@@ -100,7 +100,9 @@ Según la comprobación posterior aportada por el usuario, las siguientes prueba
 
 Esta verificación complementa la auditoría de código original y no modifica los hallazgos H01–H05. No fue un pentest ni una revisión integral de accesibilidad. Siguen pendientes pruebas más profundas sobre el resto del checkout, accesibilidad asistiva, zoom, caché/CDN y hardening.
 
-## Verificación posterior del formulario ecuatoriano
+## Verificación histórica del formulario ecuatoriano (sustituido)
+
+Este registro corresponde a la versión anterior con cantón y teléfono obligatorio; sus reglas ya no describen el formulario actual. Véase la actualización siguiente.
 
 Según las pruebas observadas aportadas por el usuario, se verificó el formulario en Chrome local con datos ficticios, con estos resultados:
 
@@ -117,9 +119,19 @@ Según las pruebas observadas aportadas por el usuario, se verificó el formular
 
 Estas pruebas verifican las reglas y el flujo observados en Chrome local. No se comprobó la entregabilidad real de la dirección o del teléfono ni el cumplimiento legal certificado. Esta verificación complementa la auditoría y conserva los hallazgos H01–H06; el vaciado observado no descarta los escenarios de concurrencia o fallo de almacenamiento descritos en H01 y H02.
 
+## Actualización local del checkout — 5 de octubre de 2026
+
+Se eliminaron cantón y las reglas antiguas de teléfono y postal. Se mantienen las 24 provincias; ciudad y dirección son requeridas y complemento es opcional. Cambiar provincia limpia ciudad, dirección, complemento y postal en DOM y memoria. Los cuatro controles de nombre validan al menos dos letras cuando están presentes; solo primer nombre y primer apellido son obligatorios. El resumen concatena en orden y escapa los valores.
+
+Celular opcional con 245 regiones ISO independientes, nombres localizados en español y Ecuador +593 por defecto. Dataset proporcionado de libphonenumber-js 1.12.6, vendorizado el día de ejecución (2026-10-05), sin dependencia runtime ni red. Sanitización ASCII al escribir/pegar, maxlength dinámico y comprobación del máximo de 15 dígitos incluyendo prefijo. Ecuador admite únicamente nueve dígitos comenzando en 9, sin cero inicial. No hay validación de fijos ni lookup de operador. El formato no acredita existencia ni titularidad del número; para otros países no se validan planes nacionales.
+
+Postal libre y opcional, sin regex, longitud o inferencia territorial; única ayuda con enlace manual al [portal oficial de Código Postal](https://www.codigopostal.gob.ec/). La dirección tampoco se contrasta con un transportista. No se incorporaron identificadores personales, datos bancarios ni nuevas persistencias. No se afirma cumplimiento legal oficial ni se ofrece asesoría legal.
+
+Pruebas: node --check y git diff --check correctos; 31 comprobaciones en Chrome headless local con datos ficticios cubrieron requeridos/opcionales, errores y foco, select y prefijos, sanitización input/paste, Ecuador válido/inválido, E.164, limpieza territorial, postal libre/vacío, resumen y escape HTML, almacenamiento exclusivo del carrito y confirmación. La recarga dejó shipping vacío y el carrito intacto. A 390 y 1237 px, sin overflow horizontal; controles y enlaces del formulario con altura mínima 44 px. Estas medidas acotadas complementan H04, no certifican accesibilidad global. No se realizó inspección visual nueva ni prueba con lector de pantalla. Se mantienen las limitaciones H01–H05 y el estado histórico de H06. No hubo redeploy.
+
 ## Limitaciones
 
-En la auditoría de código original no se ejecutó un navegador, un lector de pantalla ni una herramienta automática de accesibilidad. Las pruebas posteriores en navegador real se limitan a lo registrado en las secciones anteriores: sí se probaron las reglas del formulario ecuatoriano en Chrome local con datos ficticios. No se realizaron pruebas con transportista, consulta de verificación telefónica (phone lookup), lector de pantalla ni compatibilidad extendida entre navegadores y dispositivos. No se midieron contraste, objetivos táctiles, reflujo, recortes de foco ni dimensiones visuales. Las pruebas registradas no cubren de forma exhaustiva la validación nativa, el autocompletado, el historial completo o la caché de navegación. Los contextos Node de la auditoría original simularon almacenamiento y un DOM mínimo, no un navegador.
+En la auditoría de código original no se ejecutó un navegador, un lector de pantalla ni una herramienta automática de accesibilidad. Las pruebas posteriores en navegador real se limitan a lo registrado en las secciones anteriores: sí se probaron las reglas del formulario ecuatoriano en Chrome local con datos ficticios. No se realizaron pruebas con transportista, consulta de verificación telefónica (phone lookup), lector de pantalla ni compatibilidad extendida entre navegadores y dispositivos. No se midieron contraste, recortes de foco ni reflujo con zoom. La actualización local midió solo overflow y altura de controles/enlaces del formulario en dos anchos; no revisó los objetivos táctiles de todo el sitio. Las pruebas registradas no cubren de forma exhaustiva la validación nativa, el autocompletado, el historial completo o la caché de navegación. Los contextos Node de la auditoría original simularon almacenamiento y un DOM mínimo, no un navegador.
 
 La auditoría inicial no accedió a configuración remota de GitHub ni a un sitio publicado; el estado posterior aportado sobre la fuente de Pages, el build, HTTPS y la respuesta del sitio queda registrado en H06. No se añaden comprobaciones de DNS, certificados, cabeceras HTTP ni registros de despliegue más allá del estado de build indicado. No se afirma que falten HTTPS o cabeceras de seguridad. No hay CSP declarada en `index.html`, pero su ausencia no demuestra una explotación; una política restrictiva puede evaluarse como defensa adicional antes de incorporar fuentes externas.
 

@@ -73,296 +73,36 @@ const provinces = {
   "23": "Santo Domingo de los Tsáchilas",
   "24": "Santa Elena"
 };
-const cantonsByProvince = {
-  "01": [
-    "CAMILO PONCE ENRIQUEZ",
-    "CHORDELEG",
-    "CUENCA",
-    "EL PAN",
-    "GIRON",
-    "GUACHAPALA",
-    "GUALACEO",
-    "NABON",
-    "OÑA",
-    "PAUTE",
-    "PUCARA",
-    "SAN FERNANDO",
-    "SANTA ISABEL",
-    "SEVILLA DE ORO",
-    "SIGSIG"
-  ],
-  "02": [
-    "CALUMA",
-    "CHILLANES",
-    "CHIMBO",
-    "ECHEANDIA",
-    "GUARANDA",
-    "LAS NAVES",
-    "SAN MIGUEL"
-  ],
-  "03": [
-    "AZOGUES",
-    "BIBLIAN",
-    "CAÑAR",
-    "DELEG",
-    "EL TAMBO",
-    "LA TRONCAL",
-    "SUSCAL"
-  ],
-  "04": [
-    "BOLIVAR",
-    "ESPEJO",
-    "MIRA",
-    "MONTUFAR",
-    "SAN PEDRO DE HUACA",
-    "TULCAN"
-  ],
-  "05": [
-    "LA MANA",
-    "LATACUNGA",
-    "PANGUA",
-    "PUJILI",
-    "SALCEDO",
-    "SAQUISILI",
-    "SIGCHOS"
-  ],
-  "06": [
-    "ALAUSI",
-    "CHAMBO",
-    "CHUNCHI",
-    "COLTA",
-    "CUMANDA",
-    "GUAMOTE",
-    "GUANO",
-    "PALLATANGA",
-    "PENIPE",
-    "RIOBAMBA"
-  ],
-  "07": [
-    "ARENILLAS",
-    "ATAHUALPA",
-    "BALSAS",
-    "CHILLA",
-    "EL GUABO",
-    "HUAQUILLAS",
-    "LAS LAJAS",
-    "MACHALA",
-    "MARCABELI",
-    "PASAJE",
-    "PIÑAS",
-    "PORTOVELO",
-    "SANTA ROSA",
-    "ZARUMA"
-  ],
-  "08": [
-    "ATACAMES",
-    "ELOY ALFARO",
-    "ESMERALDAS",
-    "LA CONCORDIA",
-    "MUISNE",
-    "QUININDE",
-    "RIOVERDE",
-    "SAN LORENZO"
-  ],
-  "09": [
-    "ALFREDO BAQUERIZO MORENO",
-    "BALAO",
-    "BALZAR",
-    "COLIMES",
-    "CRNEL. MARCELINO MARIDUEÑA",
-    "DAULE",
-    "DURAN",
-    "EL TRIUNFO",
-    "EMPALME",
-    "GNRAL. ANTONIO ELIZALDE",
-    "GUAYAQUIL",
-    "ISIDRO AYORA",
-    "LOMAS DE SARGENTILLO",
-    "MILAGRO",
-    "NARANJAL",
-    "NARANJITO",
-    "NOBOL",
-    "PALESTINA",
-    "PEDRO CARBO",
-    "PLAYAS",
-    "SALITRE",
-    "SAMBORONDON",
-    "SAN JACINTO DE YAGUACHI",
-    "SANTA LUCIA",
-    "SIMON BOLIVAR"
-  ],
-  "10": [
-    "ANTONIO ANTE",
-    "COTACACHI",
-    "IBARRA",
-    "OTAVALO",
-    "PIMAMPIRO",
-    "SAN MIGUEL DE URCUQUI"
-  ],
-  "11": [
-    "CALVAS",
-    "CATAMAYO",
-    "CELICA",
-    "CHAGUARPAMBA",
-    "ESPINDOLA",
-    "GONZANAMA",
-    "LOJA",
-    "MACARA",
-    "OLMEDO",
-    "PALTAS",
-    "PINDAL",
-    "PUYANGO",
-    "QUILANGA",
-    "SARAGURO",
-    "SOZORANGA",
-    "ZAPOTILLO"
-  ],
-  "12": [
-    "BABA",
-    "BABAHOYO",
-    "BUENA FE",
-    "MOCACHE",
-    "MONTALVO",
-    "PALENQUE",
-    "PUEBLOVIEJO",
-    "QUEVEDO",
-    "QUINSALOMA",
-    "URDANETA",
-    "VALENCIA",
-    "VENTANAS",
-    "VINCES"
-  ],
-  "13": [
-    "24 DE MAYO",
-    "BOLIVAR",
-    "CHONE",
-    "EL CARMEN",
-    "FLAVIO ALFARO",
-    "JAMA",
-    "JARAMIJO",
-    "JIPIJAPA",
-    "JUNIN",
-    "MANTA",
-    "MONTECRISTI",
-    "OLMEDO",
-    "PAJAN",
-    "PEDERNALES",
-    "PICHINCHA",
-    "PORTOVIEJO",
-    "PUERTO LOPEZ",
-    "ROCAFUERTE",
-    "SAN VICENTE",
-    "SANTA ANA",
-    "SUCRE",
-    "TOSAGUA"
-  ],
-  "14": [
-    "GUALAQUIZA",
-    "HUAMBOYA",
-    "LIMON INDANZA",
-    "LOGROÑO",
-    "MORONA",
-    "PABLO SEXTO",
-    "PALORA",
-    "SAN JUAN BOSCO",
-    "SANTIAGO",
-    "SUCUA",
-    "TAISHA",
-    "TIWINTZA"
-  ],
-  "15": [
-    "ARCHIDONA",
-    "CARLOS JULIO AROSEMENA TOLA",
-    "EL CHACO",
-    "QUIJOS",
-    "TENA"
-  ],
-  "16": [
-    "ARAJUNO",
-    "MERA",
-    "PASTAZA",
-    "SANTA CLARA"
-  ],
-  "17": [
-    "CAYAMBE",
-    "MEJIA",
-    "PEDRO MONCAYO",
-    "PEDRO VICENTE MALDONADO",
-    "PUERTO QUITO",
-    "QUITO",
-    "RUMIÑAHUI",
-    "SAN MIGUEL DE LOS BANCOS"
-  ],
-  "18": [
-    "AMBATO",
-    "BAÑOS DE AGUA SANTA",
-    "CEVALLOS",
-    "MOCHA",
-    "PATATE",
-    "QUERO",
-    "SAN PEDRO DE PELILEO",
-    "SANTIAGO DE PILLARO",
-    "TISALEO"
-  ],
-  "19": [
-    "CENTINELA DEL CONDOR",
-    "CHINCHIPE",
-    "EL PANGUI",
-    "NANGARITZA",
-    "PALANDA",
-    "PAQUISHA",
-    "YACUAMBI",
-    "YANTZAZA",
-    "ZAMORA"
-  ],
-  "20": [
-    "ISABELA",
-    "SAN CRISTOBAL",
-    "SANTA CRUZ"
-  ],
-  "21": [
-    "CASCALES",
-    "CUYABENO",
-    "GONZALO PIZARRO",
-    "LAGO AGRIO",
-    "PUTUMAYO",
-    "SHUSHUFINDI",
-    "SUCUMBIOS"
-  ],
-  "22": [
-    "AGUARICO",
-    "LA JOYA DE LOS SACHAS",
-    "LORETO",
-    "ORELLANA"
-  ],
-  "23": [
-    "SANTO DOMINGO"
-  ],
-  "24": [
-    "LA LIBERTAD",
-    "SALINAS",
-    "SANTA ELENA"
-  ]
+// Datos vendorizados el 2026-10-05: mapa proporcionado de libphonenumber-js 1.12.6.
+// Solo metadatos; sin librería ni consultas de red en ejecución.
+const dialRegions = {
+1:'US AG AI AS BB BM BS CA DM DO GD GU JM KN KY LC MP MS PR SX TC TT VC VG VI',7:'RU KZ',20:'EG',27:'ZA',30:'GR',31:'NL',32:'BE',33:'FR',34:'ES',36:'HU',39:'IT VA',40:'RO',41:'CH',43:'AT',44:'GB GG IM JE',45:'DK',46:'SE',47:'NO SJ',48:'PL',49:'DE',51:'PE',52:'MX',53:'CU',54:'AR',55:'BR',56:'CL',57:'CO',58:'VE',60:'MY',61:'AU CC CX',62:'ID',63:'PH',64:'NZ',65:'SG',66:'TH',81:'JP',82:'KR',84:'VN',86:'CN',90:'TR',91:'IN',92:'PK',93:'AF',94:'LK',95:'MM',98:'IR',211:'SS',212:'MA EH',213:'DZ',216:'TN',218:'LY',220:'GM',221:'SN',222:'MR',223:'ML',224:'GN',225:'CI',226:'BF',227:'NE',228:'TG',229:'BJ',230:'MU',231:'LR',232:'SL',233:'GH',234:'NG',235:'TD',236:'CF',237:'CM',238:'CV',239:'ST',240:'GQ',241:'GA',242:'CG',243:'CD',244:'AO',245:'GW',246:'IO',247:'AC',248:'SC',249:'SD',250:'RW',251:'ET',252:'SO',253:'DJ',254:'KE',255:'TZ',256:'UG',257:'BI',258:'MZ',260:'ZM',261:'MG',262:'RE YT',263:'ZW',264:'NA',265:'MW',266:'LS',267:'BW',268:'SZ',269:'KM',290:'SH TA',291:'ER',297:'AW',298:'FO',299:'GL',350:'GI',351:'PT',352:'LU',353:'IE',354:'IS',355:'AL',356:'MT',357:'CY',358:'FI AX',359:'BG',370:'LT',371:'LV',372:'EE',373:'MD',374:'AM',375:'BY',376:'AD',377:'MC',378:'SM',380:'UA',381:'RS',382:'ME',383:'XK',385:'HR',386:'SI',387:'BA',389:'MK',420:'CZ',421:'SK',423:'LI',500:'FK',501:'BZ',502:'GT',503:'SV',504:'HN',505:'NI',506:'CR',507:'PA',508:'PM',509:'HT',590:'GP BL MF',591:'BO',592:'GY',593:'EC',594:'GF',595:'PY',596:'MQ',597:'SR',598:'UY',599:'CW BQ',670:'TL',672:'NF',673:'BN',674:'NR',675:'PG',676:'TO',677:'SB',678:'VU',679:'FJ',680:'PW',681:'WF',682:'CK',683:'NU',685:'WS',686:'KI',687:'NC',688:'TV',689:'PF',690:'TK',691:'FM',692:'MH',850:'KP',852:'HK',853:'MO',855:'KH',856:'LA',880:'BD',886:'TW',960:'MV',961:'LB',962:'JO',963:'SY',964:'IQ',965:'KW',966:'SA',967:'YE',968:'OM',970:'PS',971:'AE',972:'IL',973:'BH',974:'QA',975:'BT',976:'MN',977:'NP',992:'TJ',993:'TM',994:'AZ',995:'GE',996:'KG',998:'UZ'
 };
-const locationLabel = value => value.toLocaleLowerCase('es-EC').replace(/(^|[\s.-])(\p{L})/gu, (_, space, letter) => space + letter.toLocaleUpperCase('es-EC'));
+const dialCodes = Object.fromEntries(Object.entries(dialRegions).flatMap(([dial, regions]) => regions.split(' ').map(iso => [iso, dial])));
+let regionNames;
+try { regionNames = new Intl.DisplayNames(['es'], { type: 'region' }); } catch { /* Fallback ISO. */ }
+const phoneCountries = Object.keys(dialCodes).map(iso => {
+  let name = iso;
+  try { name = regionNames?.of(iso) || iso; } catch { /* Fallback ISO. */ }
+  return { iso, name };
+}).sort((a, b) => a.name.localeCompare(b.name, 'es'));
+const phoneCountryOptions = selected => phoneCountries.map(({ iso, name }) => `<option value="${iso}" ${iso === selected ? 'selected' : ''}>${escapeHTML(name)} (+${dialCodes[iso]})</option>`).join('');
+const phoneMaxLength = iso => 15 - (dialCodes[iso] || '').length;
+const nameFields = ['firstName', 'secondName', 'firstSurname', 'secondSurname'];
 const provinceOptions = selected => '<option value="">Selecciona una provincia</option>' + Object.entries(provinces).sort(([a], [b]) => a.localeCompare(b)).map(([code, name]) => `<option value="${code}" ${selected === code ? 'selected' : ''}>${escapeHTML(name)}</option>`).join('');
-const cantonOptions = (province, selected) => '<option value="">Selecciona un cantón</option>' + (cantonsByProvince[province] || []).map(name => `<option value="${escapeHTML(name)}" ${selected === name ? 'selected' : ''}>${escapeHTML(locationLabel(name))}</option>`).join('');
-function normalizePhone(value) {
-  if (!/^[+\d\s()-]+$/.test(value)) return '';
-  const compact = value.replace(/[\s()-]/g, '');
-  if (/^09\d{8}$/.test(compact) || /^0[2-7]\d{7}$/.test(compact)) return '+593' + compact.slice(1);
-  return /^\+593(?:9\d{8}|[2-7]\d{7})$/.test(compact) ? compact : '';
-}
 function shippingError(input, form) {
   const value = input.value;
   if (input.required && !value) return 'Completa este campo.';
-  if (input.name === 'name' && (!/^[\p{L}\p{M} '\u2019-]+$/u.test(value) || (value.match(/\p{L}/gu) || []).length < 2)) return 'Escribe al menos dos letras; usa solo letras, espacios, guiones o apóstrofes.';
-  if (input.name === 'phone' && !normalizePhone(value)) return 'Usa un celular 09XXXXXXXX o un fijo 02–07 seguido de 7 dígitos; también se admite +593 sin el cero inicial.';
-  if (input.name === 'address' && (value.length < 5 || value.length > 160 || !/\p{L}/u.test(value))) return 'Escribe la calle y el número (o S/N), entre 5 y 160 caracteres.';
+  if (nameFields.includes(input.name) && value && (!/^[\p{L}\p{M} '\u2019-]+$/u.test(value) || (value.match(/\p{L}/gu) || []).length < 2)) return 'Escribe al menos dos letras; usa solo letras, espacios, guiones o apóstrofes.';
+  if (input.name === 'phoneCountry' && !Object.hasOwn(dialCodes, value)) return 'Selecciona un país del listado.';
+  if (input.name === 'mobile' && value) {
+    const iso = form.elements.phoneCountry.value;
+    if (!/^[0-9]+$/.test(value) || !dialCodes[iso] || value.length > phoneMaxLength(iso)) return 'Usa solo dígitos; el prefijo y el celular juntos admiten hasta 15 dígitos.';
+    if (iso === 'EC' && !/^9[0-9]{8}$/.test(value)) return 'Para Ecuador escribe 9 dígitos empezando en 9, sin cero inicial; el prefijo +593 ya está seleccionado.';
+  }
   if (input.name === 'province' && !Object.hasOwn(provinces, value)) return 'Selecciona una provincia del listado.';
-  if (input.name === 'canton' && !(cantonsByProvince[form.elements.province.value] || []).includes(value)) return 'Selecciona un cantón de la provincia elegida.';
-  if (input.name === 'postal' && value && !/^\d{6}$/.test(value)) return 'El código postal debe tener exactamente seis dígitos.';
-  if (!input.validity.valid || value.length > 160) return input.type === 'email' ? 'Escribe un correo válido, por ejemplo: hola@ejemplo.com.' : 'Revisa este campo (máximo 160 caracteres).';
+  // El postal es libre y opcional: no se valida longitud ni formato.
+  if (input.name !== 'postal' && !input.validity.valid) return input.type === 'email' ? 'Escribe un correo válido, por ejemplo: hola@ejemplo.com.' : 'Revisa este campo.';
   return '';
 }
 
@@ -434,12 +174,20 @@ function render(options = {}) {
   } else if (route === 'carrito') {
     app.innerHTML = `<div class="container">${heading('Tu selección', 'Carrito')}${cart.length ? `<div class="layout"><div>${cart.map(item => `<article class="cart-row">${art(item.product)}<div><h2><a href="#detalle/${item.product.id}">${item.product.name}</a></h2><p>${item.product.size} · ${money(item.product.price)} / unidad</p><strong class="cart-price">${money(item.product.price * item.quantity)}</strong><div class="quantity"><button class="secondary" data-change="-1" data-id="${item.product.id}" aria-label="Restar una unidad de ${item.product.name}" ${item.quantity === 1 ? 'disabled' : ''}>−</button><span aria-label="Cantidad: ${item.quantity}">${item.quantity}</span><button class="secondary" data-change="1" data-id="${item.product.id}" aria-label="Sumar una unidad de ${item.product.name}" ${item.quantity >= 99 ? 'disabled' : ''}>+</button><button class="remove" data-remove="${item.product.id}" aria-label="Eliminar ${item.product.name}">Eliminar</button></div></div></article>`).join('')}<a class="back" href="#productos">← Seguir explorando</a></div><aside class="panel" aria-label="Resumen del carrito"><h2>Tu ritual, listo.</h2>${totals(cart)}<a class="button" href="#envio">Continuar a datos de envío →</a><p class="fine">Compra ficticia. No se realizarán cobros ni envíos reales.</p></aside></div>` : `<div class="empty"><div class="empty-icon" aria-hidden="true">∪</div><h2>Tu ritual está por empezar.</h2><p class="muted">Tu carrito está vacío. Explora nuestros esenciales y encuentra un momento para ti.</p><a class="button" href="#productos">Explorar productos ↗</a></div>`}</div>`;
   } else if (route === 'envio') {
-    const fields = [['name', 'Nombre completo', 'text', 'name', true], ['email', 'Correo electrónico', 'email', 'email', true], ['phone', 'Teléfono', 'tel', 'tel', true], ['address', 'Calle y número', 'text', 'street-address', true], ['reference', 'Referencia (opcional)', 'text', 'off', false], ['postal', 'Código postal (opcional)', 'text', 'postal-code', false]];
-    app.innerHTML = `<div class="container">${stepper(1)}${heading('Tu pedido / 01', 'Datos de envío')}<p class="muted">Los campos con * son obligatorios. Usa datos ficticios para probar el demo.</p><p><strong>País:</strong> Ecuador</p><div class="layout"><form id="shipping-form" novalidate><div id="form-error" class="form-error" role="alert"></div><div class="fields">${fields.map(([name, label, type, autocomplete, required]) => `<div class="field ${name === 'address' ? 'wide' : ''}"><label for="shipping-${name}">${label}${required ? ' <span aria-hidden="true">*</span>' : ''}</label><input id="shipping-${name}" name="${name}" type="${type}" autocomplete="${autocomplete}" maxlength="160" ${required ? 'required' : ''} ${name === 'postal' ? 'inputmode="numeric"' : ''} aria-describedby="error-${name}${name === 'postal' || name === 'phone' ? ' help-' + name : ''}" value="${escapeHTML(shipping[name] || '')}">${name === 'postal' ? '<span class="field-help" id="help-postal">El código postal oficial tiene seis dígitos. Es opcional: no lo inventes ni lo deduzcas solo del cantón. Puedes <a href="https://www.codigopostal.gob.ec/" target="_blank" rel="noopener">consultar el portal oficial (abre otra pestaña)</a>.</span>' : name === 'phone' ? '<span class="field-help" id="help-phone">Celular: 09XXXXXXXX o +593 9XXXXXXXX. Fijo: 02–07 + 7 dígitos, o +593 + área sin cero + 7 dígitos.</span>' : ''}<span class="field-error" id="error-${name}"></span></div>`).join('')}
+    const fields = [
+      ['firstName', 'Primer nombre', 'given-name', true], ['secondName', 'Segundo nombre (opcional)', 'additional-name', false],
+      ['firstSurname', 'Primer apellido', 'section-first family-name', true], ['secondSurname', 'Segundo apellido (opcional)', 'section-second family-name', false],
+      ['email', 'Correo electrónico', 'email', true], ['city', 'Ciudad', 'address-level2', true],
+      ['address', 'Dirección / calle y número', 'address-line1', true], ['complement', 'Complemento/departamento (opcional)', 'address-line2', false],
+      ['postal', 'Código postal (opcional)', 'postal-code', false]
+    ];
+    const phoneCountry = shipping.phoneCountry || 'EC';
+    app.innerHTML = `<div class="container">${stepper(1)}${heading('Tu pedido / 01', 'Datos de envío')}<p class="muted">Los campos con * son obligatorios. Usa datos ficticios para probar el demo.</p><p><strong>País de envío:</strong> Ecuador</p><div class="layout"><form id="shipping-form" novalidate><div id="form-error" class="form-error" role="alert"></div><div class="fields">${fields.map(([name, label, autocomplete, required]) => `<div class="field ${name === 'address' ? 'wide' : ''}"><label for="shipping-${name}">${label}${required ? ' <span aria-hidden="true">*</span>' : ''}</label><input id="shipping-${name}" name="${name}" type="${name === 'email' ? 'email' : 'text'}" autocomplete="${autocomplete}" ${name === 'postal' ? '' : 'maxlength="160"'} ${required ? 'required' : ''} aria-describedby="error-${name}${name === 'postal' ? ' help-postal' : ''}" value="${escapeHTML(shipping[name] || '')}">${name === 'postal' ? '<span class="field-help" id="help-postal">Consulte su Código Postal en: <a href="https://www.codigopostal.gob.ec/" target="_blank" rel="noopener">https://www.codigopostal.gob.ec/</a></span>' : ''}<span class="field-error" id="error-${name}"></span></div>`).join('')}
     <div class="field"><label for="shipping-province">Provincia *</label><select id="shipping-province" name="province" autocomplete="address-level1" required aria-describedby="error-province">${provinceOptions(shipping.province)}</select><span class="field-error" id="error-province"></span></div>
-    <div class="field"><label for="shipping-canton">Cantón *</label><select id="shipping-canton" name="canton" autocomplete="address-level2" required ${Object.hasOwn(provinces, shipping.province) ? '' : 'disabled'} aria-describedby="error-canton help-canton">${cantonOptions(shipping.province, shipping.canton)}</select><span class="field-help" id="help-canton">Elige primero una provincia.</span><span class="field-error" id="error-canton"></span></div></div><div class="actions"><button type="submit">Continuar al pago simulado →</button><a class="text-link" href="#carrito">← Volver al carrito</a></div><p class="fine">Estos datos solo viven en esta pestaña y se borran al recargar o confirmar.</p></form><aside class="panel"><h2>Tu selección</h2>${summary(cart)}</aside></div></div>`;
+    <div class="phone-fields wide"><div class="field"><label for="shipping-phoneCountry">País del celular / prefijo</label><select id="shipping-phoneCountry" name="phoneCountry" aria-describedby="error-phoneCountry">${phoneCountryOptions(phoneCountry)}</select><span class="field-error" id="error-phoneCountry"></span></div><div class="field"><label for="shipping-mobile">Celular (opcional)</label><input id="shipping-mobile" name="mobile" type="text" inputmode="numeric" autocomplete="tel-national" maxlength="${phoneMaxLength(phoneCountry)}" value="${escapeHTML(shipping.mobile || '')}" aria-describedby="error-mobile help-mobile"><span class="field-error" id="error-mobile"></span></div><span class="field-help wide" id="help-mobile">Solo dígitos, sin prefijo. Para Ecuador: 9 dígitos empezando en 9, sin cero inicial. Máximo 15 dígitos contando el prefijo seleccionado.</span></div>
+    </div><div class="actions"><button type="submit">Continuar al pago simulado →</button><a class="text-link" href="#carrito">← Volver al carrito</a></div><p class="fine">Estos datos solo viven en esta pestaña y se borran al recargar o confirmar.</p></form><aside class="panel"><h2>Tu selección</h2>${summary(cart)}</aside></div></div>`;
   } else if (route === 'pago') {
-    app.innerHTML = `<div class="container">${stepper(2)}${heading('Tu pedido / 02', 'Pago simulado')}<div class="layout"><div><div class="notice"><strong>Solo estamos probando el ritual.</strong><p>Esta compra es ficticia. No necesitamos datos bancarios y no se realizará ningún cobro, correo ni envío real.</p></div><h2>Datos de envío</h2><p class="shipping-summary">${escapeHTML(shipping.name)}<br>${escapeHTML(shipping.address)}<br>${shipping.reference ? escapeHTML(shipping.reference) + "<br>" : ""}${escapeHTML(locationLabel(shipping.canton))}, ${escapeHTML(provinces[shipping.province])}<br>${shipping.postal ? escapeHTML(shipping.postal) + ", " : ""}Ecuador<br>${escapeHTML(shipping.email)}<br>${escapeHTML(shipping.phone)}</p><a class="text-link" href="#envio">← Editar datos de envío</a></div><aside class="panel"><h2>Resumen del pedido</h2>${summary(cart)}<button class="button" data-pay>Simular pago y confirmar →</button><a class="text-link" href="#carrito">Editar carrito</a></aside></div></div>`;
+    app.innerHTML = `<div class="container">${stepper(2)}${heading('Tu pedido / 02', 'Pago simulado')}<div class="layout"><div><div class="notice"><strong>Solo estamos probando el ritual.</strong><p>Esta compra es ficticia. No necesitamos datos bancarios y no se realizará ningún cobro, correo ni envío real.</p></div><h2>Datos de envío</h2><p class="shipping-summary">${escapeHTML(nameFields.map(key => shipping[key]).filter(Boolean).join(' '))}<br>Dirección: ${escapeHTML(shipping.address)}<br>${shipping.complement ? 'Complemento: ' + escapeHTML(shipping.complement) + '<br>' : ''}Ciudad: ${escapeHTML(shipping.city)}<br>Provincia: ${escapeHTML(provinces[shipping.province])}<br>${shipping.postal ? 'Código postal: ' + escapeHTML(shipping.postal) + '<br>' : ''}País de envío: Ecuador<br>Correo: ${escapeHTML(shipping.email)}${shipping.mobile ? '<br>Celular: +' + escapeHTML(dialCodes[shipping.phoneCountry]) + ' ' + escapeHTML(shipping.mobile) : ''}</p><a class="text-link" href="#envio">← Editar datos de envío</a></div><aside class="panel"><h2>Resumen del pedido</h2>${summary(cart)}<button class="button" data-pay>Simular pago y confirmar →</button><a class="text-link" href="#carrito">Editar carrito</a></aside></div></div>`;
   } else if (route === 'confirmacion') {
     app.innerHTML = `<div class="container confirmation">${stepper(3)}<div class="success-mark" aria-hidden="true">✓</div>${heading('Tu pedido / 03 · ' + order.reference, 'Pedido ficticio confirmado')}<p>Tu recorrido por la botica está completo.</p><div class="notice"><strong>Pago simulado completado. No es una compra real.</strong><p>No se ha cobrado dinero, enviado un correo ni creado un envío. Los datos de envío ya se han borrado.</p></div><div class="panel"><h2>Resumen de la simulación</h2>${summary(order.items)}</div><div class="actions"><a class="button" href="#inicio">Volver al inicio ↗</a><a class="text-link" href="#productos">Explorar la colección</a></div></div>`;
   }
@@ -501,20 +249,40 @@ function editShipping(event) {
   const input = event.target;
   if (input.form?.id !== 'shipping-form') return;
   const changedProvince = input.name === 'province' && shipping.province !== input.value;
+  if (input.name === 'mobile') input.value = input.value.replace(/[^0-9]/g, '').slice(0, input.maxLength);
   shipping[input.name] = input.value;
   shippingReady = false;
   clearShippingError(input);
+  if (input.name === 'phoneCountry') {
+    const mobile = input.form.elements.mobile;
+    mobile.maxLength = phoneMaxLength(input.value);
+    // Conservar el número completo y señalarlo si excede el nuevo límite, sin truncarlo.
+    const error = shippingError(mobile, input.form);
+    clearShippingError(mobile);
+    if (error) {
+      document.querySelector('#error-mobile').textContent = error;
+      mobile.setAttribute('aria-invalid', 'true');
+    }
+  }
   if (changedProvince) {
-    shipping.canton = '';
-    shipping.postal = '';
-    const canton = input.form.elements.canton;
-    canton.innerHTML = cantonOptions(input.value, '');
-    canton.disabled = !Object.hasOwn(provinces, input.value);
-    input.form.elements.postal.value = '';
-    clearShippingError(canton);
-    clearShippingError(input.form.elements.postal);
+    for (const name of ['city', 'postal', 'address', 'complement']) {
+      shipping[name] = '';
+      input.form.elements[name].value = '';
+      clearShippingError(input.form.elements[name]);
+    }
   }
 }
+app.addEventListener('paste', event => {
+  const input = event.target;
+  if (input.form?.id !== 'shipping-form' || input.name !== 'mobile') return;
+  event.preventDefault();
+  const digits = event.clipboardData.getData('text').replace(/[^0-9]/g, '');
+  const start = input.selectionStart;
+  const end = input.selectionEnd;
+  const available = Math.max(0, input.maxLength - (input.value.length - (end - start)));
+  input.setRangeText(digits.slice(0, available), start, end, 'end');
+  editShipping(event);
+});
 app.addEventListener('input', editShipping);
 app.addEventListener('change', editShipping);
 app.addEventListener('submit', event => {
@@ -531,7 +299,6 @@ app.addEventListener('submit', event => {
   }
   if (firstInvalid) { shippingReady = false; document.querySelector('#form-error').textContent = 'Revisa los campos señalados para continuar.'; firstInvalid.focus(); return; }
   shipping = Object.fromEntries(new FormData(form));
-  shipping.phone = normalizePhone(shipping.phone);
   shippingReady = true;
   location.hash = 'pago';
 });
