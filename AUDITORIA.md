@@ -100,38 +100,48 @@ Según la comprobación posterior aportada por el usuario, las siguientes prueba
 
 Esta verificación complementa la auditoría de código original y no modifica los hallazgos H01–H05. No fue un pentest ni una revisión integral de accesibilidad. Siguen pendientes pruebas más profundas sobre el resto del checkout, accesibilidad asistiva, zoom, caché/CDN y hardening.
 
-## Verificación histórica del formulario ecuatoriano (sustituido)
-
-Este registro corresponde a la versión anterior con cantón y teléfono obligatorio; sus reglas ya no describen el formulario actual. Véase la actualización siguiente.
-
-Según las pruebas observadas aportadas por el usuario, se verificó el formulario en Chrome local con datos ficticios, con estos resultados:
-
-- El catálogo contiene 24 provincias y 221 cantones; Pichincha ofrece Quito.
-- Cambiar la provincia limpia el cantón y el código postal.
-- Enviar el formulario vacío enfoca el primer campo con error.
-- Un teléfono inválido recibe el foco y muestra una explicación del error.
-- Un código postal de 5 dígitos da error; el código postal vacío se acepta.
-- El celular `0991234567` se normaliza a `+593991234567`.
-- El teléfono fijo `02 234 5678` se normaliza a `+59322345678`.
-- El resumen de pago muestra provincia y cantón.
-- No hay inputs bancarios.
-- Confirmar vacía el carrito; en la comprobación, `localStorage` no contiene datos personales.
-
-Estas pruebas verifican las reglas y el flujo observados en Chrome local. No se comprobó la entregabilidad real de la dirección o del teléfono ni el cumplimiento legal certificado. Esta verificación complementa la auditoría y conserva los hallazgos H01–H06; el vaciado observado no descarta los escenarios de concurrencia o fallo de almacenamiento descritos en H01 y H02.
-
 ## Actualización local del checkout — 5 de octubre de 2026
 
-Se eliminaron cantón y las reglas antiguas de teléfono y postal. Se mantienen las 24 provincias; ciudad y dirección son requeridas y complemento es opcional. Cambiar provincia limpia ciudad, dirección, complemento y postal en DOM y memoria. Los cuatro controles de nombre validan al menos dos letras cuando están presentes; solo primer nombre y primer apellido son obligatorios. El resumen concatena en orden y escapa los valores.
+Esta sección sustituye las pruebas anteriores de teléfonos y territorio; describe la implementación actual. Los hallazgos generales H01–H05 y el estado histórico H06 se conservan. Las referencias numéricas de líneas en la auditoría original son históricas y no corresponden necesariamente al código reorganizado.
 
-Celular opcional con 245 regiones ISO independientes, nombres localizados en español y Ecuador +593 por defecto. Dataset proporcionado de libphonenumber-js 1.12.6, vendorizado el día de ejecución (2026-10-05), sin dependencia runtime ni red. Sanitización ASCII al escribir/pegar, maxlength dinámico y comprobación del máximo de 15 dígitos incluyendo prefijo. Ecuador admite únicamente nueve dígitos comenzando en 9, sin cero inicial. No hay validación de fijos ni lookup de operador. El formato no acredita existencia ni titularidad del número; para otros países no se validan planes nacionales.
+El stepper conserva exactamente **Datos de compra/contacto → Pago → Confirmación**. Contacto requiere primer nombre, primer apellido, correo y celular. Segundo nombre, segundo apellido y teléfono fijo son opcionales. El correo valida explícitamente parte local, un @, dominio con punto y ausencia de espacios. El resumen concatena nombres y apellidos, escapando PII. No existen campos o datasets de provincia/cantón ni destino en contacto.
 
-Postal libre y opcional, sin regex, longitud o inferencia territorial; única ayuda con enlace manual al [portal oficial de Código Postal](https://www.codigopostal.gob.ec/). La dirección tampoco se contrasta con un transportista. No se incorporaron identificadores personales, datos bancarios ni nuevas persistencias. No se afirma cumplimiento legal oficial ni se ofrece asesoría legal.
+El selector del celular mantiene 245 regiones, nombres españoles/ISO, prefijos compartidos y default EC +593; `countryFlag` genera indicadores regionales Unicode con fallback neutro. Un `span` visible externo al `select` muestra el indicador junto al control y se actualiza al cambiar de país; las opciones también incluyen indicador, nombre y prefijo. La representación gráfica depende de las fuentes y del sistema operativo. Input/paste eliminan todo salvo dígitos. Ecuador exige nueve dígitos empezando en 9; el extranjero se limita a 15 dígitos incluyendo prefijo. Fijo separado con placeholder «02 999 9999», vacío permitido; cuando está presente exige `0[2-7]` + siete dígitos, limpiando espacios/guiones para validar. Dataset offline de libphonenumber-js 1.12.6 conservado, sin instalar librerías ni realizar lookup.
 
-Pruebas: node --check y git diff --check correctos; 31 comprobaciones en Chrome headless local con datos ficticios cubrieron requeridos/opcionales, errores y foco, select y prefijos, sanitización input/paste, Ecuador válido/inválido, E.164, limpieza territorial, postal libre/vacío, resumen y escape HTML, almacenamiento exclusivo del carrito y confirmación. La recarga dejó shipping vacío y el carrito intacto. A 390 y 1237 px, sin overflow horizontal; controles y enlaces del formulario con altura mínima 44 px. Estas medidas acotadas complementan H04, no certifican accesibilidad global. No se realizó inspección visual nueva ni prueba con lector de pantalla. Se mantienen las limitaciones H01–H05 y el estado histórico de H06. No hubo redeploy.
+Pago contiene radios nativos en fieldsets: pago y retiro local, o pago en línea. Dentro de online se elige envío a casa (default) o retiro. Únicamente online/home presenta ciudad, dirección, complemento opcional y CP. Al enviar ese modo se exigen ciudad/dirección y CP de seis dígitos, con errores ARIA, mensaje visible y foco en el primer inválido. Los retiros no exigen CP. La ayuda enlaza manualmente al portal oficial con nueva pestaña y noopener; no se infiere CP de la ciudad ni se contrasta entregabilidad. No existen campos de tarjeta.
+
+Cambiar método/entrega actualiza panel, botón, resumen y anuncio accesible sin nuevos pasos; limpia errores conservando borrador en memoria. Cambiar carrito invalida contacto validado y conserva los borradores mientras haya artículos; se revalida el destino al confirmar. La confirmación muestra el fulfillment ficticio, sin PII. `order` guarda solo referencia, artículos y enum de fulfillment. Contacto y dirección se borran al confirmar, recargar o vaciar carrito; localStorage persiste únicamente cart (identificadores/cantidades). Continúan los límites de concurrencia y fallos de persistencia H01–H03.
+
+### Pruebas ejecutadas en esta actualización
+
+`node --check script.js` y `git diff --check` correctos. Chrome 154 headless real con perfil temporal, servidor HTTP local y datos ficticios:
+
+- Tres pasos, EC/Unicode/prefijo, 245 regiones y US/CA separados; nombres requeridos/opcionales y concatenación; correo inválido y sin punto, errores, ARIA, limpieza y foco.
+- Celular obligatorio, formatos EC rechazados, nueve dígitos válidos, sanitización input/paste y límites extranjeros; fijo opcional, inválido y válido con separadores.
+- Local sin destino; online/home con destino y validación de ciudad/dirección/CP exclusivamente en Pago; CP vacío, cinco/siete dígitos y alfanumérico bloqueados. Enlace oficial y regla visibles.
+- Online/pickup sin postal; cambios de selección, botones, limpieza/anuncios y conservación de borrador; confirmaciones para local-pickup, online-home y online-pickup sin PII.
+- Protección tras Back y repetición, carrito modificado y contacto revalidado, almacenamiento sin PII, recarga con carrito conservado y borradores vacíos; ninguna excepción JavaScript en el recorrido.
+- Viewports reales 390 × 844 y 1237 × 844 sin overflow en contacto y ambos modos de Pago; controles de contacto y etiquetas clicables de radios ≥44 px. Capturas de Pago online/home revisadas visualmente en ambos tamaños, sin roturas observadas.
+
+Las acciones se automatizaron vía CDP; paste se simuló con ClipboardEvent y datos ficticios, sin usar portapapeles del sistema. El indicador de `countryFlag` se muestra en un `span` visible junto al selector, además de figurar en las opciones con nombre y prefijo; su representación gráfica depende de las fuentes y del sistema operativo. No se verificaron lector de pantalla, zoom/contraste, autocompletado real ni compatibilidad extendida. Las medidas táctiles son del checkout y no cierran H04. El alcance permitido de esta versión comprende exactamente cuatro archivos: `script.js`, `styles.css`, `README.md` y `AUDITORIA.md`, sin nuevas dependencias. Esta corrección documental modifica únicamente `README.md` y `AUDITORIA.md`; `index.html` permanece intacto. Los cambios están preparados para publicar; aún no se confirma un nuevo build de GitHub Pages para esta versión. El estado `built` de H06 corresponde a la publicación histórica y no acredita un rebuild de estos cambios.
+
+### Verificaciones manuales observadas
+
+Según las observaciones manuales aportadas para esta versión:
+
+- Pago y retiro local permite confirmar sin destino.
+- Pago online con envío a casa bloquea la confirmación con CP inválido y permite confirmar con CP válido de seis dígitos y los demás campos requeridos completos.
+- Pago online con retiro permite confirmar sin destino.
+- El checkout mantiene exactamente tres pasos: Datos de compra/contacto, Pago y Confirmación.
+- El celular es requerido; dejarlo vacío bloquea el avance.
+- Estados Unidos +1 aparece con bandera/indicador y prefijo junto al control; las opciones incluyen indicador, nombre y prefijo. El celular extranjero aparece con su +prefijo en el resumen de contacto de Pago.
+- La confirmación identifica el `fulfillment` elegido y no revela datos personales (PII).
+
+Estas observaciones corresponden a la simulación: no acreditan verificación real de teléfono, pago o envío real, pruebas con lector de pantalla ni cumplimiento legal certificado.
 
 ## Limitaciones
 
-En la auditoría de código original no se ejecutó un navegador, un lector de pantalla ni una herramienta automática de accesibilidad. Las pruebas posteriores en navegador real se limitan a lo registrado en las secciones anteriores: sí se probaron las reglas del formulario ecuatoriano en Chrome local con datos ficticios. No se realizaron pruebas con transportista, consulta de verificación telefónica (phone lookup), lector de pantalla ni compatibilidad extendida entre navegadores y dispositivos. No se midieron contraste, recortes de foco ni reflujo con zoom. La actualización local midió solo overflow y altura de controles/enlaces del formulario en dos anchos; no revisó los objetivos táctiles de todo el sitio. Las pruebas registradas no cubren de forma exhaustiva la validación nativa, el autocompletado, el historial completo o la caché de navegación. Los contextos Node de la auditoría original simularon almacenamiento y un DOM mínimo, no un navegador.
+En la auditoría de código original no se ejecutó un navegador, un lector de pantalla ni una herramienta automática de accesibilidad. Las pruebas posteriores en navegador real se limitan a lo registrado en las secciones anteriores: se probaron las reglas actuales de contacto y Pago en Chrome local con datos ficticios. No se realizaron pruebas con transportista, consulta de verificación telefónica (phone lookup), lector de pantalla ni compatibilidad extendida entre navegadores y dispositivos. No se midieron contraste, recortes de foco ni reflujo con zoom. La actualización local midió overflow y altura de controles de contacto y etiquetas de radios en dos anchos, y revisó capturas de Pago; no revisó todos los objetivos táctiles del sitio. Las pruebas registradas no cubren de forma exhaustiva la validación nativa, el autocompletado, el historial completo o la caché de navegación. Los contextos Node de la auditoría original simularon almacenamiento y un DOM mínimo, no un navegador.
 
 La auditoría inicial no accedió a configuración remota de GitHub ni a un sitio publicado; el estado posterior aportado sobre la fuente de Pages, el build, HTTPS y la respuesta del sitio queda registrado en H06. No se añaden comprobaciones de DNS, certificados, cabeceras HTTP ni registros de despliegue más allá del estado de build indicado. No se afirma que falten HTTPS o cabeceras de seguridad. No hay CSP declarada en `index.html`, pero su ausencia no demuestra una explotación; una política restrictiva puede evaluarse como defensa adicional antes de incorporar fuentes externas.
 

@@ -98,7 +98,7 @@
   .value-strip{padding-block:10px}
 }
 
-/* Controles de ubicación offline del formulario de envío. */
+/* Selector offline del país del celular. */
 #shipping-form select{font:inherit;min-height:48px;width:100%;min-width:0;padding:10px 12px;border:1px solid #a8b09f;background:var(--white);border-radius:3px;color:var(--ink)}
 #shipping-form select:disabled{background:#e9ecdf;color:#505b50;cursor:not-allowed}
 #shipping-form select[aria-invalid=true]{border:2px solid var(--error)}
@@ -110,3 +110,26 @@
 #shipping-form .phone-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 16px}
 #shipping-form input,#shipping-form select{min-height:48px}
 .shipping-summary{overflow-wrap:anywhere}
+
+/* Opciones de pago y entrega: radios nativos con etiquetas táctiles. */
+.checkout-options{border:0;padding:0;margin:20px 0;min-width:0}
+.checkout-options legend{font-weight:600;margin-bottom:12px}
+.segmented{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.checkout-choice{display:flex;align-items:center;gap:12px;min-height:48px;padding:12px;border:1px solid var(--line);border-radius:4px;cursor:pointer}
+.checkout-choice:has(input:checked){background:#e9ecdf;border:2px solid var(--ink);padding:11px}
+.checkout-choice:has(input:focus-visible){outline:3px solid var(--ink);outline-offset:3px}
+.checkout-choice input[type=radio]{width:20px;height:20px;min-height:20px;flex:0 0 20px;margin:0;accent-color:var(--ink)}
+#payment-form [hidden]{display:none}
+#payment-form .field{min-width:0}
+#payment-form .field-help{font-size:14px;color:var(--muted)}
+#payment-form .field-help a{display:inline-flex;align-items:center;min-height:44px}
+#payment-form input:not([type=radio]){min-height:48px}
+#shipping-phoneCountry{font-family:system-ui,'Segoe UI Emoji','Apple Color Emoji',sans-serif;font-size:14px}
+@media(min-width:700px){.segmented{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){#shipping-form .phone-fields{grid-template-columns:minmax(0,1fr)}}
+
+#shipping-form .phone-fields,#shipping-form .phone-fields>.wide{grid-column:1/-1}
+
+#shipping-form .phone-country-control{display:inline-flex;align-items:center;gap:8px;min-width:0;width:100%}
+#shipping-form .phone-country-flag{display:inline-flex;align-items:center;justify-content:center;flex:0 0 24px;width:24px;height:24px;font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif;font-size:20px;line-height:1}
+#shipping-form .phone-country-control select{flex:1;min-width:0}

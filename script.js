@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const products = [
   { id: 'shampoo', collections: ["diario","mas-vendidos","shampoos"], name: 'Shampoo suave', category: 'Cabello', size: '250 ml', price: 1250, art: 'sage', label: 'Limpieza suave', description: 'Una pausa fresca para tu cabello. Limpieza delicada con una textura ligera que acompaña el cuidado de todos los días.', benefits: ['Limpieza suave para uso frecuente', 'Sensación fresca y ligera', 'Para distintas texturas de cabello'] },
@@ -45,34 +45,6 @@ const storageKey = 'nudo-cart-v1';
 const money = cents => new Intl.NumberFormat('es', { style: 'currency', currency: 'USD' }).format(cents / 100);
 const total = items => items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 const escapeHTML = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
-// Instantánea del servicio público codigopostal.gob.ec proporcionada para este prototipo.
-// Códigos territoriales de provincia; no son códigos postales completos.
-const provinces = {
-  "01": "Azuay",
-  "02": "Bolívar",
-  "03": "Cañar",
-  "04": "Carchi",
-  "05": "Cotopaxi",
-  "06": "Chimborazo",
-  "07": "El Oro",
-  "08": "Esmeraldas",
-  "09": "Guayas",
-  "10": "Imbabura",
-  "11": "Loja",
-  "12": "Los Ríos",
-  "13": "Manabí",
-  "14": "Morona Santiago",
-  "15": "Napo",
-  "16": "Pastaza",
-  "17": "Pichincha",
-  "18": "Tungurahua",
-  "19": "Zamora Chinchipe",
-  "20": "Galápagos",
-  "21": "Sucumbíos",
-  "22": "Orellana",
-  "23": "Santo Domingo de los Tsáchilas",
-  "24": "Santa Elena"
-};
 // Datos vendorizados el 2026-10-05: mapa proporcionado de libphonenumber-js 1.12.6.
 // Solo metadatos; sin librería ni consultas de red en ejecución.
 const dialRegions = {
@@ -86,10 +58,12 @@ const phoneCountries = Object.keys(dialCodes).map(iso => {
   try { name = regionNames?.of(iso) || iso; } catch { /* Fallback ISO. */ }
   return { iso, name };
 }).sort((a, b) => a.name.localeCompare(b.name, 'es'));
-const phoneCountryOptions = selected => phoneCountries.map(({ iso, name }) => `<option value="${iso}" ${iso === selected ? 'selected' : ''}>${escapeHTML(name)} (+${dialCodes[iso]})</option>`).join('');
+function countryFlag(iso) {
+  return /^[A-Z]{2}$/.test(iso) && !['XK', 'AC', 'TA'].includes(iso) ? String.fromCodePoint(...[...iso].map(char => 0x1F1E6 + char.charCodeAt(0) - 65)) : '🌐';
+}
+const phoneCountryOptions = selected => phoneCountries.map(({ iso, name }) => `<option value="${iso}" ${iso === selected ? 'selected' : ''}>${countryFlag(iso)} ${escapeHTML(name)} (+${dialCodes[iso]})</option>`).join('');
 const phoneMaxLength = iso => 15 - (dialCodes[iso] || '').length;
 const nameFields = ['firstName', 'secondName', 'firstSurname', 'secondSurname'];
-const provinceOptions = selected => '<option value="">Selecciona una provincia</option>' + Object.entries(provinces).sort(([a], [b]) => a.localeCompare(b)).map(([code, name]) => `<option value="${code}" ${selected === code ? 'selected' : ''}>${escapeHTML(name)}</option>`).join('');
 function shippingError(input, form) {
   const value = input.value;
   if (input.required && !value) return 'Completa este campo.';
@@ -100,15 +74,17 @@ function shippingError(input, form) {
     if (!/^[0-9]+$/.test(value) || !dialCodes[iso] || value.length > phoneMaxLength(iso)) return 'Usa solo dígitos; el prefijo y el celular juntos admiten hasta 15 dígitos.';
     if (iso === 'EC' && !/^9[0-9]{8}$/.test(value)) return 'Para Ecuador escribe 9 dígitos empezando en 9, sin cero inicial; el prefijo +593 ya está seleccionado.';
   }
-  if (input.name === 'province' && !Object.hasOwn(provinces, value)) return 'Selecciona una provincia del listado.';
-  // El postal es libre y opcional: no se valida longitud ni formato.
-  if (input.name !== 'postal' && !input.validity.valid) return input.type === 'email' ? 'Escribe un correo válido, por ejemplo: hola@ejemplo.com.' : 'Revisa este campo.';
+  if (input.name === 'email' && !/^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/.test(value)) return 'Escribe un correo con usuario, @ y dominio con punto, por ejemplo: persona@ejemplo.com, sin espacios.';
+  if (input.name === 'landline' && value && !/^0[2-7][0-9]{7}$/.test(value.replace(/[ -]/g, ''))) return 'Para Ecuador escribe 0 seguido de un dígito del 2 al 7 y siete dígitos más; puedes usar espacios o guiones.';
+  if (!input.validity.valid) return 'Revisa este campo.';
   return '';
 }
 
 let cart = loadCart();
 let shipping = {};
 let shippingReady = false;
+const emptyPayment = () => ({ method: 'local', delivery: 'home', city: '', address: '', complement: '', postal: '' });
+let payment = emptyPayment();
 let order = null;
 let orderNumber = 0;
 let storageWarning = false;
@@ -138,9 +114,43 @@ const card = product => `<article class="card"><a class="card-visual" href="#det
 const miniProduct = product => `<article class="mini-product">${art(product)}<div class="mini-product-copy"><h3>${escapeHTML(product.name)}</h3><strong>${money(product.price)}</strong><a href="#detalle/${encodeURIComponent(product.id)}" aria-label="Ver detalle de ${escapeHTML(product.name)}">Ver detalle ↗</a></div></article>`;
 const totals = items => `<dl class="totals"><div><dt>Subtotal</dt><dd>${money(total(items))}</dd></div><div><dt>Envío simulado</dt><dd>Gratis</dd></div><div class="total"><dt>Total <small>USD</small></dt><dd>${money(total(items))}</dd></div></dl>`;
 const summary = items => `<ul class="summary">${items.map(item => `<li><span>${item.product.name} × ${item.quantity}</span><strong>${money(item.product.price * item.quantity)}</strong></li>`).join('')}</ul>${totals(items)}`;
-const stepper = step => `<ol class="stepper" aria-label="Pasos del checkout">${['Datos de envío', 'Pago simulado', 'Confirmación'].map((label, index) => `<li ${index + 1 === step ? 'aria-current="step"' : ''} class="${index + 1 < step ? 'done' : ''}"><span aria-hidden="true">${index + 1 < step ? '✓' : index + 1}</span>${label}</li>`).join('')}</ol>`;
+const stepper = step => `<ol class="stepper" aria-label="Pasos del checkout">${['Datos de compra/contacto', 'Pago', 'Confirmación'].map((label, index) => `<li ${index + 1 === step ? 'aria-current="step"' : ''} class="${index + 1 < step ? 'done' : ''}"><span aria-hidden="true">${index + 1 < step ? '✓' : index + 1}</span>${label}</li>`).join('')}</ol>`;
 const categoryHref = category => '#productos/' + categories.indexOf(category);
 function replaceRoute(route) { history.replaceState(null, '', '#' + route); render(); }
+
+const currentFulfillment = () => payment.method === 'local' ? 'local-pickup' : payment.delivery === 'home' ? 'online-home' : 'online-pickup';
+const fulfillmentLabel = value => ({
+  'local-pickup': 'Simulación: pago y retiro en el local.',
+  'online-home': 'Simulación: pago en línea y envío a casa en Ecuador.',
+  'online-pickup': 'Simulación: pago en línea y retiro en el local.'
+})[value];
+const paymentButtonLabel = () => payment.method === 'local' ? 'Confirmar pago y retiro' : 'Simular pago en línea';
+const paymentOption = (name, value, label) => `<label class="checkout-choice"><input type="radio" name="${name}" value="${value}" ${payment[name] === value ? 'checked' : ''}><span>${label}</span></label>`;
+function destinationFields() {
+  if (currentFulfillment() !== 'online-home') return '';
+  return `<fieldset class="checkout-options"><legend>Destino en Ecuador</legend><div class="fields">${[
+    ['city', 'Ciudad', 'address-level2'], ['address', 'Dirección / calle y número', 'address-line1'],
+    ['complement', 'Complemento (opcional)', 'address-line2'], ['postal', 'Código postal', 'postal-code']
+  ].map(([name, label, autocomplete]) => `<div class="field"><label for="payment-${name}">${label}${name !== 'complement' ? ' *' : ''}</label><input id="payment-${name}" name="${name}" autocomplete="${autocomplete}" ${name !== 'complement' ? 'required' : ''} ${name === 'postal' ? 'inputmode="numeric"' : 'maxlength="160"'} value="${escapeHTML(payment[name])}" aria-describedby="error-${name}${name === 'postal' ? ' help-postal postal-rule' : ''}"><span class="field-error" id="error-${name}"></span></div>`).join('')}</div><p id="postal-rule" class="field-help">El código postal debe contener seis dígitos.</p><p id="help-postal" class="field-help">Consulte su Código Postal en: <a href="https://www.codigopostal.gob.ec/" target="_blank" rel="noopener">Código Postal Ecuador</a></p></fieldset>`;
+}
+function editPayment(event) {
+  const input = event.target;
+  if (input.form?.id !== 'payment-form') return;
+  if (input.type === 'radio') {
+    if (event.type !== 'change') return;
+    payment[input.name] = input.value;
+    document.querySelector('#form-error').textContent = '';
+    document.querySelector('#local-notice').hidden = payment.method !== 'local';
+    document.querySelector('#delivery-options').hidden = payment.method !== 'online';
+    document.querySelector('#destination-panel').innerHTML = destinationFields();
+    document.querySelector('[data-pay]').textContent = paymentButtonLabel();
+    document.querySelector('#fulfillment-summary').textContent = fulfillmentLabel(currentFulfillment());
+    announce(fulfillmentLabel(currentFulfillment()) + (currentFulfillment() === 'online-home' ? ' Completa el destino y el código postal de seis dígitos.' : ' No se requiere dirección ni código postal.'));
+  } else {
+    payment[input.name] = input.value;
+    clearShippingError(input);
+  }
+}
 
 function render(options = {}) {
   const route = location.hash.slice(1) || 'inicio';
@@ -172,24 +182,22 @@ function render(options = {}) {
   } else if (product) {
     app.innerHTML = `<div class="container"><a class="back" href="#productos">← Volver a la colección</a><div class="detail">${art(product)}<div class="detail-copy">${heading(product.category + ' / NUDO', product.name)}<p>${product.description}</p><p>Presentación · <strong>${product.size}</strong></p><ul class="benefits">${product.benefits.map(benefit => `<li>${benefit}</li>`).join('')}</ul><div class="detail-price">${money(product.price)}<small>USD · Precio ficticio</small></div><button class="button" data-add="${product.id}">Agregar al carrito <span aria-hidden="true">＋</span></button><p class="fine">Se agrega una unidad. Podrás ajustar la cantidad en el carrito.</p></div></div></div>`;
   } else if (route === 'carrito') {
-    app.innerHTML = `<div class="container">${heading('Tu selección', 'Carrito')}${cart.length ? `<div class="layout"><div>${cart.map(item => `<article class="cart-row">${art(item.product)}<div><h2><a href="#detalle/${item.product.id}">${item.product.name}</a></h2><p>${item.product.size} · ${money(item.product.price)} / unidad</p><strong class="cart-price">${money(item.product.price * item.quantity)}</strong><div class="quantity"><button class="secondary" data-change="-1" data-id="${item.product.id}" aria-label="Restar una unidad de ${item.product.name}" ${item.quantity === 1 ? 'disabled' : ''}>−</button><span aria-label="Cantidad: ${item.quantity}">${item.quantity}</span><button class="secondary" data-change="1" data-id="${item.product.id}" aria-label="Sumar una unidad de ${item.product.name}" ${item.quantity >= 99 ? 'disabled' : ''}>+</button><button class="remove" data-remove="${item.product.id}" aria-label="Eliminar ${item.product.name}">Eliminar</button></div></div></article>`).join('')}<a class="back" href="#productos">← Seguir explorando</a></div><aside class="panel" aria-label="Resumen del carrito"><h2>Tu ritual, listo.</h2>${totals(cart)}<a class="button" href="#envio">Continuar a datos de envío →</a><p class="fine">Compra ficticia. No se realizarán cobros ni envíos reales.</p></aside></div>` : `<div class="empty"><div class="empty-icon" aria-hidden="true">∪</div><h2>Tu ritual está por empezar.</h2><p class="muted">Tu carrito está vacío. Explora nuestros esenciales y encuentra un momento para ti.</p><a class="button" href="#productos">Explorar productos ↗</a></div>`}</div>`;
+    app.innerHTML = `<div class="container">${heading('Tu selección', 'Carrito')}${cart.length ? `<div class="layout"><div>${cart.map(item => `<article class="cart-row">${art(item.product)}<div><h2><a href="#detalle/${item.product.id}">${item.product.name}</a></h2><p>${item.product.size} · ${money(item.product.price)} / unidad</p><strong class="cart-price">${money(item.product.price * item.quantity)}</strong><div class="quantity"><button class="secondary" data-change="-1" data-id="${item.product.id}" aria-label="Restar una unidad de ${item.product.name}" ${item.quantity === 1 ? 'disabled' : ''}>−</button><span aria-label="Cantidad: ${item.quantity}">${item.quantity}</span><button class="secondary" data-change="1" data-id="${item.product.id}" aria-label="Sumar una unidad de ${item.product.name}" ${item.quantity >= 99 ? 'disabled' : ''}>+</button><button class="remove" data-remove="${item.product.id}" aria-label="Eliminar ${item.product.name}">Eliminar</button></div></div></article>`).join('')}<a class="back" href="#productos">← Seguir explorando</a></div><aside class="panel" aria-label="Resumen del carrito"><h2>Tu ritual, listo.</h2>${totals(cart)}<a class="button" href="#envio">Continuar a datos de compra/contacto →</a><p class="fine">Compra ficticia. No se realizarán cobros ni envíos reales.</p></aside></div>` : `<div class="empty"><div class="empty-icon" aria-hidden="true">∪</div><h2>Tu ritual está por empezar.</h2><p class="muted">Tu carrito está vacío. Explora nuestros esenciales y encuentra un momento para ti.</p><a class="button" href="#productos">Explorar productos ↗</a></div>`}</div>`;
   } else if (route === 'envio') {
     const fields = [
       ['firstName', 'Primer nombre', 'given-name', true], ['secondName', 'Segundo nombre (opcional)', 'additional-name', false],
       ['firstSurname', 'Primer apellido', 'section-first family-name', true], ['secondSurname', 'Segundo apellido (opcional)', 'section-second family-name', false],
-      ['email', 'Correo electrónico', 'email', true], ['city', 'Ciudad', 'address-level2', true],
-      ['address', 'Dirección / calle y número', 'address-line1', true], ['complement', 'Complemento/departamento (opcional)', 'address-line2', false],
-      ['postal', 'Código postal (opcional)', 'postal-code', false]
+      ['email', 'Correo electrónico', 'email', true], ['landline', 'Teléfono fijo (opcional)', 'section-landline tel-national', false]
     ];
     const phoneCountry = shipping.phoneCountry || 'EC';
-    app.innerHTML = `<div class="container">${stepper(1)}${heading('Tu pedido / 01', 'Datos de envío')}<p class="muted">Los campos con * son obligatorios. Usa datos ficticios para probar el demo.</p><p><strong>País de envío:</strong> Ecuador</p><div class="layout"><form id="shipping-form" novalidate><div id="form-error" class="form-error" role="alert"></div><div class="fields">${fields.map(([name, label, autocomplete, required]) => `<div class="field ${name === 'address' ? 'wide' : ''}"><label for="shipping-${name}">${label}${required ? ' <span aria-hidden="true">*</span>' : ''}</label><input id="shipping-${name}" name="${name}" type="${name === 'email' ? 'email' : 'text'}" autocomplete="${autocomplete}" ${name === 'postal' ? '' : 'maxlength="160"'} ${required ? 'required' : ''} aria-describedby="error-${name}${name === 'postal' ? ' help-postal' : ''}" value="${escapeHTML(shipping[name] || '')}">${name === 'postal' ? '<span class="field-help" id="help-postal">Consulte su Código Postal en: <a href="https://www.codigopostal.gob.ec/" target="_blank" rel="noopener">https://www.codigopostal.gob.ec/</a></span>' : ''}<span class="field-error" id="error-${name}"></span></div>`).join('')}
-    <div class="field"><label for="shipping-province">Provincia *</label><select id="shipping-province" name="province" autocomplete="address-level1" required aria-describedby="error-province">${provinceOptions(shipping.province)}</select><span class="field-error" id="error-province"></span></div>
-    <div class="phone-fields wide"><div class="field"><label for="shipping-phoneCountry">País del celular / prefijo</label><select id="shipping-phoneCountry" name="phoneCountry" aria-describedby="error-phoneCountry">${phoneCountryOptions(phoneCountry)}</select><span class="field-error" id="error-phoneCountry"></span></div><div class="field"><label for="shipping-mobile">Celular (opcional)</label><input id="shipping-mobile" name="mobile" type="text" inputmode="numeric" autocomplete="tel-national" maxlength="${phoneMaxLength(phoneCountry)}" value="${escapeHTML(shipping.mobile || '')}" aria-describedby="error-mobile help-mobile"><span class="field-error" id="error-mobile"></span></div><span class="field-help wide" id="help-mobile">Solo dígitos, sin prefijo. Para Ecuador: 9 dígitos empezando en 9, sin cero inicial. Máximo 15 dígitos contando el prefijo seleccionado.</span></div>
-    </div><div class="actions"><button type="submit">Continuar al pago simulado →</button><a class="text-link" href="#carrito">← Volver al carrito</a></div><p class="fine">Estos datos solo viven en esta pestaña y se borran al recargar o confirmar.</p></form><aside class="panel"><h2>Tu selección</h2>${summary(cart)}</aside></div></div>`;
+    app.innerHTML = `<div class="container">${stepper(1)}${heading('Tu pedido / 01', 'Datos de compra/contacto')}<p class="muted">Los campos con * son obligatorios. Usa datos ficticios para probar el demo.</p><p><strong>Contexto de la compra:</strong> Ecuador</p><div class="layout"><form id="shipping-form" novalidate><div id="form-error" class="form-error" role="alert"></div><div class="fields">${fields.map(([name, label, autocomplete, required]) => `<div class="field"><label for="shipping-${name}">${label}${required ? ' <span aria-hidden="true">*</span>' : ''}</label><input id="shipping-${name}" name="${name}" type="${name === 'email' ? 'email' : name === 'landline' ? 'tel' : 'text'}" autocomplete="${autocomplete}" maxlength="160" ${name === 'landline' ? 'placeholder="02 999 9999"' : ''} ${required ? 'required' : ''} aria-describedby="error-${name}" value="${escapeHTML(shipping[name] || '')}"><span class="field-error" id="error-${name}"></span></div>`).join('')}
+
+    <div class="phone-fields wide"><div class="field"><label for="shipping-phoneCountry">País del celular / prefijo</label><span class="phone-country-control"><span id="shipping-phoneCountry-flag" class="phone-country-flag" aria-hidden="true">${countryFlag(phoneCountry)}</span><select id="shipping-phoneCountry" name="phoneCountry" aria-describedby="error-phoneCountry">${phoneCountryOptions(phoneCountry)}</select></span><span class="field-error" id="error-phoneCountry"></span></div><div class="field"><label for="shipping-mobile">Celular *</label><input id="shipping-mobile" name="mobile" type="text" required inputmode="numeric" autocomplete="tel-national" maxlength="${phoneMaxLength(phoneCountry)}" value="${escapeHTML(shipping.mobile || '')}" aria-describedby="error-mobile help-mobile"><span class="field-error" id="error-mobile"></span></div><span class="field-help wide" id="help-mobile">Solo dígitos, sin prefijo. Para Ecuador: 9 dígitos empezando en 9, sin cero inicial. Máximo 15 dígitos contando el prefijo seleccionado.</span></div>
+    </div><div class="actions"><button type="submit">Continuar al pago →</button><a class="text-link" href="#carrito">← Volver al carrito</a></div><p class="fine">Estos datos solo viven en esta pestaña y se borran al recargar o confirmar.</p></form><aside class="panel"><h2>Tu selección</h2>${summary(cart)}</aside></div></div>`;
   } else if (route === 'pago') {
-    app.innerHTML = `<div class="container">${stepper(2)}${heading('Tu pedido / 02', 'Pago simulado')}<div class="layout"><div><div class="notice"><strong>Solo estamos probando el ritual.</strong><p>Esta compra es ficticia. No necesitamos datos bancarios y no se realizará ningún cobro, correo ni envío real.</p></div><h2>Datos de envío</h2><p class="shipping-summary">${escapeHTML(nameFields.map(key => shipping[key]).filter(Boolean).join(' '))}<br>Dirección: ${escapeHTML(shipping.address)}<br>${shipping.complement ? 'Complemento: ' + escapeHTML(shipping.complement) + '<br>' : ''}Ciudad: ${escapeHTML(shipping.city)}<br>Provincia: ${escapeHTML(provinces[shipping.province])}<br>${shipping.postal ? 'Código postal: ' + escapeHTML(shipping.postal) + '<br>' : ''}País de envío: Ecuador<br>Correo: ${escapeHTML(shipping.email)}${shipping.mobile ? '<br>Celular: +' + escapeHTML(dialCodes[shipping.phoneCountry]) + ' ' + escapeHTML(shipping.mobile) : ''}</p><a class="text-link" href="#envio">← Editar datos de envío</a></div><aside class="panel"><h2>Resumen del pedido</h2>${summary(cart)}<button class="button" data-pay>Simular pago y confirmar →</button><a class="text-link" href="#carrito">Editar carrito</a></aside></div></div>`;
+    app.innerHTML = `<div class="container">${stepper(2)}${heading('Tu pedido / 02', 'Pago')}<div class="notice"><strong>Esta compra es una simulación.</strong><p>No solicitamos tarjetas ni datos bancarios. No habrá cobros, correos ni entregas reales.</p></div><div class="layout"><div><form id="payment-form" novalidate><div id="form-error" class="form-error" role="alert"></div><fieldset class="checkout-options"><legend>Elige cómo pagar</legend><div class="segmented">${paymentOption('method', 'local', 'Pagar y retirar en el local')}${paymentOption('method', 'online', 'Pagar por línea')}</div></fieldset><p id="local-notice" ${payment.method === 'local' ? '' : 'hidden'}>Pago y retiro simulados en el local. No necesitas indicar un destino.</p><fieldset id="delivery-options" class="checkout-options" ${payment.method === 'online' ? '' : 'hidden'}><legend>Entrega del pedido simulado</legend><div class="segmented">${paymentOption('delivery', 'home', 'Enviar a casa')}${paymentOption('delivery', 'pickup', 'Retirar en el local')}</div></fieldset><div id="destination-panel">${destinationFields()}</div></form><h2>Contacto</h2><p class="shipping-summary">${escapeHTML(nameFields.map(key => shipping[key]).filter(Boolean).join(' '))}<br>Correo: ${escapeHTML(shipping.email)}<br>Celular: ${countryFlag(shipping.phoneCountry)} ${escapeHTML(phoneCountries.find(country => country.iso === shipping.phoneCountry)?.name || shipping.phoneCountry)} +${dialCodes[shipping.phoneCountry]} ${escapeHTML(shipping.mobile)}${shipping.landline ? '<br>Teléfono fijo (Ecuador): ' + escapeHTML(shipping.landline) : ''}</p><a class="text-link" href="#envio">← Editar contacto</a></div><aside class="panel"><h2>Resumen del pedido</h2>${summary(cart)}<p id="fulfillment-summary">${fulfillmentLabel(currentFulfillment())}</p><button class="button" type="submit" form="payment-form" data-pay>${paymentButtonLabel()}</button><a class="text-link" href="#carrito">Editar carrito</a></aside></div></div>`;
   } else if (route === 'confirmacion') {
-    app.innerHTML = `<div class="container confirmation">${stepper(3)}<div class="success-mark" aria-hidden="true">✓</div>${heading('Tu pedido / 03 · ' + order.reference, 'Pedido ficticio confirmado')}<p>Tu recorrido por la botica está completo.</p><div class="notice"><strong>Pago simulado completado. No es una compra real.</strong><p>No se ha cobrado dinero, enviado un correo ni creado un envío. Los datos de envío ya se han borrado.</p></div><div class="panel"><h2>Resumen de la simulación</h2>${summary(order.items)}</div><div class="actions"><a class="button" href="#inicio">Volver al inicio ↗</a><a class="text-link" href="#productos">Explorar la colección</a></div></div>`;
+    app.innerHTML = `<div class="container confirmation">${stepper(3)}<div class="success-mark" aria-hidden="true">✓</div>${heading('Tu pedido / 03 · ' + order.reference, 'Pedido ficticio confirmado')}<p>Tu recorrido por la botica está completo.</p><div class="notice"><strong>Pago simulado completado. No es una compra real.</strong><p>No se ha cobrado dinero, enviado un correo ni creado un envío. Los datos personales ya se han borrado.</p></div><div class="panel"><h2>Resumen de la simulación</h2>${summary(order.items)}<p>${fulfillmentLabel(order.fulfillment)}</p></div><div class="actions"><a class="button" href="#inicio">Volver al inicio ↗</a><a class="text-link" href="#productos">Explorar la colección</a></div></div>`;
   }
   document.title = app.querySelector('h1').textContent + ' | NUDO';
   if (!options.keepPosition) { app.querySelector('h1').focus({ preventScroll: true }); window.scrollTo(0, 0); }
@@ -219,7 +227,8 @@ app.addEventListener('click', event => {
     if (button.dataset.remove) cart = cart.filter(entry => entry !== item);
     else item.quantity = Math.min(99, Math.max(1, item.quantity + Number(change)));
     shippingReady = false;
-    if (!cart.length) shipping = {};
+    order = null;
+    if (!cart.length) { shipping = {}; payment = emptyPayment(); }
     saveCart();
     render({ keepPosition: true });
     const next = [...app.querySelectorAll('button')].find(candidate => candidate.dataset.id === id && candidate.dataset.change === change && !candidate.disabled)
@@ -227,17 +236,6 @@ app.addEventListener('click', event => {
       || app.querySelector('.cart-row button:not(:disabled)') || app.querySelector('h1');
     next.focus({ preventScroll: true });
     announce(`${button.dataset.remove ? item.product.name + ' eliminado.' : 'Cantidad actualizada: ' + item.quantity + '.'} Total del carrito: ${money(total(cart))}.`);
-  } else if (button.hasAttribute('data-pay') && cart.length && shippingReady && location.hash === '#pago') {
-    button.disabled = true;
-    orderNumber += 1;
-    order = { reference: 'DEMO-' + String(orderNumber).padStart(4, '0'), items: cart.map(item => ({ ...item })) };
-    cart = [];
-    shipping = {};
-    shippingReady = false;
-    saveCart();
-    // Replace the payment history entry so it cannot be submitted again with Back.
-    replaceRoute('confirmacion');
-    announce('Pedido ficticio confirmado. No se ha realizado ningún cobro.');
   }
 });
 function clearShippingError(input) {
@@ -248,13 +246,13 @@ function clearShippingError(input) {
 function editShipping(event) {
   const input = event.target;
   if (input.form?.id !== 'shipping-form') return;
-  const changedProvince = input.name === 'province' && shipping.province !== input.value;
   if (input.name === 'mobile') input.value = input.value.replace(/[^0-9]/g, '').slice(0, input.maxLength);
   shipping[input.name] = input.value;
   shippingReady = false;
   clearShippingError(input);
   if (input.name === 'phoneCountry') {
     const mobile = input.form.elements.mobile;
+    input.form.querySelector('#shipping-phoneCountry-flag').textContent = countryFlag(input.value);
     mobile.maxLength = phoneMaxLength(input.value);
     // Conservar el número completo y señalarlo si excede el nuevo límite, sin truncarlo.
     const error = shippingError(mobile, input.form);
@@ -264,14 +262,8 @@ function editShipping(event) {
       mobile.setAttribute('aria-invalid', 'true');
     }
   }
-  if (changedProvince) {
-    for (const name of ['city', 'postal', 'address', 'complement']) {
-      shipping[name] = '';
-      input.form.elements[name].value = '';
-      clearShippingError(input.form.elements[name]);
-    }
-  }
 }
+
 app.addEventListener('paste', event => {
   const input = event.target;
   if (input.form?.id !== 'shipping-form' || input.name !== 'mobile') return;
@@ -291,7 +283,7 @@ app.addEventListener('submit', event => {
   const form = event.target;
   let firstInvalid = null;
   for (const input of form.querySelectorAll('input, select')) {
-    input.value = input.value.trim();
+    if (input.name !== 'email') input.value = input.value.trim();
     const error = shippingError(input, form);
     document.querySelector('#error-' + input.name).textContent = error;
     if (error) { input.setAttribute('aria-invalid', 'true'); firstInvalid ||= input; }
@@ -301,6 +293,47 @@ app.addEventListener('submit', event => {
   shipping = Object.fromEntries(new FormData(form));
   shippingReady = true;
   location.hash = 'pago';
+});
+app.addEventListener('input', editPayment);
+app.addEventListener('change', editPayment);
+app.addEventListener('submit', event => {
+  if (event.target.id !== 'payment-form') return;
+  event.preventDefault();
+  if (!cart.length || !shippingReady || order || location.hash !== '#pago') return;
+  const form = event.target;
+  let firstInvalid = null;
+  if (currentFulfillment() === 'online-home') {
+    for (const input of form.querySelectorAll('#destination-panel input')) {
+      input.value = input.value.trim();
+      payment[input.name] = input.value;
+      const error = input.name === 'postal' && !/^[0-9]{6}$/.test(input.value)
+        ? 'Escribe un código postal de seis dígitos para el envío a casa.'
+        : input.required && !input.value ? 'Completa este campo para el envío a casa.'
+        : !input.validity.valid ? 'Revisa este campo.' : '';
+      clearShippingError(input);
+      if (error) {
+        document.querySelector('#error-' + input.name).textContent = error;
+        input.setAttribute('aria-invalid', 'true');
+        firstInvalid ||= input;
+      }
+    }
+  }
+  if (firstInvalid) {
+    document.querySelector('#form-error').textContent = 'Revisa el destino antes de simular el pago.';
+    firstInvalid.focus();
+    return;
+  }
+  document.querySelector('[data-pay]').disabled = true;
+  orderNumber += 1;
+  order = { reference: 'DEMO-' + String(orderNumber).padStart(4, '0'), items: cart.map(item => ({ ...item })), fulfillment: currentFulfillment() };
+  cart = [];
+  shipping = {};
+  shippingReady = false;
+  payment = emptyPayment();
+  saveCart();
+  // Sustituir Pago en el historial y vaciar el carrito impide repetir la simulación.
+  replaceRoute('confirmacion');
+  announce('Pedido ficticio confirmado. No se ha realizado ningún cobro.');
 });
 document.querySelector('.skip-link').addEventListener('click', event => { event.preventDefault(); app.focus(); app.scrollIntoView(); });
 window.addEventListener('hashchange', () => render());
