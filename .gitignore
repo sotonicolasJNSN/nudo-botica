@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+IA/
+benchmark_databases.py
+benchmark_results.csv
+requirements-benchmark.txt

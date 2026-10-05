@@ -1,0 +1,118 @@
+# Auditoría del e-commerce estático NUDO
+
+Fecha: 4 de octubre de 2026.
+
+## Alcance y método
+
+Revisión de `index.html`, `styles.css`, `script.js` y `README.md` para seguridad, privacidad, accesibilidad, usabilidad y preparación para GitHub Pages. Es una revisión acotada de código y lógica; no es una certificación, un pentest ni una declaración de conformidad normativa.
+
+Se leyeron los cuatro archivos completos, se siguieron los flujos de entrada, almacenamiento y representación HTML, y se contrastaron las afirmaciones del README. Se ejecutó `node --check script.js` y un arnés temporal por entrada estándar de Node con contextos `vm`, sin crear archivos de pruebas. Se consultó documentación oficial de GitHub y MDN para almacenamiento y despliegue. La inspección del directorio se limitó a identificar la estructura de publicación; no se revisó el contenido de otros proyectos ni se buscaron o reprodujeron secretos.
+
+Las referencias usan líneas de los archivos revisados. `styles.css:3` concentra muchas reglas; se indica también el selector para localizar la evidencia. Prioridades: P1 alta, P2 media, P3 baja. Se distingue entre un comportamiento confirmado, su impacto condicionado y una recomendación preventiva.
+
+## Resumen por área
+
+| Área | Resultado |
+| --- | --- |
+| Seguridad | Sin hallazgos confirmados de vulnerabilidades explotables en las entradas revisadas. No se confirmó XSS, extracción de datos ni ejecución de entradas del usuario. |
+| Privacidad | No se confirmó transmisión o almacenamiento persistente de datos de envío por la aplicación. Hay persistencia del carrito sin caducidad y un límite de borrado cuando falla el almacenamiento. |
+| Accesibilidad | Se confirmaron textos muy pequeños y una afirmación demasiado amplia sobre objetivos táctiles; no se declara incumplimiento WCAG a partir de esos datos. |
+| Usabilidad | Se confirmó posibilidad de sobrescritura del carrito entre pestañas y pérdida de visibilidad del aviso superior de demo en móvil. |
+| GitHub Pages | Los enlaces relativos y rutas hash son compatibles en principio. Falta una guía de publicación y delimitación de los archivos publicables; el despliegue efectivo no se verificó. |
+
+Sin hallazgos confirmados de prioridad P1 dentro de este alcance. Esta ausencia no demuestra ausencia de vulnerabilidades.
+
+## Hallazgos priorizados
+
+### H01 — P2 · Carritos de distintas pestañas pueden sobrescribirse
+
+**Evidencia:** `script.js:48,55-71` carga el carrito una sola vez y guarda una instantánea completa. Los manejadores de `script.js:127-201` no incluyen sincronización mediante el evento `storage`.
+
+**Comprobación:** dos contextos aislados partieron del mismo carrito. Uno guardó un carrito vacío; el otro volvió a guardar su instantánea antigua. Se verificó que esa segunda escritura contenía de nuevo el producto. Esto reproduce la lógica de sobrescritura, no constituye una prueba de navegador con dos pestañas.
+
+**Impacto:** otra pestaña puede reintroducir productos tras vaciar o confirmar, o perder cambios de cantidades. Afecta la coherencia de la simulación; no produce cobros.
+
+**Recomendación:** manejar cambios de almacenamiento, revalidar el contenido con el catálogo y actualizar el estado visible. Invalidar la preparación del envío cuando cambie el carrito. Para escrituras simultáneas, definir una política de conflictos; escuchar el evento por sí solo no garantiza atomicidad. Comprobar vaciado, confirmación y edición concurrentes en dos pestañas.
+
+### H02 — P2 · Un fallo al guardar impide garantizar el borrado del carrito persistente
+
+**Evidencia:** `script.js:69-73` captura errores de escritura, mantiene la aplicación en memoria y anuncia una advertencia. Al confirmar, `script.js:163-166` vacía el carrito en memoria y llama a ese guardado. No puede eliminar el valor persistente anterior si la escritura falla.
+
+**Impacto condicionado:** si ya existía un carrito guardado y una escritura posterior es rechazada, puede quedar la versión anterior y reaparecer cuando vuelva a ser legible. La advertencia afirma que el carrito se conservará solo durante la sesión, sin explicar que podría quedar una versión antigua. El envío sí se borra de las variables de la aplicación; este hallazgo no implica persistencia de datos personales de envío.
+
+**Comprobación:** se probaron excepciones de lectura y escritura: no interrumpen la lógica y activan `storageWarning`. La conservación del valor previo se deduce del camino de error; no se reprodujo una política real de bloqueo en navegador.
+
+**Recomendación:** devolver el resultado del guardado y distinguir entre cambios en memoria y persistencia confirmada. Mostrar una advertencia explícita sobre el posible carrito antiguo y cómo borrarlo desde el navegador cuando el acceso vuelva a estar disponible. No prometer borrado persistente cuando la API rechaza la operación.
+
+### H03 — P3 · Carrito sin caducidad ni explicación visible de su duración
+
+**Evidencia:** `script.js:44,55-71` usa `nudo-cart-v1`, sin fecha de creación, expiración ni ámbito específico del sitio. `README.md:28` documenta la persistencia; las vistas del carrito no explican su duración. Se almacenan únicamente identificadores y cantidades.
+
+**Impacto:** una selección puede reaparecer en sesiones posteriores o quedar visible para otra persona que use el mismo perfil del navegador. Si se alojaran otras aplicaciones con la misma clave y origen, podrían compartir o sobrescribir ese valor; no se confirmó que existan. El almacenamiento se delimita por origen, no por ruta, según [MDN: localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage).
+
+**Recomendación:** añadir información breve en la interfaz sobre qué se conserva y un control para vaciar el carrito completo. Definir una caducidad acorde al demo y una clave específica del proyecto si comparte origen. No guardar datos de envío en esa estructura.
+
+### H04 — P3 · Legibilidad reducida y alcance excesivo de la afirmación sobre controles táctiles
+
+**Evidencia:** `styles.css:15,19,26-29,41` fija textos del inicio en 6–11 px, incluidos subtítulos y nombres de mini productos. Parte de los textos pertenece a ilustraciones, pero no todos. `README.md:34` afirma controles táctiles de al menos 44 px. Hay mínimos explícitos en botones y algunos enlaces, pero `styles.css:3` no garantiza ese tamaño para `.card h3 a` ni `.cart-row h2 a`.
+
+**Impacto:** dificultad potencial de lectura y activación de enlaces pequeños, especialmente en móvil. La ausencia de un mínimo CSS no prueba por sí sola un objetivo efectivo menor de 44 px; el tamaño renderizado y el espaciado deben medirse. Tampoco un tamaño de fuente pequeño basta para declarar incumplimiento de WCAG.
+
+**Recomendación:** aumentar textos informativos pequeños, comprobar objetivos efectivos y ajustar la afirmación del README a lo medido. Validar teclado, zoom de 200 % y 400 %, reflujo a 320 px y lector de pantalla. No reducir las etiquetas accesibles del arte para compensar problemas visuales.
+
+### H05 — P3 · El aviso superior de demo desaparece en móvil
+
+**Evidencia:** `index.html:14` sitúa «DEMO · SIN COBROS REALES» dentro de `.announcement span`; `styles.css:6` lo oculta con `display:none` a anchuras de hasta 700 px.
+
+**Impacto:** quien llega al inicio desde un móvil pierde ese aviso temprano. El pie y el checkout mantienen avisos de simulación (`index.html:26`, `script.js:114,117,119,121`), por lo que no se afirma que el sitio oculte totalmente su condición ficticia.
+
+**Recomendación:** conservar una indicación breve y visible de demo en la cabecera móvil y verificar su lectura sin desplazarse hasta el pie.
+
+### H06 — P3 · Publicación en GitHub Pages sin procedimiento documentado ni conjunto de archivos delimitado
+
+**Evidencia:** el README explica apertura local y servidor estático, pero no la configuración de Pages. En esta copia no se identificó `.git`, `.github`, `CNAME` ni `.nojekyll` en la raíz. También hay archivos y directorios ajenos al sitio junto a los cuatro archivos revisados; no se inspeccionó su contenido.
+
+**Impacto condicionado:** publicar indiscriminadamente el directorio podría incluir material innecesario. No se confirmó que esté publicado ni que contenga información sensible. La ausencia de un workflow o `.nojekyll` no demuestra por sí misma un fallo: Pages admite publicación desde rama o mediante Actions. Véase [GitHub: configurar la fuente de publicación](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site).
+
+**Recomendación:** preparar un directorio o artefacto con una lista explícita de archivos públicos: `index.html`, `styles.css` y `script.js`; incluir documentación solo si se desea hacerla pública. Documentar la rama y carpeta realmente seleccionadas, o el workflow empleado. Si se publica desde rama, elegir raíz o `/docs` según la configuración real. Revisar el artefacto resultante antes de publicar. No se propone ninguna URL de producción ni se realizó despliegue.
+
+## Comprobaciones realizadas y controles existentes
+
+- **Sintaxis:** `node --check script.js` terminó correctamente.
+- **Lógica aislada:** 12 aserciones correctas: JSON malformado, objeto, `null` y entradas desconocidas; descarte de duplicados y cantidades fuera de rango o no enteras; recuperación del precio desde el catálogo; serialización limitada a identificador/cantidad; 22 identificadores únicos; escape de los cinco caracteres HTML; excepciones de lectura/escritura; vaciado y posterior guardado de estado obsoleto. El primer intento del arnés tuvo un error de comillas propio de la prueba; se corrigió y se ejecutó de nuevo completo. No era un error de `script.js`.
+- **Inyección:** `escapeHTML` (`script.js:47`) se usa en valores del formulario y resumen de envío (`117,119`). Las rutas se comparan con valores permitidos (`85-94`); no se insertan como HTML arbitrario. Las plantillas con `innerHTML` también incluyen datos del catálogo fijo: no se confirmó una entrada externa que controle ese catálogo. Si se externaliza, habrá que revisar nuevamente esos puntos.
+- **Privacidad y red:** en los cuatro archivos no se identificaron analítica, cookies, llamadas a API, `fetch`, XHR, WebSocket, recursos remotos ni campos bancarios. El formulario intercepta el envío con `preventDefault` (`183`). Los datos de envío permanecen en variables y DOM, se reinician al confirmar o vaciar el carrito y no aparecen en `saveCart`.
+- **Simulación:** los controles de ruta impiden pago sin carrito o envío validado y confirmación sin pedido (`92-94`). Confirmar deshabilita el botón, limpia estado y sustituye la ruta (`159-169`). Son controles de flujo del cliente, no autorización de un servidor. Los precios manipulables localmente no son un fraude de pago en este demo sin cobros.
+- **Accesibilidad positiva:** idioma español, estructura principal, salto al contenido, región de estado (`index.html:2,13,17,23-24`); campos etiquetados, errores asociados, foco en primer campo inválido (`script.js:117,186-193`); foco al cambiar de vista y tras cambios del carrito (`124,154-158`); foco visible y movimiento reducido (`styles.css:3,8`). Esto verifica implementación, no eficacia con toda tecnología de asistencia.
+- **Recursos y rutas:** CSS art y fuentes del sistema; `index.html:9-10` usa rutas relativas. La navegación por fragmentos no exige reescrituras de servidor para cada vista. No se identificó una ruta absoluta de recurso que rompa un sitio de proyecto bajo un subdirectorio.
+- **Documentación:** se leyó en UTF-8. Los caracteres extraños de una lectura inicial con la codificación de consola no se reportan como corrupción de archivos. Las pruebas visuales históricas que declara el README no se consideran repetidas en esta revisión.
+
+## Limitaciones
+
+No se ejecutó un navegador, un lector de pantalla ni una herramienta automática de accesibilidad. No se midieron contraste, objetivos táctiles, reflujo, recortes de foco ni dimensiones visuales. No se probó el formulario con la validación nativa real, autocompletado, historial completo o caché de navegación. Los contextos Node simularon almacenamiento y un DOM mínimo, no un navegador.
+
+No se accedió a configuración remota de GitHub, registros de despliegue, DNS, certificados, cabeceras HTTP ni un sitio publicado. Por ello no se afirma que falten HTTPS o cabeceras de seguridad. No hay CSP declarada en `index.html`, pero su ausencia no demuestra una explotación; una política restrictiva puede evaluarse como defensa adicional antes de incorporar fuentes externas.
+
+El uso de `autocomplete` en el formulario (`script.js:116-117`) permite asistencia del navegador. Que la aplicación no persista ni transmita esos valores no garantiza el comportamiento del autocompletado, extensiones o equipo. El borrado de variables tampoco es una garantía de borrado forense. Las solicitudes necesarias para servir HTML, CSS y JavaScript y los posibles registros del alojamiento quedan fuera de la afirmación «sin llamadas a API».
+
+No se auditó el resto del directorio, dependencias ajenas al sitio, infraestructura o historial de versiones. No se realizó una búsqueda exhaustiva de secretos ni se incluyeron valores sensibles.
+
+## Recomendaciones de cierre
+
+1. Corregir sincronización y mensajes de fallo de persistencia; probar dos pestañas y fallos de escritura antes de dar por fiable el vaciado.
+2. Mejorar aviso móvil, legibilidad e información de persistencia; contrastar las afirmaciones de accesibilidad con medidas reales.
+3. Publicar solo el conjunto necesario. En el despliegue real, verificar carga de los tres archivos, navegación hash, recarga, ausencia de recursos inesperados y configuración HTTPS disponible, sin asumir una URL o estado de publicación.
+4. Repetir el flujo con datos ficticios en móvil y escritorio, teclado y lector de pantalla. Registrar resultados nuevos por separado de los históricos del README.
+
+Como referencia para H01, [MDN: evento storage](https://developer.mozilla.org/en-US/docs/Web/API/Window/storage_event) documenta su notificación a otros contextos del mismo origen.
+
+## Integridad de los archivos de entrada
+
+Se conservaron los cuatro archivos existentes. Huellas SHA-256 tomadas durante la revisión y usadas para la verificación final:
+
+| Archivo | SHA-256 |
+| --- | --- |
+| index.html | a307fd78e649a8ede9a32d0ba396123c4eb0ea3f74d630bb5d97c517bac82e85 |
+| styles.css | 4f7eeb6aa82a72d5a1a15791fcf1d2f8ed40234c8faadc55f147adbf6d375222 |
+| script.js | 9281a5ed374630327679ea341eb3d34bef0f38814b6f9c897c711e2e8fb2ca26 |
+| README.md | a386f490154ef65ae3247a2fde991aec3e249eac1e46098dd78e72db26ad982f |
