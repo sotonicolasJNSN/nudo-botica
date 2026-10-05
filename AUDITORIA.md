@@ -1,6 +1,6 @@
 # Auditoría del e-commerce estático NUDO
 
-Fecha: 4 de octubre de 2026.
+Auditoría original: 4 de octubre de 2026. Revisión documental del commit publicado `70597e0`: 5 de octubre de 2026.
 
 ## Alcance y método
 
@@ -72,7 +72,7 @@ Sin hallazgos confirmados de prioridad P1 dentro de este alcance. Esta ausencia 
 
 ### H06 — Cerrado · Estado posterior de publicación en GitHub Pages
 
-**Estado posterior:** el repositorio [sotonicolasJNSN/nudo-botica](https://github.com/sotonicolasJNSN/nudo-botica) es público. La fuente de GitHub Pages es la rama `main`, ruta `/`. La API Pages reportó build status `built`, sin error, y HTTPS enforced `true`. El sitio responde en [https://sotonicolasjnsn.github.io/nudo-botica/](https://sotonicolasjnsn.github.io/nudo-botica/) y [AUDITORIA.md](https://github.com/sotonicolasJNSN/nudo-botica/blob/main/AUDITORIA.md) es accesible en el repositorio.
+**Estado posterior:** el repositorio [sotonicolasJNSN/nudo-botica](https://github.com/sotonicolasJNSN/nudo-botica) es público. La fuente de GitHub Pages es la rama `main`, ruta `/`. Para el commit `70597e09c612851efcf48118d8302d34e1d06784` (`70597e0`), Pages reportó build status `built` y error `null`. La comprobación histórica de configuración registró HTTPS enforced `true`. El sitio responde en [https://sotonicolasjnsn.github.io/nudo-botica/](https://sotonicolasjnsn.github.io/nudo-botica/) y [AUDITORIA.md](https://github.com/sotonicolasJNSN/nudo-botica/blob/main/AUDITORIA.md) es accesible en el repositorio.
 
 **Alcance del cierre:** la revisión se limitó a seis archivos explícitos. Se excluyeron `.venv`, `IA` y `benchmarks` mediante staging explícito y `.gitignore`. Con las comprobaciones posteriores registradas, queda superada la afirmación de que la publicación estaba sin verificar y el conjunto de archivos sin delimitar. Este cierre no acredita pruebas funcionales, visuales o de seguridad adicionales ni modifica los hallazgos H01–H05.
 
@@ -83,7 +83,7 @@ Sin hallazgos confirmados de prioridad P1 dentro de este alcance. Esta ausencia 
 - **Sintaxis:** `node --check script.js` terminó correctamente.
 - **Lógica aislada:** 12 aserciones correctas: JSON malformado, objeto, `null` y entradas desconocidas; descarte de duplicados y cantidades fuera de rango o no enteras; recuperación del precio desde el catálogo; serialización limitada a identificador/cantidad; 22 identificadores únicos; escape de los cinco caracteres HTML; excepciones de lectura/escritura; vaciado y posterior guardado de estado obsoleto. El primer intento del arnés tuvo un error de comillas propio de la prueba; se corrigió y se ejecutó de nuevo completo. No era un error de `script.js`.
 - **Inyección:** `escapeHTML` (`script.js:47`) se usa en valores del formulario y resumen de envío (`117,119`). Las rutas se comparan con valores permitidos (`85-94`); no se insertan como HTML arbitrario. Las plantillas con `innerHTML` también incluyen datos del catálogo fijo: no se confirmó una entrada externa que controle ese catálogo. Si se externaliza, habrá que revisar nuevamente esos puntos.
-- **Privacidad y red:** en los cuatro archivos no se identificaron analítica, cookies, llamadas a API, `fetch`, XHR, WebSocket, recursos remotos ni campos bancarios. El formulario intercepta el envío con `preventDefault` (`183`). Los datos de envío permanecen en variables y DOM, se reinician al confirmar o vaciar el carrito y no aparecen en `saveCart`.
+- **Privacidad y red (auditoría original):** en los cuatro archivos revisados entonces no se identificaron analítica, cookies, llamadas a API, `fetch`, XHR, WebSocket, recursos remotos ni campos bancarios. En `70597e0` sí existen tres inputs de tarjeta exclusivamente de prueba para online y flagcdn es el único recurso externo automático. El formulario intercepta el envío con `preventDefault` (`183`). Los datos de envío permanecen en variables y DOM, se reinician al confirmar o vaciar el carrito y no aparecen en `saveCart`.
 - **Simulación:** los controles de ruta impiden pago sin carrito o envío validado y confirmación sin pedido (`92-94`). Confirmar deshabilita el botón, limpia estado y sustituye la ruta (`159-169`). Son controles de flujo del cliente, no autorización de un servidor. Los precios manipulables localmente no son un fraude de pago en este demo sin cobros.
 - **Accesibilidad positiva:** idioma español, estructura principal, salto al contenido, región de estado (`index.html:2,13,17,23-24`); campos etiquetados, errores asociados, foco en primer campo inválido (`script.js:117,186-193`); foco al cambiar de vista y tras cambios del carrito (`124,154-158`); foco visible y movimiento reducido (`styles.css:3,8`). Esto verifica implementación, no eficacia con toda tecnología de asistencia.
 - **Recursos y rutas:** CSS art y fuentes del sistema; `index.html:9-10` usa rutas relativas. La navegación por fragmentos no exige reescrituras de servidor para cada vista. No se identificó una ruta absoluta de recurso que rompa un sitio de proyecto bajo un subdirectorio.
@@ -94,26 +94,31 @@ Sin hallazgos confirmados de prioridad P1 dentro de este alcance. Esta ausencia 
 Las cuatro verificaciones públicas históricas registradas en navegador real pasaron:
 
 - URL pública de Pages accesible; Home con 5 accesos y 5 secciones.
-- Sin recursos externos cargados durante la comprobación.
+- En aquella comprobación histórica no se cargaron recursos externos. En `70597e0`, flagcdn es el único recurso externo automático.
 - La ruta `#productos/coleccion-shampoos` abre 4 productos y el detalle de shampoo funciona.
 - Añadir al carrito funciona; la recarga conserva 1 unidad y eliminarla deja el contador en 0.
 
-Tras el despliegue del commit `281a7e0`, con GitHub Pages build status `built`, se observó en Chrome la carga y estructura básica del checkout publicado:
+## Revisión pública del commit 70597e0 — 5 de octubre de 2026
 
-- La URL pública de Pages responde.
-- En `#envio` se muestran exactamente tres pasos.
-- Los inputs tienen los atributos `name`: `firstName`, `secondName`, `firstSurname`, `secondSurname`, `email`, `landline` (opcional) y `mobile` (requerido).
-- El país predeterminado es `EC`; la bandera 🇪🇨 aparece en un `span` visible y la opción es «🇪🇨 Ecuador (+593)».
-- No hay inputs de provincia ni cantón.
-- El carrito de prueba se limpió después.
+GitHub Pages confirmó el build del commit **`70597e09c612851efcf48118d8302d34e1d06784`** (`70597e0`), status **`built`**, error **`null`**. La versión está publicada en [NUDO](https://sotonicolasjnsn.github.io/nudo-botica/). En el navegador público se comprobó:
 
-La comprobación reciente es solo una prueba pública de carga y estructura; no acredita pruebas funcionales en producción de todas las variantes de pago y entrega, que se probaron localmente. Estas verificaciones complementan la auditoría original y no modifican H01–H05. No constituyen un pentest ni una revisión integral de accesibilidad. Siguen pendientes pruebas públicas más profundas del checkout, accesibilidad asistiva, zoom, caché/CDN y hardening.
+- Checkout de exactamente tres pasos.
+- Pago local predeterminado: CTA **Continuar**, cero inputs de tarjeta o destino y aviso **Pago pendiente en el local**, con ubicación **12 de Octubre y Veintimilla**.
+- Al cambiar a online aparecen tres inputs de tarjeta de prueba y el aviso **DEMO: no uses datos reales**; con entrega home aparecen cuatro campos de destino.
+- Al cambiar a online/pickup desaparece el destino; el checkout conserva tres pasos.
+- El carrito de prueba se borró al terminar.
 
-## Actualización local: tarjeta de prueba, tickets y bandera CDN — 5 de octubre de 2026
+La comprobación pública terminó ahí: no se completaron en producción los pagos simulados ni la batería de validaciones de tarjeta. Los tickets local-pickup (pending), online-pickup y online-home, los rechazos de PAN/fecha vencida/CVV, el envío de $5, CP requerido solo para home y la ausencia de persistencia sensible se comprobaron en Chrome **local**, con los datos de tarjeta de prueba publicados. No se afirma pago real, certificación ni prueba exhaustiva de producción.
 
-Esta sección describe la versión actual y sustituye las reglas y resultados del checkout anterior. Las secciones previas son evidencia histórica: sus menciones de cero recursos externos, ausencia de campos de tarjeta o bandera Unicode dentro de opciones **no describen esta versión**. Se conservan los hallazgos generales H01–H04 y el estado histórico de publicación H06. El aviso superior de demo se mantiene ahora visible en móvil por CSS (corrección de H05; no certifica accesibilidad).
+El CDN flagcdn es el único recurso externo automático. La bandera actual es una imagen fuera del selector, con prefijo separado y opciones de solo nombre; sustituye la descripción anterior de bandera Unicode dentro de la opción.
 
-Alcance: solo `script.js`, `styles.css`, `README.md` y `AUDITORIA.md`; `index.html` intacto. No se despliega esta actualización. **regla_runtime:** se permite exclusivamente el recurso automático externo de banderas `https://flagcdn.com/w40/${iso.toLowerCase()}.png`. Es un CDN en runtime y recibe la solicitud de imagen; no se afirma cero recursos externos. No se añadieron librerías, procesadores, fetch, analítica ni consultas automáticas de direcciones/teléfonos. La ayuda postal sigue siendo un enlace manual.
+Estas verificaciones complementan la auditoría original y no constituyen un pentest ni una revisión integral de accesibilidad. Se conservan H01–H06, con la evolución de H05 indicada abajo. Siguen pendientes pruebas públicas más profundas del checkout, accesibilidad asistiva, zoom, caché/CDN y hardening.
+
+## Versión publicada 70597e0: tarjeta de prueba, tickets y bandera CDN — 5 de octubre de 2026
+
+Esta sección describe la versión actual y sustituye las reglas y resultados del checkout anterior. Las secciones previas son evidencia histórica: sus menciones de cero recursos externos, ausencia de campos de tarjeta o bandera Unicode dentro de opciones **no describen esta versión**. Se conservan H01–H06 como hallazgos de la auditoría original, con el estado de publicación actualizado en H06. El aviso superior de demo se mantiene ahora visible en móvil por CSS (corrección de H05; no certifica accesibilidad).
+
+Alcance de esta revisión documental: únicamente `README.md` y `AUDITORIA.md`; sin cambios en `script.js`, `styles.css` ni `index.html`. La versión `70597e0` ya está publicada, con build `built` y error `null`. **regla_runtime:** se permite exclusivamente el recurso automático externo de banderas `https://flagcdn.com/w40/${iso.toLowerCase()}.png`. Es un CDN en runtime y recibe la solicitud de imagen; no se afirma cero recursos externos. No se añadieron librerías, procesadores, fetch, analítica ni consultas automáticas de direcciones/teléfonos. La ayuda postal sigue siendo un enlace manual.
 
 El checkout conserva exactamente **Datos de compra/contacto → Pago → Confirmación**. Carrito/contacto muestran «Se define en Pago». Local predeterminado tiene CTA «Continuar», no presenta tarjeta/destino y emite ticket con **Pago pendiente en el local** y **12 de Octubre y Veintimilla**, sin afirmar pago confirmado. Online/pickup requiere tarjeta de prueba, no presenta destino/CP y emite ticket de retiro con ubicación y nota **pago en línea simulado**. Online/home solicita Ciudad, Dirección, Complemento opcional y CP; solamente su submit normaliza espacios exteriores y exige seis dígitos. Tiene cargo fijo $5.00 USD (5,00 US$ en pantalla). Retiros: cero/No aplica. La función única `deliveryFee` determina el cargo y actualiza inmediatamente los totales al cambiar modalidad.
 
@@ -125,7 +130,7 @@ Errores inline con aria-describedby, aria-invalid y foco al primer inválido; ca
 
 País: select nativo con 245 regiones, opciones solo nombre localizado, Ecuador por defecto. Fuera del select hay imagen real de 24 × 18, alt descriptivo, loading eager y referrerpolicy no-referrer; se actualizan src/alt al seleccionar, con onerror a countryFlag Unicode/global. Prefijo separado (+593). Metadatos telefónicos locales conservados; no se instala libphonenumber. Los indicadores de fallback dependen de fuentes/plataforma.
 
-### Resultados ejecutados en esta versión
+### Resultados completos ejecutados en Chrome local para esta versión
 
 `node --check script.js` y `git diff --check`: correctos. Chrome **154.0.8037.93 headless**, perfil temporal, servidor local con MIME/charset UTF-8 y automatización CDP: **73 aserciones pasaron**.
 
@@ -139,7 +144,7 @@ País: select nativo con 245 regiones, opciones solo nombre localizado, Ecuador 
 - 390 × 844 y 1237 × 844: sin overflow horizontal en contacto, local, online/home, online/pickup y confirmación; tres pasos conservados.
 - Cero excepciones JavaScript. Tráfico de página observado: solo GET locales y flagcdn, sin datos de formulario/PII/tarjeta en URL o payload. Datos exclusivamente ficticios.
 
-El primer arnés no logró cargar la página; se corrigió el servidor de pruebas con charset UTF-8 explícito y la ejecución completa pasó. No se añaden pruebas visuales manuales, lector de pantalla, zoom, contraste, autofill ni cobertura de otros navegadores. No se afirma que estas pruebas cierren H01–H04, certifiquen seguridad o acrediten un despliegue público. Los registros anteriores de GitHub Pages corresponden a versiones anteriores.
+El primer arnés no logró cargar la página; se corrigió el servidor de pruebas con charset UTF-8 explícito y la ejecución completa pasó. No se añaden pruebas visuales manuales, lector de pantalla, zoom, contraste, autofill ni cobertura de otros navegadores. Estas pruebas locales no cierran H01–H04 ni certifican seguridad. El despliegue público de `70597e0` se acredita por el build indicado y la comprobación pública acotada de la sección anterior; no por esta batería local.
 
 ## Limitaciones
 

@@ -9,7 +9,7 @@ Prototipo de tienda de cuidado capilar y personal en HTML, CSS y JavaScript nati
 - `styles.css`: presentación adaptable, controles nativos y bandera/prefijo separados.
 - `README.md` y `AUDITORIA.md`: uso, alcance, evidencias y limitaciones.
 
-El alcance de esta actualización comprende únicamente `script.js`, `styles.css`, `README.md` y `AUDITORIA.md`. **regla_runtime:** el único recurso externo automático es la imagen de bandera en `https://flagcdn.com/w40/${iso.toLowerCase()}.png`. Sí es un CDN externo en runtime; no se afirma cero recursos externos. No hay librerías remotas, analítica, API de pago ni consultas automáticas de teléfonos o direcciones. El enlace de ayuda al portal de código postal se abre solo por acción del usuario.
+Esta revisión documental del commit publicado `70597e0` modifica únicamente `README.md` y `AUDITORIA.md`; no altera código. **regla_runtime:** el único recurso externo automático es la imagen de bandera en `https://flagcdn.com/w40/${iso.toLowerCase()}.png`. Sí es un CDN externo en runtime; no se afirma cero recursos externos. No hay librerías remotas, analítica, API de pago ni consultas automáticas de teléfonos o direcciones. El enlace de ayuda al portal de código postal se abre solo por acción del usuario.
 
 Abre `index.html` en un navegador moderno o sirve la carpeta con un servidor estático local. Las banderas gráficas necesitan conexión; si fallan, se muestra `countryFlag` Unicode o un símbolo global. La tienda no necesita instalar dependencias. Rutas principales: `#inicio`, `#productos`, `#detalle/shampoo`, `#carrito`, `#envio`, `#pago`, `#confirmacion`; se conservan filtros por categoría y colección.
 
@@ -62,4 +62,18 @@ Confirmar vacía el carrito, contacto y borrador; sustituye Pago en el historial
 - Viewports 390 × 844 y 1237 × 844 sin overflow horizontal en contacto, local, online/home, online/pickup y confirmación.
 - Cero excepciones JavaScript. Solicitudes observadas exclusivamente GET locales y al CDN flagcdn, sin payload de formulario ni PII/tarjeta en URL. No se usaron datos reales.
 
-El primer intento del arnés no cargó correctamente; la ejecución completa pasó después de servir tipos MIME con charset UTF-8 explícito. Estas son pruebas locales automatizadas, no una certificación ni un nuevo despliegue. No se verificaron lector de pantalla, zoom, contraste, autocompletado real, otros navegadores ni entrega/pago reales. Las comprobaciones históricas de producción corresponden a versiones anteriores y se conservan en AUDITORIA.
+El primer intento del arnés no cargó correctamente; la ejecución completa pasó después de servir tipos MIME con charset UTF-8 explícito. Estas son pruebas locales automatizadas de la versión publicada, no una certificación ni pruebas completas del sitio público. No se verificaron lector de pantalla, zoom, contraste, autocompletado real, otros navegadores ni entrega/pago reales. La comprobación pública de esta versión se limita a lo registrado a continuación; las comprobaciones históricas se conservan en AUDITORIA.
+
+## Revisión pública del commit 70597e0 — 5 de octubre de 2026
+
+GitHub Pages confirmó el build del commit **`70597e09c612851efcf48118d8302d34e1d06784`** (`70597e0`), status **`built`**, error **`null`**. La versión está publicada en [NUDO](https://sotonicolasjnsn.github.io/nudo-botica/). En el navegador público se comprobó:
+
+- Checkout de exactamente tres pasos.
+- Pago local predeterminado: CTA **Continuar**, cero inputs de tarjeta o destino y aviso **Pago pendiente en el local**, con ubicación **12 de Octubre y Veintimilla**.
+- Al cambiar a online aparecen tres inputs de tarjeta de prueba y el aviso **DEMO: no uses datos reales**; con entrega home aparecen cuatro campos de destino.
+- Al cambiar a online/pickup desaparece el destino; el checkout conserva tres pasos.
+- El carrito de prueba se borró al terminar.
+
+La comprobación pública terminó ahí: no se completaron en producción los pagos simulados ni la batería de validaciones de tarjeta. Los tickets local-pickup (pending), online-pickup y online-home, los rechazos de PAN/fecha vencida/CVV, el envío de $5, CP requerido solo para home y la ausencia de persistencia sensible se comprobaron en Chrome **local**, con los datos de tarjeta de prueba publicados. No se afirma pago real, certificación ni prueba exhaustiva de producción.
+
+El CDN flagcdn es el único recurso externo automático. La bandera actual es una imagen fuera del selector, con prefijo separado y opciones de solo nombre; sustituye la descripción anterior de bandera Unicode dentro de la opción.
