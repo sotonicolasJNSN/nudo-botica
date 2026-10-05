@@ -67,7 +67,7 @@ Las pruebas automatizan acciones DOM mediante Chrome DevTools Protocol; el pegad
 
 ### Verificaciones manuales observadas
 
-Según las observaciones manuales aportadas para esta versión:
+Según las observaciones manuales locales aportadas para esta versión:
 
 - Pago y retiro local permite confirmar sin destino.
 - Pago online con envío a casa bloquea la confirmación con CP inválido y permite confirmar con CP válido de seis dígitos y los demás campos requeridos completos.
@@ -79,4 +79,17 @@ Según las observaciones manuales aportadas para esta versión:
 
 Estas observaciones corresponden a la simulación: no acreditan verificación real de teléfono, pago o envío real, pruebas con lector de pantalla ni cumplimiento legal certificado.
 
-El alcance permitido de esta versión comprende exactamente cuatro archivos: `script.js`, `styles.css`, `README.md` y `AUDITORIA.md`. Esta corrección documental modifica únicamente `README.md` y `AUDITORIA.md`; `index.html` permanece intacto. Los cambios están preparados para publicar; aún no se confirma un nuevo build de GitHub Pages para esta versión.
+El alcance permitido de esta versión comprende exactamente cuatro archivos: `script.js`, `styles.css`, `README.md` y `AUDITORIA.md`. Esta corrección documental modifica únicamente `README.md` y `AUDITORIA.md`; `index.html` permanece intacto. El commit `281a7e0` está desplegado y GitHub Pages reportó build status `built`, sin error, para `281a7e0efeddec5e2d5bdd83e838307a26f36f50`.
+
+### Comprobación en producción posterior al despliegue de `281a7e0`
+
+Según la prueba del sitio público en Chrome aportada por el usuario, la comprobación en producción fue de **carga y estructura básica del contacto**:
+
+- La URL pública de Pages responde.
+- En `#envio` se muestran exactamente tres pasos.
+- Los inputs tienen los atributos `name`: `firstName`, `secondName`, `firstSurname`, `secondSurname`, `email`, `landline` (opcional) y `mobile` (requerido).
+- El país predeterminado es `EC`; la bandera 🇪🇨 aparece en un `span` visible y la opción es «🇪🇨 Ecuador (+593)».
+- No hay inputs de provincia ni cantón.
+- El carrito de prueba se limpió después.
+
+Esta comprobación no acredita pruebas funcionales en producción de todos los modos de pago y entrega; esos modos se probaron localmente.

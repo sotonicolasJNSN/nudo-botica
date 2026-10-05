@@ -8,7 +8,7 @@ Revisión de `index.html`, `styles.css`, `script.js` y `README.md` para segurida
 
 Se leyeron los cuatro archivos completos, se siguieron los flujos de entrada, almacenamiento y representación HTML, y se contrastaron las afirmaciones del README. Se ejecutó `node --check script.js` y un arnés temporal por entrada estándar de Node con contextos `vm`, sin crear archivos de pruebas. Se consultó documentación oficial de GitHub y MDN para almacenamiento y despliegue. La inspección del directorio se limitó a identificar la estructura de publicación; no se revisó el contenido de otros proyectos ni se buscaron o reprodujeron secretos.
 
-El cierre posterior se limitó a seis archivos explícitos, excluyendo `.venv`, `IA` y `benchmarks` mediante staging explícito y `.gitignore`. Este cierre no amplía las comprobaciones de código descritas arriba; el estado de publicación consignado en H06 corresponde a la información posterior aportada.
+El cierre posterior se limitó a seis archivos explícitos, excluyendo `.venv`, `IA` y `benchmarks` mediante staging explícito y `.gitignore`. Este cierre no amplía las comprobaciones de código descritas arriba; el estado de publicación consignado en H06 corresponde a las comprobaciones posteriores registradas.
 
 Las referencias usan líneas de los archivos de la revisión histórica; pueden desplazarse tras la actualización del formulario. `styles.css:3` concentra muchas reglas; se indica también el selector para localizar la evidencia. Prioridades: P1 alta, P2 media, P3 baja. Se distingue entre un comportamiento confirmado, su impacto condicionado y una recomendación preventiva.
 
@@ -74,7 +74,7 @@ Sin hallazgos confirmados de prioridad P1 dentro de este alcance. Esta ausencia 
 
 **Estado posterior:** el repositorio [sotonicolasJNSN/nudo-botica](https://github.com/sotonicolasJNSN/nudo-botica) es público. La fuente de GitHub Pages es la rama `main`, ruta `/`. La API Pages reportó build status `built`, sin error, y HTTPS enforced `true`. El sitio responde en [https://sotonicolasjnsn.github.io/nudo-botica/](https://sotonicolasjnsn.github.io/nudo-botica/) y [AUDITORIA.md](https://github.com/sotonicolasJNSN/nudo-botica/blob/main/AUDITORIA.md) es accesible en el repositorio.
 
-**Alcance del cierre:** la revisión se limitó a seis archivos explícitos. Se excluyeron `.venv`, `IA` y `benchmarks` mediante staging explícito y `.gitignore`. Con la información posterior aportada, queda superada la afirmación de que la publicación estaba sin verificar y el conjunto de archivos sin delimitar. Este cierre no acredita pruebas funcionales, visuales o de seguridad adicionales ni modifica los hallazgos H01–H05.
+**Alcance del cierre:** la revisión se limitó a seis archivos explícitos. Se excluyeron `.venv`, `IA` y `benchmarks` mediante staging explícito y `.gitignore`. Con las comprobaciones posteriores registradas, queda superada la afirmación de que la publicación estaba sin verificar y el conjunto de archivos sin delimitar. Este cierre no acredita pruebas funcionales, visuales o de seguridad adicionales ni modifica los hallazgos H01–H05.
 
 **Recomendación vigente:** mantener una lista explícita de archivos publicables, revisar los cambios preparados antes de cada publicación y conservar documentadas la rama y carpeta seleccionadas. Incluir documentación solo cuando se desee hacerla pública.
 
@@ -91,14 +91,23 @@ Sin hallazgos confirmados de prioridad P1 dentro de este alcance. Esta ausencia 
 
 ## Verificación posterior del sitio público en navegador real
 
-Según la comprobación posterior aportada por el usuario, las siguientes pruebas básicas del sitio publicado pasaron:
+Las cuatro verificaciones públicas históricas registradas en navegador real pasaron:
 
 - URL pública de Pages accesible; Home con 5 accesos y 5 secciones.
 - Sin recursos externos cargados durante la comprobación.
 - La ruta `#productos/coleccion-shampoos` abre 4 productos y el detalle de shampoo funciona.
 - Añadir al carrito funciona; la recarga conserva 1 unidad y eliminarla deja el contador en 0.
 
-Esta verificación complementa la auditoría de código original y no modifica los hallazgos H01–H05. No fue un pentest ni una revisión integral de accesibilidad. Siguen pendientes pruebas más profundas sobre el resto del checkout, accesibilidad asistiva, zoom, caché/CDN y hardening.
+Tras el despliegue del commit `281a7e0`, con GitHub Pages build status `built`, se observó en Chrome la carga y estructura básica del checkout publicado:
+
+- La URL pública de Pages responde.
+- En `#envio` se muestran exactamente tres pasos.
+- Los inputs tienen los atributos `name`: `firstName`, `secondName`, `firstSurname`, `secondSurname`, `email`, `landline` (opcional) y `mobile` (requerido).
+- El país predeterminado es `EC`; la bandera 🇪🇨 aparece en un `span` visible y la opción es «🇪🇨 Ecuador (+593)».
+- No hay inputs de provincia ni cantón.
+- El carrito de prueba se limpió después.
+
+La comprobación reciente es solo una prueba pública de carga y estructura; no acredita pruebas funcionales en producción de todas las variantes de pago y entrega, que se probaron localmente. Estas verificaciones complementan la auditoría original y no modifican H01–H05. No constituyen un pentest ni una revisión integral de accesibilidad. Siguen pendientes pruebas públicas más profundas del checkout, accesibilidad asistiva, zoom, caché/CDN y hardening.
 
 ## Actualización local del checkout — 5 de octubre de 2026
 
@@ -123,11 +132,11 @@ Cambiar método/entrega actualiza panel, botón, resumen y anuncio accesible sin
 - Protección tras Back y repetición, carrito modificado y contacto revalidado, almacenamiento sin PII, recarga con carrito conservado y borradores vacíos; ninguna excepción JavaScript en el recorrido.
 - Viewports reales 390 × 844 y 1237 × 844 sin overflow en contacto y ambos modos de Pago; controles de contacto y etiquetas clicables de radios ≥44 px. Capturas de Pago online/home revisadas visualmente en ambos tamaños, sin roturas observadas.
 
-Las acciones se automatizaron vía CDP; paste se simuló con ClipboardEvent y datos ficticios, sin usar portapapeles del sistema. El indicador de `countryFlag` se muestra en un `span` visible junto al selector, además de figurar en las opciones con nombre y prefijo; su representación gráfica depende de las fuentes y del sistema operativo. No se verificaron lector de pantalla, zoom/contraste, autocompletado real ni compatibilidad extendida. Las medidas táctiles son del checkout y no cierran H04. El alcance permitido de esta versión comprende exactamente cuatro archivos: `script.js`, `styles.css`, `README.md` y `AUDITORIA.md`, sin nuevas dependencias. Esta corrección documental modifica únicamente `README.md` y `AUDITORIA.md`; `index.html` permanece intacto. Los cambios están preparados para publicar; aún no se confirma un nuevo build de GitHub Pages para esta versión. El estado `built` de H06 corresponde a la publicación histórica y no acredita un rebuild de estos cambios.
+Las acciones se automatizaron vía CDP; paste se simuló con ClipboardEvent y datos ficticios, sin usar portapapeles del sistema. El indicador de `countryFlag` se muestra en un `span` visible junto al selector, además de figurar en las opciones con nombre y prefijo; su representación gráfica depende de las fuentes y del sistema operativo. No se verificaron lector de pantalla, zoom/contraste, autocompletado real ni compatibilidad extendida. Las medidas táctiles son del checkout y no cierran H04. El alcance permitido de esta versión comprende exactamente cuatro archivos: `script.js`, `styles.css`, `README.md` y `AUDITORIA.md`, sin nuevas dependencias. Esta corrección documental modifica únicamente `README.md` y `AUDITORIA.md`; `index.html` permanece intacto. El commit `281a7e0` está desplegado y GitHub Pages reportó build status `built`, sin error, para `281a7e0efeddec5e2d5bdd83e838307a26f36f50`. El estado histórico de H06 se complementa con este despliegue confirmado.
 
 ### Verificaciones manuales observadas
 
-Según las observaciones manuales aportadas para esta versión:
+En las verificaciones manuales locales de esta versión se observó:
 
 - Pago y retiro local permite confirmar sin destino.
 - Pago online con envío a casa bloquea la confirmación con CP inválido y permite confirmar con CP válido de seis dígitos y los demás campos requeridos completos.
@@ -143,7 +152,7 @@ Estas observaciones corresponden a la simulación: no acreditan verificación re
 
 En la auditoría de código original no se ejecutó un navegador, un lector de pantalla ni una herramienta automática de accesibilidad. Las pruebas posteriores en navegador real se limitan a lo registrado en las secciones anteriores: se probaron las reglas actuales de contacto y Pago en Chrome local con datos ficticios. No se realizaron pruebas con transportista, consulta de verificación telefónica (phone lookup), lector de pantalla ni compatibilidad extendida entre navegadores y dispositivos. No se midieron contraste, recortes de foco ni reflujo con zoom. La actualización local midió overflow y altura de controles de contacto y etiquetas de radios en dos anchos, y revisó capturas de Pago; no revisó todos los objetivos táctiles del sitio. Las pruebas registradas no cubren de forma exhaustiva la validación nativa, el autocompletado, el historial completo o la caché de navegación. Los contextos Node de la auditoría original simularon almacenamiento y un DOM mínimo, no un navegador.
 
-La auditoría inicial no accedió a configuración remota de GitHub ni a un sitio publicado; el estado posterior aportado sobre la fuente de Pages, el build, HTTPS y la respuesta del sitio queda registrado en H06. No se añaden comprobaciones de DNS, certificados, cabeceras HTTP ni registros de despliegue más allá del estado de build indicado. No se afirma que falten HTTPS o cabeceras de seguridad. No hay CSP declarada en `index.html`, pero su ausencia no demuestra una explotación; una política restrictiva puede evaluarse como defensa adicional antes de incorporar fuentes externas.
+La auditoría inicial no accedió a configuración remota de GitHub ni a un sitio publicado; el estado posterior observado sobre la fuente de Pages, el build, HTTPS y la respuesta del sitio queda registrado en H06. No se añaden comprobaciones de DNS, certificados, cabeceras HTTP ni registros de despliegue más allá del estado de build indicado. No se afirma que falten HTTPS o cabeceras de seguridad. No hay CSP declarada en `index.html`, pero su ausencia no demuestra una explotación; una política restrictiva puede evaluarse como defensa adicional antes de incorporar fuentes externas.
 
 El uso de `autocomplete` en el formulario (`script.js:116-117`) permite asistencia del navegador. Que la aplicación no persista ni transmita esos valores no garantiza el comportamiento del autocompletado, extensiones o equipo. El borrado de variables tampoco es una garantía de borrado forense. Las solicitudes necesarias para servir HTML, CSS y JavaScript y los posibles registros del alojamiento quedan fuera de la afirmación «sin llamadas a API».
 
