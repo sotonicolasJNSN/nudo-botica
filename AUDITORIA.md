@@ -8,6 +8,8 @@ Revisión de `index.html`, `styles.css`, `script.js` y `README.md` para segurida
 
 Se leyeron los cuatro archivos completos, se siguieron los flujos de entrada, almacenamiento y representación HTML, y se contrastaron las afirmaciones del README. Se ejecutó `node --check script.js` y un arnés temporal por entrada estándar de Node con contextos `vm`, sin crear archivos de pruebas. Se consultó documentación oficial de GitHub y MDN para almacenamiento y despliegue. La inspección del directorio se limitó a identificar la estructura de publicación; no se revisó el contenido de otros proyectos ni se buscaron o reprodujeron secretos.
 
+El cierre posterior se limitó a seis archivos explícitos, excluyendo `.venv`, `IA` y `benchmarks` mediante staging explícito y `.gitignore`. Este cierre no amplía las comprobaciones de código descritas arriba; el estado de publicación consignado en H06 corresponde a la información posterior aportada.
+
 Las referencias usan líneas de los archivos revisados. `styles.css:3` concentra muchas reglas; se indica también el selector para localizar la evidencia. Prioridades: P1 alta, P2 media, P3 baja. Se distingue entre un comportamiento confirmado, su impacto condicionado y una recomendación preventiva.
 
 ## Resumen por área
@@ -18,7 +20,7 @@ Las referencias usan líneas de los archivos revisados. `styles.css:3` concentra
 | Privacidad | No se confirmó transmisión o almacenamiento persistente de datos de envío por la aplicación. Hay persistencia del carrito sin caducidad y un límite de borrado cuando falla el almacenamiento. |
 | Accesibilidad | Se confirmaron textos muy pequeños y una afirmación demasiado amplia sobre objetivos táctiles; no se declara incumplimiento WCAG a partir de esos datos. |
 | Usabilidad | Se confirmó posibilidad de sobrescritura del carrito entre pestañas y pérdida de visibilidad del aviso superior de demo en móvil. |
-| GitHub Pages | Los enlaces relativos y rutas hash son compatibles en principio. Falta una guía de publicación y delimitación de los archivos publicables; el despliegue efectivo no se verificó. |
+| GitHub Pages | Cierre posterior: repositorio público y sitio publicado desde `main`, ruta `/`; API Pages con build status `built`, sin error, y HTTPS enforced `true`. Alcance y estado detallados en H06. |
 
 Sin hallazgos confirmados de prioridad P1 dentro de este alcance. Esta ausencia no demuestra ausencia de vulnerabilidades.
 
@@ -68,13 +70,13 @@ Sin hallazgos confirmados de prioridad P1 dentro de este alcance. Esta ausencia 
 
 **Recomendación:** conservar una indicación breve y visible de demo en la cabecera móvil y verificar su lectura sin desplazarse hasta el pie.
 
-### H06 — P3 · Publicación en GitHub Pages sin procedimiento documentado ni conjunto de archivos delimitado
+### H06 — Cerrado · Estado posterior de publicación en GitHub Pages
 
-**Evidencia:** el README explica apertura local y servidor estático, pero no la configuración de Pages. En esta copia no se identificó `.git`, `.github`, `CNAME` ni `.nojekyll` en la raíz. También hay archivos y directorios ajenos al sitio junto a los cuatro archivos revisados; no se inspeccionó su contenido.
+**Estado posterior:** el repositorio [sotonicolasJNSN/nudo-botica](https://github.com/sotonicolasJNSN/nudo-botica) es público. La fuente de GitHub Pages es la rama `main`, ruta `/`. La API Pages reportó build status `built`, sin error, y HTTPS enforced `true`. El sitio responde en [https://sotonicolasjnsn.github.io/nudo-botica/](https://sotonicolasjnsn.github.io/nudo-botica/) y [AUDITORIA.md](https://github.com/sotonicolasJNSN/nudo-botica/blob/main/AUDITORIA.md) es accesible en el repositorio.
 
-**Impacto condicionado:** publicar indiscriminadamente el directorio podría incluir material innecesario. No se confirmó que esté publicado ni que contenga información sensible. La ausencia de un workflow o `.nojekyll` no demuestra por sí misma un fallo: Pages admite publicación desde rama o mediante Actions. Véase [GitHub: configurar la fuente de publicación](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site).
+**Alcance del cierre:** la revisión se limitó a seis archivos explícitos. Se excluyeron `.venv`, `IA` y `benchmarks` mediante staging explícito y `.gitignore`. Con la información posterior aportada, queda superada la afirmación de que la publicación estaba sin verificar y el conjunto de archivos sin delimitar. Este cierre no acredita pruebas funcionales, visuales o de seguridad adicionales ni modifica los hallazgos H01–H05.
 
-**Recomendación:** preparar un directorio o artefacto con una lista explícita de archivos públicos: `index.html`, `styles.css` y `script.js`; incluir documentación solo si se desea hacerla pública. Documentar la rama y carpeta realmente seleccionadas, o el workflow empleado. Si se publica desde rama, elegir raíz o `/docs` según la configuración real. Revisar el artefacto resultante antes de publicar. No se propone ninguna URL de producción ni se realizó despliegue.
+**Recomendación vigente:** mantener una lista explícita de archivos publicables, revisar los cambios preparados antes de cada publicación y conservar documentadas la rama y carpeta seleccionadas. Incluir documentación solo cuando se desee hacerla pública.
 
 ## Comprobaciones realizadas y controles existentes
 
@@ -87,11 +89,22 @@ Sin hallazgos confirmados de prioridad P1 dentro de este alcance. Esta ausencia 
 - **Recursos y rutas:** CSS art y fuentes del sistema; `index.html:9-10` usa rutas relativas. La navegación por fragmentos no exige reescrituras de servidor para cada vista. No se identificó una ruta absoluta de recurso que rompa un sitio de proyecto bajo un subdirectorio.
 - **Documentación:** se leyó en UTF-8. Los caracteres extraños de una lectura inicial con la codificación de consola no se reportan como corrupción de archivos. Las pruebas visuales históricas que declara el README no se consideran repetidas en esta revisión.
 
+## Verificación posterior del sitio público en navegador real
+
+Según la comprobación posterior aportada por el usuario, las siguientes pruebas básicas del sitio publicado pasaron:
+
+- URL pública de Pages accesible; Home con 5 accesos y 5 secciones.
+- Sin recursos externos cargados durante la comprobación.
+- La ruta `#productos/coleccion-shampoos` abre 4 productos y el detalle de shampoo funciona.
+- Añadir al carrito funciona; la recarga conserva 1 unidad y eliminarla deja el contador en 0.
+
+Esta verificación complementa la auditoría de código original y no modifica los hallazgos H01–H05. No fue un pentest ni una revisión integral de accesibilidad. Siguen pendientes pruebas más profundas sobre el resto del checkout, accesibilidad asistiva, zoom, caché/CDN y hardening.
+
 ## Limitaciones
 
-No se ejecutó un navegador, un lector de pantalla ni una herramienta automática de accesibilidad. No se midieron contraste, objetivos táctiles, reflujo, recortes de foco ni dimensiones visuales. No se probó el formulario con la validación nativa real, autocompletado, historial completo o caché de navegación. Los contextos Node simularon almacenamiento y un DOM mínimo, no un navegador.
+En la auditoría de código original no se ejecutó un navegador, un lector de pantalla ni una herramienta automática de accesibilidad. Las pruebas posteriores en navegador real se limitan a lo registrado en la sección anterior. No se midieron contraste, objetivos táctiles, reflujo, recortes de foco ni dimensiones visuales. No se probó el formulario con la validación nativa real, autocompletado, historial completo o caché de navegación. Los contextos Node simularon almacenamiento y un DOM mínimo, no un navegador.
 
-No se accedió a configuración remota de GitHub, registros de despliegue, DNS, certificados, cabeceras HTTP ni un sitio publicado. Por ello no se afirma que falten HTTPS o cabeceras de seguridad. No hay CSP declarada en `index.html`, pero su ausencia no demuestra una explotación; una política restrictiva puede evaluarse como defensa adicional antes de incorporar fuentes externas.
+La auditoría inicial no accedió a configuración remota de GitHub ni a un sitio publicado; el estado posterior aportado sobre la fuente de Pages, el build, HTTPS y la respuesta del sitio queda registrado en H06. No se añaden comprobaciones de DNS, certificados, cabeceras HTTP ni registros de despliegue más allá del estado de build indicado. No se afirma que falten HTTPS o cabeceras de seguridad. No hay CSP declarada en `index.html`, pero su ausencia no demuestra una explotación; una política restrictiva puede evaluarse como defensa adicional antes de incorporar fuentes externas.
 
 El uso de `autocomplete` en el formulario (`script.js:116-117`) permite asistencia del navegador. Que la aplicación no persista ni transmita esos valores no garantiza el comportamiento del autocompletado, extensiones o equipo. El borrado de variables tampoco es una garantía de borrado forense. Las solicitudes necesarias para servir HTML, CSS y JavaScript y los posibles registros del alojamiento quedan fuera de la afirmación «sin llamadas a API».
 
@@ -101,7 +114,7 @@ No se auditó el resto del directorio, dependencias ajenas al sitio, infraestruc
 
 1. Corregir sincronización y mensajes de fallo de persistencia; probar dos pestañas y fallos de escritura antes de dar por fiable el vaciado.
 2. Mejorar aviso móvil, legibilidad e información de persistencia; contrastar las afirmaciones de accesibilidad con medidas reales.
-3. Publicar solo el conjunto necesario. En el despliegue real, verificar carga de los tres archivos, navegación hash, recarga, ausencia de recursos inesperados y configuración HTTPS disponible, sin asumir una URL o estado de publicación.
+3. Mantener la publicación limitada al conjunto explícito de archivos. Las pruebas básicas del sitio publicado en navegador real sí pasaron, según la verificación posterior descrita arriba. Siguen pendientes pruebas más profundas sobre el resto del checkout, accesibilidad asistiva, zoom, caché/CDN y hardening. Conservar HTTPS enforced, cuyo estado posterior reportado es `true`.
 4. Repetir el flujo con datos ficticios en móvil y escritorio, teclado y lector de pantalla. Registrar resultados nuevos por separado de los históricos del README.
 
 Como referencia para H01, [MDN: evento storage](https://developer.mozilla.org/en-US/docs/Web/API/Window/storage_event) documenta su notificación a otros contextos del mismo origen.
