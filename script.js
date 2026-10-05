@@ -61,7 +61,7 @@ const phoneCountries = Object.keys(dialCodes).map(iso => {
 function countryFlag(iso) {
   return /^[A-Z]{2}$/.test(iso) && !['XK', 'AC', 'TA'].includes(iso) ? String.fromCodePoint(...[...iso].map(char => 0x1F1E6 + char.charCodeAt(0) - 65)) : '🌐';
 }
-const phoneCountryOptions = selected => phoneCountries.map(({ iso, name }) => `<option value="${iso}" ${iso === selected ? 'selected' : ''}>${countryFlag(iso)} ${escapeHTML(name)} (+${dialCodes[iso]})</option>`).join('');
+const phoneCountryOptions = selected => phoneCountries.map(({ iso, name }) => `<option value="${iso}" ${iso === selected ? 'selected' : ''}>${escapeHTML(name)}</option>`).join('');
 const phoneMaxLength = iso => 15 - (dialCodes[iso] || '').length;
 const nameFields = ['firstName', 'secondName', 'firstSurname', 'secondSurname'];
 function shippingError(input, form) {
@@ -83,7 +83,7 @@ function shippingError(input, form) {
 let cart = loadCart();
 let shipping = {};
 let shippingReady = false;
-const emptyPayment = () => ({ method: 'local', delivery: 'home', city: '', address: '', complement: '', postal: '' });
+const emptyPayment = () => ({ method: 'local', delivery: 'home', destination: { city: '', address: '', complement: '', postal: '' } });
 let payment = emptyPayment();
 let order = null;
 let orderNumber = 0;
@@ -112,8 +112,10 @@ const art = product => `<div class="art ${product.art}" role="img" aria-label="I
 const heading = (eyebrow, title) => `<p class="eyebrow">${eyebrow}</p><h1 tabindex="-1">${title}</h1>`;
 const card = product => `<article class="card"><a class="card-visual" href="#detalle/${product.id}" aria-label="Ver ${product.name}">${art(product)}<span class="card-number" aria-hidden="true">Nº ${String(products.indexOf(product) + 1).padStart(2, '0')}</span></a><p class="eyebrow">${product.category}</p><h3><a href="#detalle/${product.id}">${product.name}</a></h3><p class="card-size">${product.size}</p><div class="card-bottom"><strong>${money(product.price)}</strong><a href="#detalle/${product.id}" aria-label="Ver detalle de ${product.name}">Ver detalle ↗</a></div></article>`;
 const miniProduct = product => `<article class="mini-product">${art(product)}<div class="mini-product-copy"><h3>${escapeHTML(product.name)}</h3><strong>${money(product.price)}</strong><a href="#detalle/${encodeURIComponent(product.id)}" aria-label="Ver detalle de ${escapeHTML(product.name)}">Ver detalle ↗</a></div></article>`;
-const totals = items => `<dl class="totals"><div><dt>Subtotal</dt><dd>${money(total(items))}</dd></div><div><dt>Envío simulado</dt><dd>Gratis</dd></div><div class="total"><dt>Total <small>USD</small></dt><dd>${money(total(items))}</dd></div></dl>`;
-const summary = items => `<ul class="summary">${items.map(item => `<li><span>${item.product.name} × ${item.quantity}</span><strong>${money(item.product.price * item.quantity)}</strong></li>`).join('')}</ul>${totals(items)}`;
+// Importes en centavos; única regla de cargo por fulfillment.
+const deliveryFee = fulfillment => fulfillment === 'online-home' ? 500 : 0;
+const totals = (items, fulfillment) => `<dl class="totals"><div><dt>Subtotal</dt><dd>${money(total(items))}</dd></div><div><dt>Envío simulado</dt><dd>${!fulfillment ? 'Se define en Pago' : deliveryFee(fulfillment) ? money(deliveryFee(fulfillment)) : 'No aplica'}</dd></div><div class="total"><dt>Total <small>USD</small></dt><dd>${money(total(items) + deliveryFee(fulfillment))}</dd></div></dl>`;
+const summary = (items, fulfillment) => `<ul class="summary">${items.map(item => `<li><span>${item.product.name} × ${item.quantity}</span><strong>${money(item.product.price * item.quantity)}</strong></li>`).join('')}</ul>${totals(items, fulfillment)}`;
 const stepper = step => `<ol class="stepper" aria-label="Pasos del checkout">${['Datos de compra/contacto', 'Pago', 'Confirmación'].map((label, index) => `<li ${index + 1 === step ? 'aria-current="step"' : ''} class="${index + 1 < step ? 'done' : ''}"><span aria-hidden="true">${index + 1 < step ? '✓' : index + 1}</span>${label}</li>`).join('')}</ol>`;
 const categoryHref = category => '#productos/' + categories.indexOf(category);
 function replaceRoute(route) { history.replaceState(null, '', '#' + route); render(); }
@@ -124,30 +126,65 @@ const fulfillmentLabel = value => ({
   'online-home': 'Simulación: pago en línea y envío a casa en Ecuador.',
   'online-pickup': 'Simulación: pago en línea y retiro en el local.'
 })[value];
-const paymentButtonLabel = () => payment.method === 'local' ? 'Confirmar pago y retiro' : 'Simular pago en línea';
+const paymentButtonLabel = () => payment.method === 'local' ? 'Continuar' : 'Simular pago en línea';
 const paymentOption = (name, value, label) => `<label class="checkout-choice"><input type="radio" name="${name}" value="${value}" ${payment[name] === value ? 'checked' : ''}><span>${label}</span></label>`;
 function destinationFields() {
   if (currentFulfillment() !== 'online-home') return '';
   return `<fieldset class="checkout-options"><legend>Destino en Ecuador</legend><div class="fields">${[
     ['city', 'Ciudad', 'address-level2'], ['address', 'Dirección / calle y número', 'address-line1'],
     ['complement', 'Complemento (opcional)', 'address-line2'], ['postal', 'Código postal', 'postal-code']
-  ].map(([name, label, autocomplete]) => `<div class="field"><label for="payment-${name}">${label}${name !== 'complement' ? ' *' : ''}</label><input id="payment-${name}" name="${name}" autocomplete="${autocomplete}" ${name !== 'complement' ? 'required' : ''} ${name === 'postal' ? 'inputmode="numeric"' : 'maxlength="160"'} value="${escapeHTML(payment[name])}" aria-describedby="error-${name}${name === 'postal' ? ' help-postal postal-rule' : ''}"><span class="field-error" id="error-${name}"></span></div>`).join('')}</div><p id="postal-rule" class="field-help">El código postal debe contener seis dígitos.</p><p id="help-postal" class="field-help">Consulte su Código Postal en: <a href="https://www.codigopostal.gob.ec/" target="_blank" rel="noopener">Código Postal Ecuador</a></p></fieldset>`;
+  ].map(([name, label, autocomplete]) => `<div class="field"><label for="payment-${name}">${label}${name !== 'complement' ? ' *' : ''}</label><input id="payment-${name}" name="${name}" autocomplete="${autocomplete}" ${name !== 'complement' ? 'required' : ''} ${name === 'postal' ? 'inputmode="numeric"' : 'maxlength="160"'} value="${escapeHTML(payment.destination[name])}" aria-describedby="error-${name}${name === 'postal' ? ' help-postal postal-rule' : ''}"><span class="field-error" id="error-${name}"></span></div>`).join('')}</div><p id="postal-rule" class="field-help">El código postal debe contener seis dígitos.</p><p id="help-postal" class="field-help">Consulte su Código Postal en: <a href="https://www.codigopostal.gob.ec/" target="_blank" rel="noopener">Código Postal Ecuador</a></p></fieldset>`;
+}
+const demoNotice = 'DEMO: no uses datos reales. Solo se acepta la tarjeta de prueba indicada y no se envía ni guarda.';
+function cardFields() {
+  if (payment.method !== 'online') return '';
+  return `<fieldset class="checkout-options"><legend>Tarjeta de prueba · pago en línea simulado</legend><p>Datos de prueba: <strong>4242 4242 4242 4242</strong> · Fecha <strong>12/30</strong> · CVV <strong>123</strong></p><div class="fields">${[
+    ['cardNumber', 'Card number', '4242 4242 4242 4242', 19],
+    ['expiry', 'Fecha (MM/YY)', '12/30', 5], ['cvv', 'CVV', '123', 3]
+  ].map(([name, label, placeholder, max]) => `<div class="field"><label for="payment-${name}">${label} *</label><input id="payment-${name}" name="${name}" type="text" required autocomplete="off" inputmode="numeric" maxlength="${max}" placeholder="${placeholder}" aria-describedby="error-${name} demo-notice"><span class="field-error" id="error-${name}"></span></div>`).join('')}</div></fieldset>`;
+}
+function cardError(input) {
+  if (input.name === 'cardNumber' && input.value.replace(/ /g, '') !== '4242424242424242') return 'Solo se acepta la tarjeta de prueba 4242 4242 4242 4242.';
+  if (input.name === 'expiry') {
+    const match = /^(0[1-9]|1[0-2])\/(\d{2})$/.exec(input.value);
+    const now = new Date();
+    if (!match || new Date(2000 + Number(match[2]), Number(match[1]), 1) <= now) return 'Usa MM/YY con mes válido y fecha no vencida; fecha de prueba: 12/30.';
+  }
+  if (input.name === 'cvv' && input.value !== '123') return 'Solo se acepta el CVV de prueba 123.';
+  return '';
+}
+function updateCountryFlag() {
+  const iso = document.querySelector('#shipping-phoneCountry')?.value;
+  if (!iso) return;
+  const host = document.querySelector('#shipping-phoneCountry-flag');
+  const img = document.createElement('img');
+  img.width = 24; img.height = 18; img.loading = 'eager'; img.referrerPolicy = 'no-referrer';
+  img.alt = 'Bandera de ' + phoneCountries.find(country => country.iso === iso).name;
+  img.onerror = () => { host.textContent = countryFlag(iso); host.setAttribute('role', 'img'); host.setAttribute('aria-label', img.alt); };
+  host.removeAttribute('role'); host.removeAttribute('aria-label');
+  img.src = `https://flagcdn.com/w40/${iso.toLowerCase()}.png`;
+  host.replaceChildren(img);
+  document.querySelector('#phone-prefix').textContent = '+' + dialCodes[iso];
 }
 function editPayment(event) {
   const input = event.target;
   if (input.form?.id !== 'payment-form') return;
-  if (input.type === 'radio') {
+  if (input.type === 'radio' && ['method', 'delivery'].includes(input.name)) {
     if (event.type !== 'change') return;
     payment[input.name] = input.value;
     document.querySelector('#form-error').textContent = '';
     document.querySelector('#local-notice').hidden = payment.method !== 'local';
     document.querySelector('#delivery-options').hidden = payment.method !== 'online';
+    document.querySelector('#card-panel').innerHTML = cardFields();
     document.querySelector('#destination-panel').innerHTML = destinationFields();
     document.querySelector('[data-pay]').textContent = paymentButtonLabel();
+    document.querySelector('#payment-summary').innerHTML = summary(cart, currentFulfillment());
     document.querySelector('#fulfillment-summary').textContent = fulfillmentLabel(currentFulfillment());
-    announce(fulfillmentLabel(currentFulfillment()) + (currentFulfillment() === 'online-home' ? ' Completa el destino y el código postal de seis dígitos.' : ' No se requiere dirección ni código postal.'));
+    announce(fulfillmentLabel(currentFulfillment()) + (currentFulfillment() === 'online-home' ? ' Envío: ' + money(deliveryFee(currentFulfillment())) + '. Completa el destino.' : ' No se requiere dirección ni código postal.'));
   } else {
-    payment[input.name] = input.value;
+    if (Object.hasOwn(payment.destination, input.name)) payment.destination[input.name] = input.value;
+    if (input.name === 'cardNumber') input.value = input.value.replace(/[^0-9 ]/g, '');
+    if (input.name === 'cvv') input.value = input.value.replace(/[^0-9]/g, '');
     clearShippingError(input);
   }
 }
@@ -192,13 +229,14 @@ function render(options = {}) {
     const phoneCountry = shipping.phoneCountry || 'EC';
     app.innerHTML = `<div class="container">${stepper(1)}${heading('Tu pedido / 01', 'Datos de compra/contacto')}<p class="muted">Los campos con * son obligatorios. Usa datos ficticios para probar el demo.</p><p><strong>Contexto de la compra:</strong> Ecuador</p><div class="layout"><form id="shipping-form" novalidate><div id="form-error" class="form-error" role="alert"></div><div class="fields">${fields.map(([name, label, autocomplete, required]) => `<div class="field"><label for="shipping-${name}">${label}${required ? ' <span aria-hidden="true">*</span>' : ''}</label><input id="shipping-${name}" name="${name}" type="${name === 'email' ? 'email' : name === 'landline' ? 'tel' : 'text'}" autocomplete="${autocomplete}" maxlength="160" ${name === 'landline' ? 'placeholder="02 999 9999"' : ''} ${required ? 'required' : ''} aria-describedby="error-${name}" value="${escapeHTML(shipping[name] || '')}"><span class="field-error" id="error-${name}"></span></div>`).join('')}
 
-    <div class="phone-fields wide"><div class="field"><label for="shipping-phoneCountry">País del celular / prefijo</label><span class="phone-country-control"><span id="shipping-phoneCountry-flag" class="phone-country-flag" aria-hidden="true">${countryFlag(phoneCountry)}</span><select id="shipping-phoneCountry" name="phoneCountry" aria-describedby="error-phoneCountry">${phoneCountryOptions(phoneCountry)}</select></span><span class="field-error" id="error-phoneCountry"></span></div><div class="field"><label for="shipping-mobile">Celular *</label><input id="shipping-mobile" name="mobile" type="text" required inputmode="numeric" autocomplete="tel-national" maxlength="${phoneMaxLength(phoneCountry)}" value="${escapeHTML(shipping.mobile || '')}" aria-describedby="error-mobile help-mobile"><span class="field-error" id="error-mobile"></span></div><span class="field-help wide" id="help-mobile">Solo dígitos, sin prefijo. Para Ecuador: 9 dígitos empezando en 9, sin cero inicial. Máximo 15 dígitos contando el prefijo seleccionado.</span></div>
+    <div class="phone-fields wide"><div class="field"><label for="shipping-phoneCountry">País del celular / prefijo</label><span class="phone-country-control"><span id="shipping-phoneCountry-flag" class="phone-country-flag">${countryFlag(phoneCountry)}</span><select id="shipping-phoneCountry" name="phoneCountry" aria-describedby="error-phoneCountry">${phoneCountryOptions(phoneCountry)}</select><span id="phone-prefix" class="phone-prefix">+${dialCodes[phoneCountry]}</span></span><span class="field-error" id="error-phoneCountry"></span></div><div class="field"><label for="shipping-mobile">Celular *</label><input id="shipping-mobile" name="mobile" type="text" required inputmode="numeric" autocomplete="tel-national" maxlength="${phoneMaxLength(phoneCountry)}" value="${escapeHTML(shipping.mobile || '')}" aria-describedby="error-mobile help-mobile"><span class="field-error" id="error-mobile"></span></div><span class="field-help wide" id="help-mobile">Solo dígitos, sin prefijo. Para Ecuador: 9 dígitos empezando en 9, sin cero inicial. Máximo 15 dígitos contando el prefijo seleccionado.</span></div>
     </div><div class="actions"><button type="submit">Continuar al pago →</button><a class="text-link" href="#carrito">← Volver al carrito</a></div><p class="fine">Estos datos solo viven en esta pestaña y se borran al recargar o confirmar.</p></form><aside class="panel"><h2>Tu selección</h2>${summary(cart)}</aside></div></div>`;
   } else if (route === 'pago') {
-    app.innerHTML = `<div class="container">${stepper(2)}${heading('Tu pedido / 02', 'Pago')}<div class="notice"><strong>Esta compra es una simulación.</strong><p>No solicitamos tarjetas ni datos bancarios. No habrá cobros, correos ni entregas reales.</p></div><div class="layout"><div><form id="payment-form" novalidate><div id="form-error" class="form-error" role="alert"></div><fieldset class="checkout-options"><legend>Elige cómo pagar</legend><div class="segmented">${paymentOption('method', 'local', 'Pagar y retirar en el local')}${paymentOption('method', 'online', 'Pagar por línea')}</div></fieldset><p id="local-notice" ${payment.method === 'local' ? '' : 'hidden'}>Pago y retiro simulados en el local. No necesitas indicar un destino.</p><fieldset id="delivery-options" class="checkout-options" ${payment.method === 'online' ? '' : 'hidden'}><legend>Entrega del pedido simulado</legend><div class="segmented">${paymentOption('delivery', 'home', 'Enviar a casa')}${paymentOption('delivery', 'pickup', 'Retirar en el local')}</div></fieldset><div id="destination-panel">${destinationFields()}</div></form><h2>Contacto</h2><p class="shipping-summary">${escapeHTML(nameFields.map(key => shipping[key]).filter(Boolean).join(' '))}<br>Correo: ${escapeHTML(shipping.email)}<br>Celular: ${countryFlag(shipping.phoneCountry)} ${escapeHTML(phoneCountries.find(country => country.iso === shipping.phoneCountry)?.name || shipping.phoneCountry)} +${dialCodes[shipping.phoneCountry]} ${escapeHTML(shipping.mobile)}${shipping.landline ? '<br>Teléfono fijo (Ecuador): ' + escapeHTML(shipping.landline) : ''}</p><a class="text-link" href="#envio">← Editar contacto</a></div><aside class="panel"><h2>Resumen del pedido</h2>${summary(cart)}<p id="fulfillment-summary">${fulfillmentLabel(currentFulfillment())}</p><button class="button" type="submit" form="payment-form" data-pay>${paymentButtonLabel()}</button><a class="text-link" href="#carrito">Editar carrito</a></aside></div></div>`;
+    app.innerHTML = `<div class="container">${stepper(2)}${heading('Tu pedido / 02', 'Pago')}<div class="notice"><strong id="demo-notice">${demoNotice}</strong><p>Sin procesador de pagos. No habrá cobros, correos ni entregas reales.</p></div><div class="layout"><div><form id="payment-form" novalidate><div id="form-error" class="form-error" role="alert"></div><fieldset class="checkout-options"><legend>Elige cómo pagar</legend><div class="segmented">${paymentOption('method', 'local', 'Pagar y retirar en el local')}${paymentOption('method', 'online', 'Tarjeta de prueba en línea')}</div></fieldset><p id="local-notice" ${payment.method === 'local' ? '' : 'hidden'}>Pago pendiente en el local. Retira en 12 de Octubre y Veintimilla. No necesitas indicar un destino.</p><fieldset id="delivery-options" class="checkout-options" ${payment.method === 'online' ? '' : 'hidden'}><legend>Entrega del pedido simulado</legend><div class="segmented">${paymentOption('delivery', 'home', 'Enviar a casa')}${paymentOption('delivery', 'pickup', 'Retirar en el local')}</div></fieldset><div id="card-panel">${cardFields()}</div><div id="destination-panel">${destinationFields()}</div></form><h2>Contacto</h2><p class="shipping-summary">${escapeHTML(nameFields.map(key => shipping[key]).filter(Boolean).join(' '))}<br>Correo: ${escapeHTML(shipping.email)}<br>Celular: ${countryFlag(shipping.phoneCountry)} ${escapeHTML(phoneCountries.find(country => country.iso === shipping.phoneCountry)?.name || shipping.phoneCountry)} +${dialCodes[shipping.phoneCountry]} ${escapeHTML(shipping.mobile)}${shipping.landline ? '<br>Teléfono fijo (Ecuador): ' + escapeHTML(shipping.landline) : ''}</p><a class="text-link" href="#envio">← Editar contacto</a></div><aside class="panel"><h2>Resumen del pedido</h2><div id="payment-summary">${summary(cart, currentFulfillment())}</div><p id="fulfillment-summary">${fulfillmentLabel(currentFulfillment())}</p><button class="button" type="submit" form="payment-form" data-pay>${paymentButtonLabel()}</button><a class="text-link" href="#carrito">Editar carrito</a></aside></div></div>`;
   } else if (route === 'confirmacion') {
-    app.innerHTML = `<div class="container confirmation">${stepper(3)}<div class="success-mark" aria-hidden="true">✓</div>${heading('Tu pedido / 03 · ' + order.reference, 'Pedido ficticio confirmado')}<p>Tu recorrido por la botica está completo.</p><div class="notice"><strong>Pago simulado completado. No es una compra real.</strong><p>No se ha cobrado dinero, enviado un correo ni creado un envío. Los datos personales ya se han borrado.</p></div><div class="panel"><h2>Resumen de la simulación</h2>${summary(order.items)}<p>${fulfillmentLabel(order.fulfillment)}</p></div><div class="actions"><a class="button" href="#inicio">Volver al inicio ↗</a><a class="text-link" href="#productos">Explorar la colección</a></div></div>`;
+    app.innerHTML = `<div class="container confirmation">${stepper(3)}<div class="success-mark" aria-hidden="true">✓</div>${heading('Tu pedido / 03 · ' + order.reference, order.fulfillment === 'online-home' ? 'Ticket de envío a casa' : 'Ticket de retiro')}<p>Tu recorrido por la botica está completo.</p><div class="notice"><strong>${order.fulfillment === 'local-pickup' ? 'Pago pendiente en el local' : 'pago en línea simulado · Sin cobro real'}</strong><p>No se ha cobrado dinero, enviado un correo ni creado un envío. Los datos personales ya se han borrado.</p></div><div class="panel"><h2>Resumen de la simulación</h2>${summary(order.items, order.fulfillment)}<p>${fulfillmentLabel(order.fulfillment)}</p>${order.fulfillment === 'online-home' ? '<p>Envío a casa · Cargo de envío: ' + money(order.deliveryFee) + '</p>' : '<p>Retiro en <strong>12 de Octubre y Veintimilla</strong></p>'}</div><div class="actions"><a class="button" href="#inicio">Volver al inicio ↗</a><a class="text-link" href="#productos">Explorar la colección</a></div></div>`;
   }
+  updateCountryFlag();
   document.title = app.querySelector('h1').textContent + ' | NUDO';
   if (!options.keepPosition) { app.querySelector('h1').focus({ preventScroll: true }); window.scrollTo(0, 0); }
 }
@@ -252,7 +290,7 @@ function editShipping(event) {
   clearShippingError(input);
   if (input.name === 'phoneCountry') {
     const mobile = input.form.elements.mobile;
-    input.form.querySelector('#shipping-phoneCountry-flag').textContent = countryFlag(input.value);
+    updateCountryFlag();
     mobile.maxLength = phoneMaxLength(input.value);
     // Conservar el número completo y señalarlo si excede el nuevo límite, sin truncarlo.
     const error = shippingError(mobile, input.form);
@@ -305,7 +343,7 @@ app.addEventListener('submit', event => {
   if (currentFulfillment() === 'online-home') {
     for (const input of form.querySelectorAll('#destination-panel input')) {
       input.value = input.value.trim();
-      payment[input.name] = input.value;
+      payment.destination[input.name] = input.value;
       const error = input.name === 'postal' && !/^[0-9]{6}$/.test(input.value)
         ? 'Escribe un código postal de seis dígitos para el envío a casa.'
         : input.required && !input.value ? 'Completa este campo para el envío a casa.'
@@ -318,14 +356,25 @@ app.addEventListener('submit', event => {
       }
     }
   }
+  if (payment.method === 'online') {
+    for (const input of form.querySelectorAll('#card-panel input')) {
+      const error = cardError(input);
+      clearShippingError(input);
+      if (error) {
+        document.querySelector('#error-' + input.name).textContent = error;
+        input.setAttribute('aria-invalid', 'true');
+      }
+    }
+  }
+  firstInvalid = form.querySelector('[aria-invalid="true"]');
   if (firstInvalid) {
-    document.querySelector('#form-error').textContent = 'Revisa el destino antes de simular el pago.';
+    document.querySelector('#form-error').textContent = 'Revisa los campos señalados antes de continuar.';
     firstInvalid.focus();
     return;
   }
   document.querySelector('[data-pay]').disabled = true;
   orderNumber += 1;
-  order = { reference: 'DEMO-' + String(orderNumber).padStart(4, '0'), items: cart.map(item => ({ ...item })), fulfillment: currentFulfillment() };
+  order = { reference: 'DEMO-' + String(orderNumber).padStart(4, '0'), items: cart.map(item => ({ ...item })), fulfillment: currentFulfillment(), deliveryFee: deliveryFee(currentFulfillment()) };
   cart = [];
   shipping = {};
   shippingReady = false;

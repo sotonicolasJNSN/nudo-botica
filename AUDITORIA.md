@@ -109,44 +109,37 @@ Tras el despliegue del commit `281a7e0`, con GitHub Pages build status `built`, 
 
 La comprobación reciente es solo una prueba pública de carga y estructura; no acredita pruebas funcionales en producción de todas las variantes de pago y entrega, que se probaron localmente. Estas verificaciones complementan la auditoría original y no modifican H01–H05. No constituyen un pentest ni una revisión integral de accesibilidad. Siguen pendientes pruebas públicas más profundas del checkout, accesibilidad asistiva, zoom, caché/CDN y hardening.
 
-## Actualización local del checkout — 5 de octubre de 2026
+## Actualización local: tarjeta de prueba, tickets y bandera CDN — 5 de octubre de 2026
 
-Esta sección sustituye las pruebas anteriores de teléfonos y territorio; describe la implementación actual. Los hallazgos generales H01–H05 y el estado histórico H06 se conservan. Las referencias numéricas de líneas en la auditoría original son históricas y no corresponden necesariamente al código reorganizado.
+Esta sección describe la versión actual y sustituye las reglas y resultados del checkout anterior. Las secciones previas son evidencia histórica: sus menciones de cero recursos externos, ausencia de campos de tarjeta o bandera Unicode dentro de opciones **no describen esta versión**. Se conservan los hallazgos generales H01–H04 y el estado histórico de publicación H06. El aviso superior de demo se mantiene ahora visible en móvil por CSS (corrección de H05; no certifica accesibilidad).
 
-El stepper conserva exactamente **Datos de compra/contacto → Pago → Confirmación**. Contacto requiere primer nombre, primer apellido, correo y celular. Segundo nombre, segundo apellido y teléfono fijo son opcionales. El correo valida explícitamente parte local, un @, dominio con punto y ausencia de espacios. El resumen concatena nombres y apellidos, escapando PII. No existen campos o datasets de provincia/cantón ni destino en contacto.
+Alcance: solo `script.js`, `styles.css`, `README.md` y `AUDITORIA.md`; `index.html` intacto. No se despliega esta actualización. **regla_runtime:** se permite exclusivamente el recurso automático externo de banderas `https://flagcdn.com/w40/${iso.toLowerCase()}.png`. Es un CDN en runtime y recibe la solicitud de imagen; no se afirma cero recursos externos. No se añadieron librerías, procesadores, fetch, analítica ni consultas automáticas de direcciones/teléfonos. La ayuda postal sigue siendo un enlace manual.
 
-El selector del celular mantiene 245 regiones, nombres españoles/ISO, prefijos compartidos y default EC +593; `countryFlag` genera indicadores regionales Unicode con fallback neutro. Un `span` visible externo al `select` muestra el indicador junto al control y se actualiza al cambiar de país; las opciones también incluyen indicador, nombre y prefijo. La representación gráfica depende de las fuentes y del sistema operativo. Input/paste eliminan todo salvo dígitos. Ecuador exige nueve dígitos empezando en 9; el extranjero se limita a 15 dígitos incluyendo prefijo. Fijo separado con placeholder «02 999 9999», vacío permitido; cuando está presente exige `0[2-7]` + siete dígitos, limpiando espacios/guiones para validar. Dataset offline de libphonenumber-js 1.12.6 conservado, sin instalar librerías ni realizar lookup.
+El checkout conserva exactamente **Datos de compra/contacto → Pago → Confirmación**. Carrito/contacto muestran «Se define en Pago». Local predeterminado tiene CTA «Continuar», no presenta tarjeta/destino y emite ticket con **Pago pendiente en el local** y **12 de Octubre y Veintimilla**, sin afirmar pago confirmado. Online/pickup requiere tarjeta de prueba, no presenta destino/CP y emite ticket de retiro con ubicación y nota **pago en línea simulado**. Online/home solicita Ciudad, Dirección, Complemento opcional y CP; solamente su submit normaliza espacios exteriores y exige seis dígitos. Tiene cargo fijo $5.00 USD (5,00 US$ en pantalla). Retiros: cero/No aplica. La función única `deliveryFee` determina el cargo y actualiza inmediatamente los totales al cambiar modalidad.
 
-Pago contiene radios nativos en fieldsets: pago y retiro local, o pago en línea. Dentro de online se elige envío a casa (default) o retiro. Únicamente online/home presenta ciudad, dirección, complemento opcional y CP. Al enviar ese modo se exigen ciudad/dirección y CP de seis dígitos, con errores ARIA, mensaje visible y foco en el primer inválido. Los retiros no exigen CP. La ayuda enlaza manualmente al portal oficial con nueva pestaña y noopener; no se infiere CP de la ciudad ni se contrasta entregabilidad. No existen campos de tarjeta.
+`payment` contiene method local/online, delivery home/pickup y destination. `emptyPayment` no incluye tarjeta; `editPayment` solo guarda esas propiedades. El pedido contiene referencia, artículos, `fulfillment` (`local-pickup`, `online-pickup`, `online-home`) y `deliveryFee` numérico **en centavos** (0 o 500). No incluye PII ni datos de tarjeta. Confirmación tampoco revela nombre, contacto o dirección personal. Contacto/destino se borran al confirmar; se persiste únicamente cart con identificadores/cantidades. No se usan cookies ni sessionStorage.
 
-Cambiar método/entrega actualiza panel, botón, resumen y anuncio accesible sin nuevos pasos; limpia errores conservando borrador en memoria. Cambiar carrito invalida contacto validado y conserva los borradores mientras haya artículos; se revalida el destino al confirmar. La confirmación muestra el fulfillment ficticio, sin PII. `order` guarda solo referencia, artículos y enum de fulfillment. Contacto y dirección se borran al confirmar, recargar o vaciar carrito; localStorage persiste únicamente cart (identificadores/cantidades). Continúan los límites de concurrencia y fallos de persistencia H01–H03.
+Aviso prominente: **DEMO: no uses datos reales. Solo se acepta la tarjeta de prueba indicada y no se envía ni guarda.** Datos publicados: **4242 4242 4242 4242 · 12/30 · CVV 123**. Solo el PAN exacto, después de quitar espacios, es válido; otro PAN se rechaza. Fecha MM/YY con mes válido y no vencida; CVV exactamente 123. Inputs exclusivamente online con labels Card number, Fecha (MM/YY), CVV, autocomplete off e inputmode numeric. Se leen directamente del form para validar, sin incorporarlos a state, pedido, referencia ni almacenamiento; no se envían requests. Confirmar descarta el DOM. Es un formulario visual de prueba, sin procesador ni cobro real; sin certificación. Se mantienen los avisos del checkout y footer.
 
-### Pruebas ejecutadas en esta actualización
+Errores inline con aria-describedby, aria-invalid y foco al primer inválido; campos ausentes no validan. Destino escapado al reconstruir HTML; errores insertados mediante textContent. Cambiar método/entrega actualiza controles, aviso local, CTA, resumen y anuncio accesible sin pasos adicionales y reconstruye tarjeta vacía.
 
-`node --check script.js` y `git diff --check` correctos. Chrome 154 headless real con perfil temporal, servidor HTTP local y datos ficticios:
+País: select nativo con 245 regiones, opciones solo nombre localizado, Ecuador por defecto. Fuera del select hay imagen real de 24 × 18, alt descriptivo, loading eager y referrerpolicy no-referrer; se actualizan src/alt al seleccionar, con onerror a countryFlag Unicode/global. Prefijo separado (+593). Metadatos telefónicos locales conservados; no se instala libphonenumber. Los indicadores de fallback dependen de fuentes/plataforma.
 
-- Tres pasos, EC/Unicode/prefijo, 245 regiones y US/CA separados; nombres requeridos/opcionales y concatenación; correo inválido y sin punto, errores, ARIA, limpieza y foco.
-- Celular obligatorio, formatos EC rechazados, nueve dígitos válidos, sanitización input/paste y límites extranjeros; fijo opcional, inválido y válido con separadores.
-- Local sin destino; online/home con destino y validación de ciudad/dirección/CP exclusivamente en Pago; CP vacío, cinco/siete dígitos y alfanumérico bloqueados. Enlace oficial y regla visibles.
-- Online/pickup sin postal; cambios de selección, botones, limpieza/anuncios y conservación de borrador; confirmaciones para local-pickup, online-home y online-pickup sin PII.
-- Protección tras Back y repetición, carrito modificado y contacto revalidado, almacenamiento sin PII, recarga con carrito conservado y borradores vacíos; ninguna excepción JavaScript en el recorrido.
-- Viewports reales 390 × 844 y 1237 × 844 sin overflow en contacto y ambos modos de Pago; controles de contacto y etiquetas clicables de radios ≥44 px. Capturas de Pago online/home revisadas visualmente en ambos tamaños, sin roturas observadas.
+### Resultados ejecutados en esta versión
 
-Las acciones se automatizaron vía CDP; paste se simuló con ClipboardEvent y datos ficticios, sin usar portapapeles del sistema. El indicador de `countryFlag` se muestra en un `span` visible junto al selector, además de figurar en las opciones con nombre y prefijo; su representación gráfica depende de las fuentes y del sistema operativo. No se verificaron lector de pantalla, zoom/contraste, autocompletado real ni compatibilidad extendida. Las medidas táctiles son del checkout y no cierran H04. El alcance permitido de esta versión comprende exactamente cuatro archivos: `script.js`, `styles.css`, `README.md` y `AUDITORIA.md`, sin nuevas dependencias. Esta corrección documental modifica únicamente `README.md` y `AUDITORIA.md`; `index.html` permanece intacto. El commit `281a7e0` está desplegado y GitHub Pages reportó build status `built`, sin error, para `281a7e0efeddec5e2d5bdd83e838307a26f36f50`. El estado histórico de H06 se complementa con este despliegue confirmado.
+`node --check script.js` y `git diff --check`: correctos. Chrome **154.0.8037.93 headless**, perfil temporal, servidor local con MIME/charset UTF-8 y automatización CDP: **73 aserciones pasaron**.
 
-### Verificaciones manuales observadas
+- Tres pasos y envío desconocido en carrito/contacto; 245 nombres de país, EC/+593; atributos de img, cambio US/+1 y fallback de error provocado.
+- Local default, CTA Continuar, campos ausentes y ticket pendiente con ubicación exacta.
+- Online/pickup sin destino ni CP; tarjeta obligatoria, ticket simulado con ubicación y sin estado pendiente.
+- Online/home con cuatro campos de destino, CP vacío/cinco/siete dígitos/alfabético rechazado; seis dígitos con espacios exteriores válido. Cargo $5 y total inmediato al alternar delivery; ticket casa con cargo, sin dirección personal.
+- Rechazo de PAN distinto, expiración vencida 01/20, meses 00/13 y formato 1/30, CVV distinto. PAN publicado con/sin espacios válido, fecha 12/30 y CVV 123. Errores ARIA y foco comprobados.
+- Tarjeta no presente en payment/order/localStorage; cambiar a local elimina inputs y regresar online los deja vacíos. Confirmación sin PII, carrito vacío persistido, sessionStorage vacío y cookies vacías.
+- Inyección de prueba en complemento conserva texto escapado sin crear imagen/handler HTML.
+- 390 × 844 y 1237 × 844: sin overflow horizontal en contacto, local, online/home, online/pickup y confirmación; tres pasos conservados.
+- Cero excepciones JavaScript. Tráfico de página observado: solo GET locales y flagcdn, sin datos de formulario/PII/tarjeta en URL o payload. Datos exclusivamente ficticios.
 
-En las verificaciones manuales locales de esta versión se observó:
-
-- Pago y retiro local permite confirmar sin destino.
-- Pago online con envío a casa bloquea la confirmación con CP inválido y permite confirmar con CP válido de seis dígitos y los demás campos requeridos completos.
-- Pago online con retiro permite confirmar sin destino.
-- El checkout mantiene exactamente tres pasos: Datos de compra/contacto, Pago y Confirmación.
-- El celular es requerido; dejarlo vacío bloquea el avance.
-- Estados Unidos +1 aparece con bandera/indicador y prefijo junto al control; las opciones incluyen indicador, nombre y prefijo. El celular extranjero aparece con su +prefijo en el resumen de contacto de Pago.
-- La confirmación identifica el `fulfillment` elegido y no revela datos personales (PII).
-
-Estas observaciones corresponden a la simulación: no acreditan verificación real de teléfono, pago o envío real, pruebas con lector de pantalla ni cumplimiento legal certificado.
+El primer arnés no logró cargar la página; se corrigió el servidor de pruebas con charset UTF-8 explícito y la ejecución completa pasó. No se añaden pruebas visuales manuales, lector de pantalla, zoom, contraste, autofill ni cobertura de otros navegadores. No se afirma que estas pruebas cierren H01–H04, certifiquen seguridad o acrediten un despliegue público. Los registros anteriores de GitHub Pages corresponden a versiones anteriores.
 
 ## Limitaciones
 
@@ -154,7 +147,7 @@ En la auditoría de código original no se ejecutó un navegador, un lector de p
 
 La auditoría inicial no accedió a configuración remota de GitHub ni a un sitio publicado; el estado posterior observado sobre la fuente de Pages, el build, HTTPS y la respuesta del sitio queda registrado en H06. No se añaden comprobaciones de DNS, certificados, cabeceras HTTP ni registros de despliegue más allá del estado de build indicado. No se afirma que falten HTTPS o cabeceras de seguridad. No hay CSP declarada en `index.html`, pero su ausencia no demuestra una explotación; una política restrictiva puede evaluarse como defensa adicional antes de incorporar fuentes externas.
 
-El uso de `autocomplete` en el formulario (`script.js:116-117`) permite asistencia del navegador. Que la aplicación no persista ni transmita esos valores no garantiza el comportamiento del autocompletado, extensiones o equipo. El borrado de variables tampoco es una garantía de borrado forense. Las solicitudes necesarias para servir HTML, CSS y JavaScript y los posibles registros del alojamiento quedan fuera de la afirmación «sin llamadas a API».
+El uso de `autocomplete` en el formulario (`script.js:116-117`) permite asistencia del navegador. Que la aplicación no persista ni transmita esos valores no garantiza el comportamiento del autocompletado, extensiones o equipo. El borrado de variables tampoco es una garantía de borrado forense. Las solicitudes necesarias para servir HTML, CSS y JavaScript, el CDN externo de banderas flagcdn y los posibles registros del alojamiento/CDN quedan fuera de la afirmación «sin llamadas a API».
 
 No se auditó el resto del directorio, dependencias ajenas al sitio, infraestructura o historial de versiones. No se realizó una búsqueda exhaustiva de secretos ni se incluyeron valores sensibles.
 

@@ -133,3 +133,10 @@
 #shipping-form .phone-country-control{display:inline-flex;align-items:center;gap:8px;min-width:0;width:100%}
 #shipping-form .phone-country-flag{display:inline-flex;align-items:center;justify-content:center;flex:0 0 24px;width:24px;height:24px;font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif;font-size:20px;line-height:1}
 #shipping-form .phone-country-control select{flex:1;min-width:0}
+/* Bandera remota con fallback y prefijo separado del selector nativo. */
+.phone-country-flag img{display:block;object-fit:contain;width:24px;height:18px}
+.phone-prefix{white-space:nowrap;font-weight:600;flex:0 0 auto}
+#card-panel{min-width:0;overflow-wrap:anywhere}
+#payment-form input{max-width:100%;box-sizing:border-box}
+.notice{overflow-wrap:anywhere}
+@media(max-width:700px){.announcement span{display:inline}}
