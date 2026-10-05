@@ -97,3 +97,11 @@
   .mini-product .art{height:120px}
   .value-strip{padding-block:10px}
 }
+
+/* Controles de ubicación offline del formulario de envío. */
+#shipping-form select{font:inherit;min-height:48px;width:100%;min-width:0;padding:10px 12px;border:1px solid #a8b09f;background:var(--white);border-radius:3px;color:var(--ink)}
+#shipping-form select:disabled{background:#e9ecdf;color:#505b50;cursor:not-allowed}
+#shipping-form select[aria-invalid=true]{border:2px solid var(--error)}
+#shipping-form .field{min-width:0}
+#shipping-form .field-help{font-size:14px;color:var(--muted)}
+#shipping-form .field-help a{display:inline-flex;align-items:center;min-height:44px}

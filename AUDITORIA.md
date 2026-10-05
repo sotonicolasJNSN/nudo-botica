@@ -10,7 +10,7 @@ Se leyeron los cuatro archivos completos, se siguieron los flujos de entrada, al
 
 El cierre posterior se limitó a seis archivos explícitos, excluyendo `.venv`, `IA` y `benchmarks` mediante staging explícito y `.gitignore`. Este cierre no amplía las comprobaciones de código descritas arriba; el estado de publicación consignado en H06 corresponde a la información posterior aportada.
 
-Las referencias usan líneas de los archivos revisados. `styles.css:3` concentra muchas reglas; se indica también el selector para localizar la evidencia. Prioridades: P1 alta, P2 media, P3 baja. Se distingue entre un comportamiento confirmado, su impacto condicionado y una recomendación preventiva.
+Las referencias usan líneas de los archivos de la revisión histórica; pueden desplazarse tras la actualización del formulario. `styles.css:3` concentra muchas reglas; se indica también el selector para localizar la evidencia. Prioridades: P1 alta, P2 media, P3 baja. Se distingue entre un comportamiento confirmado, su impacto condicionado y una recomendación preventiva.
 
 ## Resumen por área
 
@@ -100,9 +100,26 @@ Según la comprobación posterior aportada por el usuario, las siguientes prueba
 
 Esta verificación complementa la auditoría de código original y no modifica los hallazgos H01–H05. No fue un pentest ni una revisión integral de accesibilidad. Siguen pendientes pruebas más profundas sobre el resto del checkout, accesibilidad asistiva, zoom, caché/CDN y hardening.
 
+## Verificación posterior del formulario ecuatoriano
+
+Según las pruebas observadas aportadas por el usuario, se verificó el formulario en Chrome local con datos ficticios, con estos resultados:
+
+- El catálogo contiene 24 provincias y 221 cantones; Pichincha ofrece Quito.
+- Cambiar la provincia limpia el cantón y el código postal.
+- Enviar el formulario vacío enfoca el primer campo con error.
+- Un teléfono inválido recibe el foco y muestra una explicación del error.
+- Un código postal de 5 dígitos da error; el código postal vacío se acepta.
+- El celular `0991234567` se normaliza a `+593991234567`.
+- El teléfono fijo `02 234 5678` se normaliza a `+59322345678`.
+- El resumen de pago muestra provincia y cantón.
+- No hay inputs bancarios.
+- Confirmar vacía el carrito; en la comprobación, `localStorage` no contiene datos personales.
+
+Estas pruebas verifican las reglas y el flujo observados en Chrome local. No se comprobó la entregabilidad real de la dirección o del teléfono ni el cumplimiento legal certificado. Esta verificación complementa la auditoría y conserva los hallazgos H01–H06; el vaciado observado no descarta los escenarios de concurrencia o fallo de almacenamiento descritos en H01 y H02.
+
 ## Limitaciones
 
-En la auditoría de código original no se ejecutó un navegador, un lector de pantalla ni una herramienta automática de accesibilidad. Las pruebas posteriores en navegador real se limitan a lo registrado en la sección anterior. No se midieron contraste, objetivos táctiles, reflujo, recortes de foco ni dimensiones visuales. No se probó el formulario con la validación nativa real, autocompletado, historial completo o caché de navegación. Los contextos Node simularon almacenamiento y un DOM mínimo, no un navegador.
+En la auditoría de código original no se ejecutó un navegador, un lector de pantalla ni una herramienta automática de accesibilidad. Las pruebas posteriores en navegador real se limitan a lo registrado en las secciones anteriores: sí se probaron las reglas del formulario ecuatoriano en Chrome local con datos ficticios. No se realizaron pruebas con transportista, consulta de verificación telefónica (phone lookup), lector de pantalla ni compatibilidad extendida entre navegadores y dispositivos. No se midieron contraste, objetivos táctiles, reflujo, recortes de foco ni dimensiones visuales. Las pruebas registradas no cubren de forma exhaustiva la validación nativa, el autocompletado, el historial completo o la caché de navegación. Los contextos Node de la auditoría original simularon almacenamiento y un DOM mínimo, no un navegador.
 
 La auditoría inicial no accedió a configuración remota de GitHub ni a un sitio publicado; el estado posterior aportado sobre la fuente de Pages, el build, HTTPS y la respuesta del sitio queda registrado en H06. No se añaden comprobaciones de DNS, certificados, cabeceras HTTP ni registros de despliegue más allá del estado de build indicado. No se afirma que falten HTTPS o cabeceras de seguridad. No hay CSP declarada en `index.html`, pero su ausencia no demuestra una explotación; una política restrictiva puede evaluarse como defensa adicional antes de incorporar fuentes externas.
 
@@ -121,7 +138,7 @@ Como referencia para H01, [MDN: evento storage](https://developer.mozilla.org/en
 
 ## Integridad de los archivos de entrada
 
-Se conservaron los cuatro archivos existentes. Huellas SHA-256 tomadas durante la revisión y usadas para la verificación final:
+Huellas SHA-256 históricas de la revisión original; no representan las versiones posteriores del formulario, CSS y README:
 
 | Archivo | SHA-256 |
 | --- | --- |
