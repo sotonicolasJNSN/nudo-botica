@@ -40,9 +40,82 @@ const products = [
   {"id": "spray-refresca-rizos", "collections": ["rizos", "peinado"], "name": "Spray refrescante para rizos", "category": "Rizos y ondas", "size": "150 ml", "price": 1400, "art": "sage", "label": "Rizos renovados", "description": "Una bruma para refrescar y acomodar ondas y rizos entre lavados.", "benefits": ["Aplicación en spray", "Ayuda a reactivar la forma", "No requiere enjuague"]},
   {"id": "serum-cuero-cabelludo", "collections": ["cuero-cabelludo", "tratamientos"], "name": "Sérum para cuero cabelludo", "category": "Cuero cabelludo", "size": "50 ml", "price": 1750, "art": "oil dark", "label": "Cuidado desde la raíz", "description": "Un sérum ligero para integrar un masaje suave al cuidado del cuero cabelludo.", "benefits": ["Aplicación localizada", "Textura ligera", "Masajear suavemente"]},
   {"id": "exfoliante-cuero-cabelludo", "collections": ["cuero-cabelludo", "tratamientos"], "name": "Exfoliante suave de cuero cabelludo", "category": "Cuero cabelludo", "size": "150 g", "price": 1800, "art": "jar sage", "label": "Limpieza ocasional", "description": "Una fórmula de uso ocasional para masajear el cuero cabelludo antes del lavado.", "benefits": ["Uso ocasional", "Masajear con suavidad", "Enjuagar antes del shampoo"]},
-  {"id": "acondicionador-color", "collections": ["acondicionadores", "diario"], "name": "Acondicionador para cabello teñido", "category": "Cabello", "size": "250 ml", "price": 1600, "art": "clay", "label": "Suavidad y color", "description": "Un cuidado cremoso para suavizar los largos y acompañar la rutina del cabello teñido.", "benefits": ["Facilita el desenredado", "Suaviza medios y puntas", "Enjuagar después de aplicar"]}
+  {"id": "acondicionador-color", "collections": ["acondicionadores", "diario"], "name": "Acondicionador para cabello teñido", "category": "Cabello", "size": "250 ml", "price": 1600, "art": "clay", "label": "Suavidad y color", "description": "Un cuidado cremoso para suavizar los largos y acompañar la rutina del cabello teñido.", "benefits": ["Facilita el desenredado", "Suaviza medios y puntas", "Enjuagar después de aplicar"]},
+  {"id": "shampoo-volumen", "collections": ["shampoos", "diario"], "name": "Shampoo de volumen", "category": "Cabello", "size": "250 ml", "price": 1450, "art": "sage", "label": "Raíces con aire", "description": "Una limpieza ligera para acompañar las rutinas que buscan movimiento y cuerpo.", "benefits": ["Limpieza ligera", "Acompaña el volumen natural", "Enjuagar con abundante agua"]},
+  {"id": "shampoo-menta", "collections": ["shampoos", "cuero-cabelludo"], "name": "Shampoo de menta", "category": "Cuero cabelludo", "size": "250 ml", "price": 1500, "art": "dark", "label": "Frescura herbal", "description": "Un shampoo de aroma fresco para sumar una sensación revitalizante al lavado.", "benefits": ["Aroma herbal fresco", "Limpieza cotidiana", "Masajear suavemente"]},
+  {"id": "shampoo-antiresiduos", "collections": ["shampoos", "tratamientos"], "name": "Shampoo clarificante", "category": "Cabello", "size": "250 ml", "price": 1650, "art": "cream", "label": "Limpieza profunda", "description": "Una limpieza ocasional para complementar el lavado cuando se acumulan residuos de peinado.", "benefits": ["Uso ocasional", "Ayuda a retirar residuos", "Seguir con acondicionador"]},
+  {"id": "acondicionador-reparador", "collections": ["acondicionadores", "tratamientos"], "name": "Acondicionador reparador", "category": "Cabello", "size": "250 ml", "price": 1750, "art": "clay", "label": "Cuidado de largos", "description": "Un acondicionador cremoso para desenredar y acompañar el cuidado de medios y puntas.", "benefits": ["Facilita el desenredado", "Suaviza los largos", "Enjuagar después de aplicar"]},
+  {"id": "acondicionador-volumen", "collections": ["acondicionadores"], "name": "Acondicionador liviano", "category": "Cabello", "size": "250 ml", "price": 1500, "art": "cream", "label": "Suavidad sin peso", "description": "Un acondicionador de textura ligera para suavizar el cabello y conservar su movimiento.", "benefits": ["Textura ligera", "Facilita el peinado", "Enjuagar después de aplicar"]},
+  {"id": "mascarilla-hidratante", "collections": ["tratamientos"], "name": "Mascarilla hidratante", "category": "Cabello", "size": "200 g", "price": 1950, "art": "jar cream", "label": "Hidratación semanal", "description": "Un tratamiento de uso semanal para dedicar un momento de cuidado a los largos.", "benefits": ["Suaviza medios y puntas", "Textura cremosa", "Dejar actuar y enjuagar"]},
+  {"id": "mascarilla-color", "collections": ["tratamientos", "acondicionadores"], "name": "Mascarilla para cabello teñido", "category": "Cabello", "size": "200 g", "price": 2100, "art": "jar clay", "label": "Ritual para el color", "description": "Un tratamiento de textura envolvente para complementar el cuidado del cabello teñido.", "benefits": ["Acompaña la rutina de color", "Suaviza los largos", "Uso semanal"]},
+  {"id": "crema-rizos", "collections": ["rizos", "peinado"], "name": "Crema definidora de rizos", "category": "Rizos y ondas", "size": "200 ml", "price": 1750, "art": "tube sage", "label": "Rizos definidos", "description": "Una crema de peinado para acompañar la forma natural de ondas y rizos.", "benefits": ["Definición flexible", "Ayuda a controlar el frizz", "Aplicar sobre cabello húmedo"]},
+  {"id": "gel-fijacion-suave", "collections": ["rizos", "peinado"], "name": "Gel de fijación suave", "category": "Rizos y ondas", "size": "200 ml", "price": 1550, "art": "sage", "label": "Movimiento flexible", "description": "Un gel ligero para definir el peinado con movimiento y fijación suave.", "benefits": ["Fijación flexible", "Acompaña ondas y rizos", "Se distribuye fácilmente"]},
+  {"id": "aceite-capilar", "collections": ["tratamientos", "diario"], "name": "Aceite capilar ligero", "category": "Cabello", "size": "50 ml", "price": 1850, "art": "oil cream", "label": "Brillo en gotas", "description": "Unas gotas para suavizar los largos y dar un acabado luminoso al peinado.", "benefits": ["Aporta brillo ligero", "Suaviza las puntas", "Dosificación práctica"]},
+  {"id": "tonico-capilar", "collections": ["cuero-cabelludo", "tratamientos"], "name": "Tónico refrescante capilar", "category": "Cuero cabelludo", "size": "100 ml", "price": 1650, "art": "sage", "label": "Raíces frescas", "description": "Un tónico ligero para integrar un masaje refrescante al cuidado de la raíz.", "benefits": ["Aplicación localizada", "Textura ligera", "Masajear suavemente"]},
+  {"id": "spray-salino", "collections": ["peinado"], "name": "Spray de ondas", "category": "Estilo y barba", "size": "150 ml", "price": 1550, "art": "cream", "label": "Ondas naturales", "description": "Un spray de textura para acompañar peinados relajados y con movimiento.", "benefits": ["Aporta textura", "Acabado natural", "Aplicar sobre cabello húmedo o seco"]},
+  {"id": "pomada-mate", "collections": ["peinado"], "name": "Pomada mate", "category": "Estilo y barba", "size": "80 g", "price": 1600, "art": "jar dark", "label": "Fijación mate", "description": "Una pomada moldeable para definir el peinado con un acabado mate y flexible.", "benefits": ["Acabado mate", "Fijación flexible", "Permite retocar durante el día"]},
+  {"id": "aceite-barba-suave", "collections": ["barba"], "name": "Aceite nutritivo para barba", "category": "Estilo y barba", "size": "30 ml", "price": 1750, "art": "oil dark", "label": "Barba suave", "description": "Un aceite ligero para suavizar la barba y completar el cuidado diario.", "benefits": ["Suaviza el vello facial", "Aroma delicado", "Dosificar con gotero"]},
+  {"id": "balsamo-barba-mate", "collections": ["barba", "peinado"], "name": "Bálsamo moldeador de barba", "category": "Estilo y barba", "size": "60 g", "price": 1550, "art": "jar clay", "label": "Forma natural", "description": "Un bálsamo moldeable para ordenar la barba y mantener un acabado natural.", "benefits": ["Ayuda a dar forma", "Fijación suave", "Aplicar con las manos"]},
+  {"id": "crema-corporal", "collections": ["diario"], "name": "Crema corporal", "category": "Cuidado personal", "size": "200 ml", "price": 1450, "art": "cream", "label": "Piel en calma", "description": "Una crema de textura agradable para sumar un gesto de cuidado corporal cotidiano.", "benefits": ["Fácil de extender", "Textura cremosa", "Aroma delicado"]},
+  {"id": "exfoliante-corporal", "collections": ["diario", "tratamientos"], "name": "Exfoliante corporal suave", "category": "Cuidado personal", "size": "200 g", "price": 1750, "art": "jar sage", "label": "Pausa renovadora", "description": "Un exfoliante de uso ocasional para complementar el ritual de ducha.", "benefits": ["Uso ocasional", "Masajear sobre piel húmeda", "Enjuagar después de aplicar"]},
+  {"id": "mascarilla-cuero-cabelludo", "collections": ["cuero-cabelludo", "tratamientos"], "name": "Mascarilla de cuero cabelludo", "category": "Cuero cabelludo", "size": "150 g", "price": 1900, "art": "jar cream", "label": "Cuidado desde la raíz", "description": "Una pausa de cuidado para integrar antes del lavado, con masaje suave en el cuero cabelludo.", "benefits": ["Uso ocasional", "Masajear con suavidad", "Enjuagar antes del shampoo"]},
+  {"id": "spray-protector-termico", "collections": ["peinado", "tratamientos"], "name": "Bruma protectora térmica", "category": "Cabello", "size": "150 ml", "price": 1800, "art": "sage", "label": "Antes del calor", "description": "Una bruma ligera para sumar un paso de cuidado antes de usar herramientas térmicas.", "benefits": ["Aplicar antes del secado", "Textura ligera", "Distribuir sobre cabello húmedo"]},
+  {"id": "serum-brillo", "collections": ["tratamientos", "diario"], "name": "Sérum de brillo", "category": "Cabello", "size": "30 ml", "price": 1950, "art": "oil clay", "label": "Luz en las puntas", "description": "Un sérum ligero para dar un acabado cuidado y luminoso a los largos.", "benefits": ["Aporta brillo", "Suaviza las puntas", "Aplicar poca cantidad"]}
 ];
 const categories = ['Cabello', 'Estilo y barba', 'Cuidado personal', 'Rizos y ondas', 'Cuero cabelludo'];
+const priceRanges = [
+  { value: 'all', label: 'Cualquier precio' },
+  { value: 'under-10', label: 'Menos de $10' },
+  { value: '10-15', label: '$10 a $15' },
+  { value: '15-20', label: 'Más de $15' }
+];
+const sortOptions = [
+  { value: 'list', label: 'Orden de la lista' },
+  { value: 'price-asc', label: 'Precio: menor a mayor' },
+  { value: 'price-desc', label: 'Precio: mayor a menor' },
+  { value: 'name-asc', label: 'Nombre: A a Z' }
+];
+function filterFields(prefix, state) {
+  return `<label for="${prefix}-category">Categoría<select id="${prefix}-category" name="category">${[['', 'Todas las categorías'], ...categories.map(category => [category, category])].map(([value, label]) => `<option value="${escapeHTML(value)}" ${state.category === value ? 'selected' : ''}>${escapeHTML(label)}</option>`).join('')}</select></label>
+    <label for="${prefix}-price">Precio<select id="${prefix}-price" name="price">${priceRanges.map(range => `<option value="${range.value}" ${state.price === range.value ? 'selected' : ''}>${range.label}</option>`).join('')}</select></label>
+    <label class="sort-field" for="${prefix}-sort">Ordenar por<select id="${prefix}-sort" name="sort">${sortOptions.map(option => `<option value="${option.value}" ${state.sort === option.value ? 'selected' : ''}>${option.label}</option>`).join('')}</select></label>`;
+}
+function listingStateFrom(form) {
+  return {
+    category: form.elements.category.value,
+    price: form.elements.price.value,
+    sort: form.elements.sort.value
+  };
+}
+function listingQueryString(state) {
+  const params = new URLSearchParams();
+  if (state.category) params.set('categoria', state.category);
+  if (state.price !== 'all') params.set('precio', state.price);
+  if (state.sort !== 'list') params.set('orden', state.sort);
+  const query = params.toString();
+  return query ? '?' + query : '';
+}
+function filteredProducts(items, state, query = '') {
+  const normalizedQuery = normalizeSearch(query);
+  const results = items.filter(product => {
+    const matchesQuery = !normalizedQuery || normalizeSearch(
+      `${product.name} ${product.category} ${product.description} ${product.label} ${product.benefits.join(' ')}`
+    ).includes(normalizedQuery);
+    const matchesCategory = !state.category || product.category === state.category;
+    const matchesPrice = state.price === 'all'
+      || (state.price === 'under-10' && product.price < 1000)
+      || (state.price === '10-15' && product.price >= 1000 && product.price <= 1500)
+      || (state.price === '15-20' && product.price > 1500);
+    return matchesQuery && matchesCategory && matchesPrice;
+  });
+  if (state.sort === 'price-asc') results.sort((a, b) => a.price - b.price || products.indexOf(a) - products.indexOf(b));
+  if (state.sort === 'price-desc') results.sort((a, b) => b.price - a.price || products.indexOf(a) - products.indexOf(b));
+  if (state.sort === 'name-asc') results.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+  return results;
+}
+function listingControls(state) {
+  return `<form class="listing-controls" data-listing-controls><div class="filter-fields">${filterFields('catalog', state)}</div><div class="filter-actions"><button type="submit">Aplicar filtros</button><button type="button" class="filter-reset" data-reset-filters>Limpiar filtros</button></div></form>`;
+}
 // Colecciones independientes de los índices históricos de categoría.
 const collections = [
   { id: 'diario', title: 'Cuidado diario', note: 'Los gestos de cada día', description: 'Limpieza y suavidad para acompañar tu rutina.' },
@@ -73,7 +146,7 @@ const status = document.querySelector('#status');
 const cartFeedback = document.querySelector('#cart-feedback');
 const cartCount = document.querySelector('#cart-count');
 const storageKey = 'nudo-cart-v1';
-const money = cents => new Intl.NumberFormat('es', { style: 'currency', currency: 'USD' }).format(cents / 100);
+const money = cents => '$' + new Intl.NumberFormat('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cents / 100);
 const total = items => items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 const escapeHTML = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const icon = name => `<svg class="icon" aria-hidden="true"><use href="#icon-${name}"></use></svg>`;
@@ -93,6 +166,9 @@ const phoneCountries = Object.keys(dialCodes).map(iso => {
   try { name = regionNames?.of(iso) || iso; } catch { /* Fallback ISO. */ }
   return { iso, name };
 }).sort((a, b) => a.name.localeCompare(b.name, 'es'));
+let phonePicker = null;
+let phonePickerMode = '';
+let phonePickerResizeTimer;
 function countryFlag(iso) {
   return /^[A-Z]{2}$/.test(iso) && !['XK', 'AC', 'TA'].includes(iso) ? String.fromCodePoint(...[...iso].map(char => 0x1F1E6 + char.charCodeAt(0) - 65)) : '🌐';
 }
@@ -136,8 +212,41 @@ let shippingReady = false;
 const emptyPayment = () => ({ method: 'local', delivery: 'home', destination: { city: '', address: '', complement: '', postal: '' } });
 let payment = emptyPayment();
 let order = null;
-let orderNumber = 0;
 let storageWarning = false;
+let cartConfirmationAction = null;
+
+const cartConfirmDialog = document.querySelector('#cart-confirm-dialog');
+const cartConfirmTitle = document.querySelector('#cart-confirm-title');
+const cartConfirmMessage = document.querySelector('#cart-confirm-message');
+const cartConfirmAccept = document.querySelector('#cart-confirm-accept');
+
+function requestCartConfirmation(title, message, actionLabel, action) {
+  cartConfirmTitle.textContent = title;
+  cartConfirmMessage.textContent = message;
+  cartConfirmAccept.textContent = actionLabel;
+  cartConfirmationAction = action;
+  cartConfirmDialog.showModal();
+}
+function updateCartAfterRemoval(message) {
+  shippingReady = false;
+  order = null;
+  if (!cart.length) { shipping = {}; payment = emptyPayment(); }
+  saveCart();
+  render({ keepPosition: true });
+  (app.querySelector('[data-empty-cart]') || app.querySelector('h1')).focus({ preventScroll: true });
+  announce(`${message} Total del carrito: ${money(total(cart))}.`);
+}
+cartConfirmAccept.addEventListener('click', () => {
+  const action = cartConfirmationAction;
+  cartConfirmationAction = null;
+  cartConfirmDialog.close();
+  action?.();
+});
+document.querySelector('#cart-confirm-cancel').addEventListener('click', () => {
+  cartConfirmationAction = null;
+  cartConfirmDialog.close();
+});
+cartConfirmDialog.addEventListener('close', () => { cartConfirmationAction = null; });
 
 function loadCart() {
   try {
@@ -170,11 +279,11 @@ function showCartFeedback(message) {
 }
 const art = product => `<div class="art ${product.art}" role="img" aria-label="Ilustración de ${product.name}, envase de ${product.size}"><div class="pack" aria-hidden="true"><div class="label"><b>nudo</b><span>${product.label}</span><small>${product.size} · BOTICA</small></div></div></div>`;
 const heading = (eyebrow, title) => `<p class="eyebrow">${eyebrow}</p><h1 tabindex="-1">${title}</h1>`;
-const card = product => `<article class="card"><a class="card-visual" href="#detalle/${product.id}" aria-label="Ver ${product.name}">${art(product)}<span class="card-number" aria-hidden="true">Nº ${String(products.indexOf(product) + 1).padStart(2, '0')}</span></a><p class="eyebrow">${product.category}</p><h3><a href="#detalle/${product.id}">${product.name}</a></h3><p class="card-size">${product.size}</p><div class="card-bottom"><strong>${money(product.price)}</strong><a href="#detalle/${product.id}" aria-label="Ver detalle de ${product.name}">Ver detalle ↗</a></div><button class="card-add" type="button" data-add="${product.id}" aria-label="Agregar ${product.name} al carrito">${icon('cart')}<span>Agregar</span></button></article>`;
+const card = product => `<article class="card"><a class="card-visual" href="#detalle/${product.id}" aria-label="Ver ${product.name}">${art(product)}</a><p class="eyebrow">${product.category}</p><h3><a href="#detalle/${product.id}">${product.name}</a></h3><p class="card-size">${product.size}</p><div class="card-bottom"><strong>${money(product.price)}</strong><a href="#detalle/${product.id}" aria-label="Ver detalle de ${product.name}">Ver detalle ↗</a></div><button class="card-add" type="button" data-add="${product.id}" aria-label="Agregar ${product.name} al carrito">${icon('cart')}<span>Agregar</span></button></article>`;
 const miniProduct = product => `<article class="mini-product">${art(product)}<div class="mini-product-copy"><h3>${escapeHTML(product.name)}</h3><strong>${money(product.price)}</strong><a href="#detalle/${encodeURIComponent(product.id)}" aria-label="Ver detalle de ${escapeHTML(product.name)}">Ver detalle ↗</a></div></article>`;
 // Importes en centavos; única regla de cargo por fulfillment.
 const deliveryFee = fulfillment => fulfillment === 'online-home' ? 500 : 0;
-const totals = (items, fulfillment) => `<dl class="totals"><div><dt>Subtotal</dt><dd>${money(total(items))}</dd></div>${fulfillment === 'local-pickup' || fulfillment === 'online-pickup' ? '' : `<div><dt>Envío</dt><dd>${!fulfillment ? 'Se define en Pago' : money(deliveryFee(fulfillment))}</dd></div>`}<div class="total"><dt>Total <small>USD</small></dt><dd>${money(total(items) + deliveryFee(fulfillment))}</dd></div></dl>`;
+const totals = (items, fulfillment) => `<dl class="totals"><div><dt>Subtotal</dt><dd>${money(total(items))}</dd></div>${fulfillment === 'online-home' ? `<div><dt>Envío</dt><dd>${money(deliveryFee(fulfillment))}</dd></div>` : ''}<div class="total"><dt>Total</dt><dd>${money(total(items) + deliveryFee(fulfillment))}</dd></div></dl>`;
 const summary = (items, fulfillment) => `<ul class="summary">${items.map(item => `<li><span>${item.product.name} × ${item.quantity}</span><strong>${money(item.product.price * item.quantity)}</strong></li>`).join('')}</ul>${totals(items, fulfillment)}`;
 const stepper = step => `<ol class="stepper" aria-label="Pasos del checkout">${[['Datos de compra/contacto', 'person'], ['Pago', 'card'], ['Confirmación', 'check']].map(([label, symbol], index) => `<li ${index + 1 === step ? 'aria-current="step"' : ''} class="${index + 1 < step ? 'done' : ''}"><span aria-hidden="true">${index + 1 < step ? icon('check') : icon(symbol)}</span>${label}</li>`).join('')}</ol>`;
 const categoryHref = category => '#productos/' + categories.indexOf(category);
@@ -202,10 +311,27 @@ function cardFields() {
     ['expiry', 'Vencimiento (MM/AA)', 'MM/AA', 5], ['cvv', 'CVV', '123', 4]
   ].map(([name, label, placeholder, max]) => `<div class="field"><label for="payment-${name}">${label} *</label><input id="payment-${name}" name="${name}" type="text" required autocomplete="off" inputmode="numeric" maxlength="${max}" placeholder="${placeholder}" aria-describedby="error-${name}"><span class="field-error" id="error-${name}" aria-live="polite" aria-atomic="true"></span></div>`).join('')}</div></fieldset>`;
 }
+function passesLuhn(digits) {
+  let sum = 0;
+  let doubleDigit = false;
+  for (let index = digits.length - 1; index >= 0; index -= 1) {
+    let digit = Number(digits[index]);
+    if (doubleDigit) {
+      digit *= 2;
+      if (digit > 9) digit -= 9;
+    }
+    sum += digit;
+    doubleDigit = !doubleDigit;
+  }
+  return sum % 10 === 0;
+}
 function cardError(input) {
   if (input.name === 'cardNumber') {
-    const digits = input.value.replace(/\D/g, '');
+    const value = input.value.trim();
+    if (!/^[0-9]+(?:[ -][0-9]+)*$/.test(value)) return 'Usa solo dígitos y separadores válidos en el número de tarjeta.';
+    const digits = value.replace(/[ -]/g, '');
     if (digits.length < 12 || digits.length > 19) return 'Escribe un número de tarjeta de 12 a 19 dígitos.';
+    if (!passesLuhn(digits)) return 'Revisa el número de tarjeta; no supera la validación de Luhn.';
   }
   if (input.name === 'expiry') {
     if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(input.value)) return 'Escribe un mes válido en formato MM/AA.';
@@ -213,7 +339,14 @@ function cardError(input) {
   if (input.name === 'cvv' && !/^\d{3,4}$/.test(input.value)) return 'Escribe el código de seguridad de 3 o 4 dígitos.';
   return '';
 }
+function createVerificationCode() {
+  if (!window.crypto?.getRandomValues) throw new Error('No está disponible un generador seguro para el código del pedido.');
+  const bytes = window.crypto.getRandomValues(new Uint8Array(8));
+  const value = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('').toUpperCase();
+  return 'NUDO-' + value.match(/.{4}/g).join('-');
+}
 function updateCountryFlag() {
+  if (phonePicker) return;
   const iso = document.querySelector('#shipping-phoneCountry')?.value;
   if (!iso) return;
   const host = document.querySelector('#shipping-phoneCountry-flag');
@@ -226,6 +359,73 @@ function updateCountryFlag() {
   host.replaceChildren(img);
   document.querySelector('#phone-prefix').textContent = '+' + dialCodes[iso];
 }
+function initializePhonePicker() {
+  const countrySelect = document.querySelector('#shipping-phoneCountry');
+  const mobile = document.querySelector('#shipping-mobile');
+  if (!countrySelect || !mobile || !window.intlTelInput) {
+    updateCountryFlag();
+    return;
+  }
+  phonePickerMode = window.matchMedia('(max-width: 700px)').matches ? 'FULLSCREEN' : 'DROPDOWN';
+  phonePicker = window.intlTelInput(mobile, {
+    initialCountry: countrySelect.value.toLowerCase(),
+    separateDialCode: true,
+    countrySearch: true,
+    showFlags: true,
+    countrySelectorMode: phonePickerMode,
+    formatAsYouType: false,
+    countryNameLocale: 'es',
+    i18n: {
+      ...Object.fromEntries(phoneCountries.map(({ iso, name }) => [iso.toLowerCase(), name])),
+      selectedCountryAriaLabel: 'Cambiar país del número telefónico; seleccionado ${countryName} (${dialCode})',
+      noCountrySelected: 'Seleccionar país del número telefónico',
+      countryListAriaLabel: 'Lista de países',
+      searchPlaceholder: 'Buscar país o prefijo',
+      clearSearchAriaLabel: 'Limpiar búsqueda',
+      zeroSearchResults: 'No se encontraron países',
+      oneSearchResult: '1 país encontrado',
+      multipleSearchResults: '${count} países encontrados'
+    },
+    uiTranslations: {
+      selectedCountryAriaLabel: 'Cambiar país del número telefónico; seleccionado ${countryName} (${dialCode})',
+      noCountrySelected: 'Seleccionar país del número telefónico',
+      countryListAriaLabel: 'Lista de países',
+      searchPlaceholder: 'Buscar país o prefijo',
+      clearSearchAriaLabel: 'Limpiar búsqueda',
+      closeCountrySelectorAriaLabel: 'Cerrar',
+      searchEmptyState: 'No se encontraron países',
+      searchSummaryAria: count => count === 0 ? 'No se encontraron países' : count === 1 ? '1 país encontrado' : `${count} países encontrados`
+    }
+  });
+  mobile.form.classList.add('has-phone-picker');
+  mobile.addEventListener('countrychange', () => {
+    const iso = phonePicker.getSelectedCountryData().iso2.toUpperCase();
+    if (!Object.hasOwn(dialCodes, iso)) return;
+    countrySelect.value = iso;
+    shipping.phoneCountry = iso;
+    shippingReady = false;
+    mobile.maxLength = phoneMaxLength(iso);
+    if (mobile.value || mobile.hasAttribute('aria-invalid')) setFieldError(mobile, shippingError(mobile, mobile.form));
+  });
+}
+function adaptPhonePickerToViewport() {
+  if (!phonePicker) return;
+  const mode = window.matchMedia('(max-width: 700px)').matches ? 'FULLSCREEN' : 'DROPDOWN';
+  if (mode === phonePickerMode) return;
+  const mobile = document.querySelector('#shipping-mobile');
+  if (!mobile) return;
+  const hadFocus = document.activeElement === mobile;
+  phonePicker.destroy();
+  phonePicker = null;
+  phonePickerMode = '';
+  mobile.form.classList.remove('has-phone-picker');
+  initializePhonePicker();
+  if (hadFocus) mobile.focus({ preventScroll: true });
+}
+window.addEventListener('resize', () => {
+  window.clearTimeout(phonePickerResizeTimer);
+  phonePickerResizeTimer = window.setTimeout(adaptPhonePickerToViewport, 120);
+});
 function editPayment(event) {
   const input = event.target;
   if (!(input instanceof HTMLInputElement || input instanceof HTMLSelectElement) || input.form?.id !== 'payment-form') return;
@@ -257,7 +457,11 @@ function editPayment(event) {
 }
 
 function render(options = {}) {
-  const route = location.hash.slice(1) || 'inicio';
+  phonePicker?.destroy();
+  phonePicker = null;
+  phonePickerMode = '';
+  const [route, routeQuery = ''] = (location.hash.slice(1) || 'inicio').split('?');
+  const routeParams = new URLSearchParams(routeQuery);
   const product = products.find(item => route === 'detalle/' + item.id);
   const searchMatch = /^buscar\/(.+)$/.exec(route);
   let searchQuery = '';
@@ -269,13 +473,20 @@ function render(options = {}) {
   const categoryMatch = /^productos\/(0|[1-9]\d*)$/.exec(route);
   const categoryIndex = categoryMatch && Number(categoryMatch[1]) < categories.length ? Number(categoryMatch[1]) : -1;
   const collection = collections.find(item => route === 'productos/coleccion-' + item.id);
+  const categoryParam = categories.includes(routeParams.get('categoria')) ? routeParams.get('categoria') : '';
+  const listingState = {
+    category: categoryParam || (categoryIndex >= 0 ? categories[categoryIndex] : ''),
+    price: priceRanges.some(range => range.value === routeParams.get('precio')) ? routeParams.get('precio') : 'all',
+    sort: sortOptions.some(option => option.value === routeParams.get('orden')) ? routeParams.get('orden') : 'list'
+  };
   const isCatalog = route === 'productos' || categoryIndex >= 0 || Boolean(collection);
   if (!['inicio', 'carrito', 'envio', 'pago', 'confirmacion'].includes(route) && !isCatalog && !product && !isSearch) return replaceRoute('productos');
   if ((route === 'envio' || route === 'pago') && !cart.length) return replaceRoute('carrito');
   if (route === 'pago' && !shippingReady) return replaceRoute('envio');
   if (route === 'confirmacion' && !order) return replaceRoute('carrito');
   updateCartCount();
-  if (isSearch) document.querySelector('#site-search-input').value = searchQuery;
+  document.querySelector('#site-search-input').value = isSearch ? searchQuery : '';
+  document.querySelector('#search-filter-options').innerHTML = filterFields('search', listingState);
   document.querySelectorAll('nav a').forEach(link => {
     const active = link.hash === '#' + route || ((product || isCatalog || isSearch) && link.hash === '#productos');
     if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
@@ -287,20 +498,30 @@ function render(options = {}) {
       <aside class="hero-discovery" aria-labelledby="discovery-title"><h2 id="discovery-title">Encuentra tu ritual</h2><div class="discovery-links" aria-label="Explorar por categoría">${quickCategories.map(category => `<a class="discovery-link" href="${categoryHref(category)}"><span>${category}</span><span aria-hidden="true">↗</span></a>`).join('')}</div><div class="mini-products">${[products[0], products[1]].map(miniProduct).join('')}</div></aside>
       </section><div class="value-strip"><span>Una rutina para cada persona</span><span>Lo esencial, bien elegido</span><span>Tu momento de cuidado</span></div><div class="container home-selections">${categories.map((category, index) => { const items = products.filter(item => item.category === category); return '<section class="home-collection category-preview" aria-labelledby="home-category-' + index + '"><div class="section-head"><div><p class="eyebrow">La colección / NUDO</p><h2 id="home-category-' + index + '">' + category + '</h2></div></div><div class="grid home-grid">' + items.map(card).join('') + '</div><a class="explore-more" href="' + categoryHref(category) + '">Ver todos los productos de ' + category + ' <span aria-hidden="true">→</span></a></section>'; }).join('')}</div>`;
   } else if (isSearch) {
-    const query = normalizeSearch(searchQuery);
-    const results = products.filter(item => normalizeSearch(`${item.name} ${item.category} ${item.description} ${item.label}`).includes(query));
-    app.innerHTML = `<div class="container search-results"><a class="back" href="#productos">← Volver a productos</a>${heading('Búsqueda / NUDO', `Resultados para “${escapeHTML(searchQuery)}”`)}${results.length ? `<div class="grid search-grid">${results.map(card).join('')}</div>` : `<div class="search-empty">${icon('search')}<h2>No encontramos productos</h2><p class="muted">Prueba con otro nombre o categoría, o explora todos los productos.</p><a class="button" href="#productos">Ver todos los productos</a></div>`}</div>`;
+    const results = filteredProducts(products, listingState, searchQuery);
+    const hasFilters = listingState.category || listingState.price !== 'all' || listingState.sort !== 'list';
+    app.innerHTML = `<div class="container search-results"><a class="back" href="#productos">← Volver a productos</a>${heading('Búsqueda / NUDO', `Resultados para “${escapeHTML(searchQuery)}”`)}${listingControls(listingState)}${results.length ? `<div class="grid search-grid">${results.map(card).join('')}</div>` : `<div class="search-empty">${icon('search')}<h2>No hay productos con estos filtros</h2><p class="muted">Prueba con otro término, categoría o rango de precio.</p>${hasFilters ? '<button class="secondary" type="button" data-reset-filters>Limpiar filtros</button>' : '<a class="button" href="#productos">Explorar todos los productos</a>'}</div>`}</div>`;
   } else if (isCatalog) {
-    const selected = categoryIndex < 0 ? null : categories[categoryIndex];
+    const selected = categoryIndex < 0 ? (listingState.category || null) : categories[categoryIndex];
     const catalogSection = (title, id, items, preview) => '<section class="category-section" aria-labelledby="' + id + '"><div class="category-heading"><h2 id="' + id + '">' + title + '</h2></div><div class="grid' + (preview ? ' home-grid' : '') + '">' + items.map(card).join('') + '</div>' + (preview ? '<a class="explore-more" href="' + categoryHref(title) + '">Ver todos los productos de ' + title + ' <span aria-hidden="true">→</span></a>' : '') + '</section>';
+    const sourceProducts = collection ? collectionProducts(collection) : products;
+    const results = filteredProducts(sourceProducts, listingState);
     const otherCategories = categories.filter(category => category !== selected).map((category, index) =>
       catalogSection(category, 'other-category-' + index, products.filter(item => item.category === category), true)
     ).join('');
-    app.innerHTML = '<div class="container"><div class="catalog-intro"><div>' + heading('La colección / NUDO', collection ? collection.title : selected || 'Tu próxima rutina.') + '<p class="muted">' + (collection ? collection.description : selected ? 'Descubre toda la colección de ' + selected.toLowerCase() + ' y encuentra tus esenciales.' : 'Cabello, estilo y cuidado personal. Elige lo que acompaña tu rutina.') + '</p></div><p class="muted">Precios en USD</p></div>' + (collection ? catalogSection(collection.title, 'collection-' + collection.id, collectionProducts(collection), false) : selected ? catalogSection(selected, 'category-' + categoryIndex, products.filter(item => item.category === selected), false) + '<section class="other-categories" aria-labelledby="other-categories-title"><h2 id="other-categories-title">También puedes explorar</h2>' + otherCategories + '</section>' : categories.map((category, index) => catalogSection(category, 'category-' + index, products.filter(item => item.category === category), true)).join('')) + '</div>';
+    const showPreviews = !collection && !selected && !routeQuery;
+    const catalogContent = collection
+      ? results.length ? catalogSection(collection.title, 'collection-' + collection.id, results, false) : `<div class="search-empty"><h2>No hay productos con estos filtros</h2><p class="muted">Prueba con otra categoría o rango de precio.</p></div>`
+      : selected && !routeQuery
+        ? catalogSection(selected, 'category-' + categoryIndex, results, false) + '<section class="other-categories" aria-labelledby="other-categories-title"><h2 id="other-categories-title">También puedes explorar</h2>' + otherCategories + '</section>'
+        : showPreviews
+          ? categories.map((category, index) => catalogSection(category, 'category-' + index, products.filter(item => item.category === category), true)).join('')
+          : results.length ? catalogSection(listingState.category || 'Productos', 'filtered-products', results, false) : `<div class="search-empty"><h2>No hay productos con estos filtros</h2><p class="muted">Prueba con otra categoría o rango de precio.</p></div>`;
+    app.innerHTML = '<div class="container"><div class="catalog-intro"><div>' + heading('La colección / NUDO', collection ? collection.title : selected || 'Tu próxima rutina.') + '<p class="muted">' + (collection ? collection.description : selected ? 'Descubre toda la colección de ' + selected.toLowerCase() + ' y encuentra tus esenciales.' : 'Cabello, estilo y cuidado personal. Elige lo que acompaña tu rutina.') + '</p></div></div>' + listingControls(listingState) + catalogContent + '</div>';
   } else if (product) {
-    app.innerHTML = `<div class="container"><a class="back" href="#productos">← Volver a la colección</a><div class="detail">${art(product)}<div class="detail-copy">${heading(product.category + ' / NUDO', product.name)}<p>${product.description}</p><p>Presentación · <strong>${product.size}</strong></p><ul class="benefits">${product.benefits.map(benefit => `<li>${icon('check')}${benefit}</li>`).join('')}</ul><div class="detail-price">${money(product.price)}<small>USD</small></div><button class="button" data-add="${product.id}">${icon('cart')}<span>Agregar al carrito</span></button><p class="fine">Se agrega una unidad. Podrás ajustar la cantidad en el carrito.</p></div></div><section class="related-products" aria-labelledby="related-title"><div class="section-head"><div><p class="eyebrow">Completa tu rutina</p><h2 id="related-title">Productos que podrían interesarte</h2></div><a class="text-link" href="#productos">Ver todos ↗</a></div><div class="grid">${relatedProducts(product).map(card).join('')}</div></section></div>`;
+    app.innerHTML = `<div class="container"><a class="back" href="#productos">← Volver a la colección</a><div class="detail">${art(product)}<div class="detail-copy">${heading(product.category + ' / NUDO', product.name)}<p>${product.description}</p><p>Presentación · <strong>${product.size}</strong></p><ul class="benefits">${product.benefits.map(benefit => `<li>${icon('check')}${benefit}</li>`).join('')}</ul><div class="detail-price">${money(product.price)}</div><button class="button" data-add="${product.id}">${icon('cart')}<span>Agregar al carrito</span></button><p class="fine">Se agrega una unidad. Podrás ajustar la cantidad en el carrito.</p></div></div><section class="related-products" aria-labelledby="related-title"><div class="section-head"><div><p class="eyebrow">Completa tu rutina</p><h2 id="related-title">Productos que podrían interesarte</h2></div><a class="text-link" href="#productos">Ver todos ↗</a></div><div class="grid">${relatedProducts(product).map(card).join('')}</div></section></div>`;
   } else if (route === 'carrito') {
-    app.innerHTML = `<div class="container">${heading('Tu selección', 'Carrito')}${cart.length ? `<div class="layout"><div>${cart.map(item => `<article class="cart-row">${art(item.product)}<div><h2><a href="#detalle/${item.product.id}">${item.product.name}</a></h2><p>${item.product.size} · ${money(item.product.price)} / unidad</p><strong class="cart-price">${money(item.product.price * item.quantity)}</strong><div class="quantity"><button class="secondary" data-change="-1" data-id="${item.product.id}" aria-label="Restar una unidad de ${item.product.name}" ${item.quantity === 1 ? 'disabled' : ''}>−</button><span aria-label="Cantidad: ${item.quantity}">${item.quantity}</span><button class="secondary" data-change="1" data-id="${item.product.id}" aria-label="Sumar una unidad de ${item.product.name}" ${item.quantity >= 99 ? 'disabled' : ''}>+</button><button class="remove" data-remove="${item.product.id}" aria-label="Eliminar ${item.product.name}">Eliminar</button></div></div></article>`).join('')}<a class="back" href="#productos">← Seguir explorando</a></div><aside class="panel" aria-label="Resumen del carrito"><h2>${icon('cart')}Tu ritual, listo.</h2>${totals(cart)}<a class="button" href="#envio">Continuar a datos de compra/contacto →</a></aside></div>` : `<div class="empty"><div class="empty-icon">${icon('cart')}</div><h2>Tu ritual está por empezar.</h2><p class="muted">Tu carrito está vacío. Explora nuestros esenciales y encuentra un momento para ti.</p><a class="button" href="#productos">Explorar productos ↗</a></div>`}</div>`;
+    app.innerHTML = `<div class="container">${heading('Tu selección', 'Carrito')}${cart.length ? `<div class="layout"><div class="cart-items"><div class="cart-actions"><a class="back" href="#productos">← Seguir explorando</a><button class="secondary empty-cart" type="button" data-empty-cart>Vaciar carrito</button></div>${cart.map(item => `<article class="cart-row">${art(item.product)}<div><h2><a href="#detalle/${item.product.id}">${item.product.name}</a></h2><p>${item.product.size} · ${money(item.product.price)} / unidad</p><strong class="cart-price">${money(item.product.price * item.quantity)}</strong><div class="quantity"><button class="secondary" data-change="-1" data-id="${item.product.id}" aria-label="Restar una unidad de ${item.product.name}" ${item.quantity === 1 ? 'disabled' : ''}>−</button><span aria-label="Cantidad: ${item.quantity}">${item.quantity}</span><button class="secondary" data-change="1" data-id="${item.product.id}" aria-label="Sumar una unidad de ${item.product.name}" ${item.quantity >= 99 ? 'disabled' : ''}>+</button><button class="remove" data-remove="${item.product.id}" aria-label="Eliminar ${item.product.name}">Eliminar</button></div></div></article>`).join('')}</div><aside class="panel" aria-label="Resumen del carrito"><h2>${icon('cart')}Tu ritual, listo.</h2>${totals(cart)}<a class="button" href="#envio">Continuar a datos de compra/contacto →</a></aside></div>` : `<div class="empty"><div class="empty-icon">${icon('cart')}</div><h2>Tu ritual está por empezar.</h2><p class="muted">Tu carrito está vacío. Explora nuestros esenciales y encuentra un momento para ti.</p><a class="button" href="#productos">Explorar productos ↗</a></div>`}</div>`;
   } else if (route === 'envio') {
     const fields = [
       ['firstName', 'Primer nombre', 'given-name', true], ['secondName', 'Segundo nombre (opcional)', 'additional-name', false],
@@ -310,14 +531,16 @@ function render(options = {}) {
     const phoneCountry = shipping.phoneCountry || 'EC';
     app.innerHTML = `<div class="container">${stepper(1)}${heading('Tu pedido / 01', 'Datos de compra/contacto')}<p class="muted">Los campos con * son obligatorios.</p><p><strong>Contexto de la compra:</strong> Ecuador</p><div class="layout"><form id="shipping-form" novalidate><div id="form-error" class="form-error" role="alert"></div><div class="fields">${fields.map(([name, label, autocomplete, required]) => `<div class="field"><label for="shipping-${name}">${label}${required ? ' <span aria-hidden="true">*</span>' : ''}</label><input id="shipping-${name}" name="${name}" type="${name === 'email' ? 'email' : name === 'landline' ? 'tel' : 'text'}" autocomplete="${autocomplete}" maxlength="160" ${name === 'landline' ? 'placeholder="02 999 9999"' : ''} ${required ? 'required' : ''} aria-describedby="error-${name}" value="${escapeHTML(shipping[name] || '')}"><span class="field-error" id="error-${name}" aria-live="polite" aria-atomic="true"></span></div>`).join('')}
 
-    <div class="phone-fields wide"><div class="field"><label for="shipping-phoneCountry">País del celular / prefijo</label><span class="phone-country-control"><span id="shipping-phoneCountry-flag" class="phone-country-flag">${countryFlag(phoneCountry)}</span><select id="shipping-phoneCountry" name="phoneCountry" aria-describedby="error-phoneCountry">${phoneCountryOptions(phoneCountry)}</select><span id="phone-prefix" class="phone-prefix">+${dialCodes[phoneCountry]}</span></span><span class="field-error" id="error-phoneCountry" aria-live="polite" aria-atomic="true"></span></div><div class="field"><label for="shipping-mobile">Celular *</label><input id="shipping-mobile" name="mobile" type="text" required inputmode="numeric" autocomplete="tel-national" maxlength="${phoneMaxLength(phoneCountry)}" value="${escapeHTML(shipping.mobile || '')}" aria-describedby="error-mobile help-mobile"><span class="field-error" id="error-mobile" aria-live="polite" aria-atomic="true"></span></div><span class="field-help wide" id="help-mobile">Solo dígitos, sin prefijo. Para Ecuador: 9 dígitos empezando en 9, sin cero inicial. Máximo 15 dígitos contando el prefijo seleccionado.</span></div>
+    <div class="phone-fields wide"><div class="field phone-country-field"><label for="shipping-phoneCountry">País del celular / prefijo</label><span class="phone-country-control"><span id="shipping-phoneCountry-flag" class="phone-country-flag">${countryFlag(phoneCountry)}</span><select id="shipping-phoneCountry" name="phoneCountry" aria-describedby="error-phoneCountry">${phoneCountryOptions(phoneCountry)}</select><span id="phone-prefix" class="phone-prefix">+${dialCodes[phoneCountry]}</span></span><span class="field-error" id="error-phoneCountry" aria-live="polite" aria-atomic="true"></span></div><div class="field phone-number-field"><label for="shipping-mobile">Celular *</label><input id="shipping-mobile" name="mobile" type="tel" required inputmode="tel" autocomplete="tel-national" maxlength="${phoneMaxLength(phoneCountry)}" value="${escapeHTML(shipping.mobile || '')}" aria-describedby="error-mobile help-mobile"><span class="field-error" id="error-mobile" aria-live="polite" aria-atomic="true"></span></div><span class="field-help wide" id="help-mobile">Solo dígitos, sin prefijo. Para Ecuador: 9 dígitos empezando en 9, sin cero inicial. Máximo 15 dígitos contando el prefijo seleccionado.</span></div>
     </div><div class="actions"><button type="submit">Continuar al pago →</button><a class="text-link" href="#carrito">← Volver al carrito</a></div><p class="fine">Los datos de contacto no se guardan y se eliminan al recargar o confirmar.</p></form><aside class="panel"><h2>Tu selección</h2>${summary(cart)}</aside></div></div>`;
   } else if (route === 'pago') {
     app.innerHTML = `<div class="container">${stepper(2)}${heading('Tu pedido / 02', 'Pago')}<div class="layout"><div><form id="payment-form" novalidate><div id="form-error" class="form-error" role="alert"></div><fieldset class="checkout-options"><legend>Elige cómo pagar</legend><div class="segmented">${paymentOption('method', 'local', 'Pagar y retirar en el local')}${paymentOption('method', 'online', 'Pago en línea')}</div></fieldset><p id="local-notice" ${payment.method === 'local' ? '' : 'hidden'}>Pago pendiente en el local. Retira en 12 de Octubre y Veintimilla. No necesitas indicar un destino.</p><fieldset id="delivery-options" class="checkout-options" ${payment.method === 'online' ? '' : 'hidden'}><legend>Entrega del pedido</legend><div class="segmented">${paymentOption('delivery', 'home', 'Enviar a casa')}${paymentOption('delivery', 'pickup', 'Retirar en el local')}</div></fieldset><div id="card-panel">${cardFields()}</div><div id="destination-panel">${destinationFields()}</div></form><h2>Contacto</h2><p class="shipping-summary">${escapeHTML(nameFields.map(key => shipping[key]).filter(Boolean).join(' '))}<br>Correo: ${escapeHTML(shipping.email)}<br>Celular: ${countryFlag(shipping.phoneCountry)} ${escapeHTML(phoneCountries.find(country => country.iso === shipping.phoneCountry)?.name || shipping.phoneCountry)} +${dialCodes[shipping.phoneCountry]} ${escapeHTML(shipping.mobile)}${shipping.landline ? '<br>Teléfono fijo (Ecuador): ' + escapeHTML(shipping.landline) : ''}</p><a class="text-link" href="#envio">← Editar contacto</a></div><aside class="panel"><h2>Resumen del pedido</h2><div id="payment-summary">${summary(cart, currentFulfillment())}</div><p id="fulfillment-summary">${fulfillmentLabel(currentFulfillment())}</p><button class="button" type="submit" form="payment-form" data-pay>${paymentButtonLabel()}</button><a class="text-link" href="#carrito">Editar carrito</a></aside></div></div>`;
   } else if (route === 'confirmacion') {
-    app.innerHTML = `<div class="container confirmation">${stepper(3)}<div class="success-mark" aria-hidden="true">✓</div>${heading('Tu pedido / 03 · ' + order.reference, order.fulfillment === 'online-home' ? 'Ticket de envío a casa' : 'Ticket de retiro')}<p class="confirmation-encouragement">Gracias por elegir NUDO. Sigue explorando y encuentra más esenciales para tu rutina.</p><p class="checkout-disclosure"><strong>${order.fulfillment === 'local-pickup' ? 'Pago pendiente en el local.' : 'Pago en línea no procesado.'}</strong> No se ha realizado ningún cobro${order.fulfillment === 'online-home' ? ' ni envío' : ''}. Los datos personales ya se eliminaron.</p><div class="panel"><h2>Resumen del pedido</h2>${summary(order.items, order.fulfillment)}<p>${fulfillmentLabel(order.fulfillment)}</p>${order.fulfillment === 'online-home' ? '<p>Envío a casa · Cargo de envío: ' + money(order.deliveryFee) + '</p>' : ''}</div><div class="actions"><a class="button" href="#productos">Seguir explorando ↗</a><a class="text-link" href="#inicio">Volver al inicio</a></div></div>`;
+    const ticketTitle = order.paymentMethod === 'local' ? 'Ticket de pago' : order.fulfillment === 'online-home' ? 'Ticket de envío' : 'Ticket de retiro';
+    const paymentStatus = order.paymentMethod === 'local' ? 'Pago pendiente en el local.' : 'Pago confirmado.';
+    app.innerHTML = `<div class="container confirmation">${stepper(3)}<div class="success-mark" aria-hidden="true">✓</div>${heading('Tu pedido / 03', ticketTitle)}<p class="confirmation-encouragement">Gracias por elegir NUDO. Sigue explorando y encuentra más esenciales para tu rutina.</p><p class="checkout-disclosure"><strong>${paymentStatus}</strong></p><div class="panel ticket-panel"><h2>Resumen del pedido</h2><p class="verification-code"><span>Código de verificación</span><strong>${order.reference}</strong></p>${summary(order.items, order.fulfillment)}<p>${order.paymentMethod === 'local' ? 'Punto de pago: 12 de Octubre y Veintimilla.' : fulfillmentLabel(order.fulfillment)}</p>${order.fulfillment === 'online-home' ? '<p>Envío a casa · Cargo de envío: ' + money(order.deliveryFee) + '</p>' : ''}</div><div class="actions"><a class="button" href="#productos">Seguir explorando ↗</a><a class="text-link" href="#inicio">Volver al inicio</a></div></div>`;
   }
-  updateCountryFlag();
+  initializePhonePicker();
   document.title = app.querySelector('h1').textContent + ' | NUDO';
   if (!options.keepPosition) { app.querySelector('h1').focus({ preventScroll: true }); window.scrollTo(0, 0); }
 }
@@ -346,25 +569,48 @@ app.addEventListener('click', event => {
       button.innerHTML = originalContent;
       button.classList.remove('added-feedback');
     }, 1800);
-  } else if (button.dataset.change || button.dataset.remove) {
-    const id = button.dataset.id || button.dataset.remove;
+  } else if (button.dataset.change) {
+    const id = button.dataset.id;
     const item = cart.find(entry => entry.product.id === id);
     if (!item) return;
     const change = button.dataset.change;
-    if (button.dataset.remove) cart = cart.filter(entry => entry !== item);
-    else item.quantity = Math.min(99, Math.max(1, item.quantity + Number(change)));
+    item.quantity = Math.min(99, Math.max(1, item.quantity + Number(change)));
     shippingReady = false;
     order = null;
-    if (!cart.length) { shipping = {}; payment = emptyPayment(); }
     saveCart();
     render({ keepPosition: true });
     const next = [...app.querySelectorAll('button')].find(candidate => candidate.dataset.id === id && candidate.dataset.change === change && !candidate.disabled)
       || [...app.querySelectorAll('button')].find(candidate => candidate.dataset.id === id && !candidate.disabled)
       || app.querySelector('.cart-row button:not(:disabled)') || app.querySelector('h1');
     next.focus({ preventScroll: true });
-    announce(`${button.dataset.remove ? item.product.name + ' eliminado.' : 'Cantidad actualizada: ' + item.quantity + '.'} Total del carrito: ${money(total(cart))}.`);
+    announce(`Cantidad actualizada: ${item.quantity}. Total del carrito: ${money(total(cart))}.`);
   }
 });
+app.addEventListener('click', event => {
+  const button = event.target.closest('[data-remove], [data-empty-cart]');
+  if (!button) return;
+  if (button.dataset.emptyCart !== undefined) {
+    requestCartConfirmation(
+      '¿Vaciar el carrito?',
+      'Se eliminarán todos los productos del carrito. Esta acción no se puede deshacer.',
+      'Vaciar carrito',
+      () => { cart = []; updateCartAfterRemoval('Carrito vaciado.'); }
+    );
+    return;
+  }
+  const item = cart.find(entry => entry.product.id === button.dataset.remove);
+  if (!item) return;
+  requestCartConfirmation(
+    '¿Eliminar este producto?',
+    `Se quitará ${item.product.name} del carrito.`,
+    'Eliminar producto',
+    () => {
+      cart = cart.filter(entry => entry !== item);
+      updateCartAfterRemoval(`${item.product.name} eliminado.`);
+    }
+  );
+});
+cartConfirmDialog.addEventListener('cancel', () => { cartConfirmationAction = null; });
 
 const searchToggle = document.querySelector('#search-toggle');
 const searchForm = document.querySelector('#site-search');
@@ -390,9 +636,35 @@ document.addEventListener('pointerdown', event => {
 searchForm.addEventListener('submit', event => {
   event.preventDefault();
   const query = searchInput.value.trim();
-  if (!query) { searchInput.focus(); return; }
   closeSearch();
-  location.hash = 'buscar/' + encodeURIComponent(query);
+  const listingQuery = listingQueryString(listingStateFrom(searchForm));
+  location.hash = query
+    ? 'buscar/' + encodeURIComponent(query) + listingQuery
+    : 'productos' + listingQuery;
+});
+function resetFilters(form) {
+  form.elements.category.value = '';
+  form.elements.price.value = 'all';
+  form.elements.sort.value = 'list';
+  form.requestSubmit();
+}
+searchForm.addEventListener('click', event => {
+  if (event.target.closest('[data-reset-filters]')) resetFilters(searchForm);
+});
+app.addEventListener('click', event => {
+  const resetButton = event.target.closest('[data-reset-filters]');
+  if (resetButton) {
+    const form = location.hash.slice(1).startsWith('buscar/')
+      ? searchForm
+      : resetButton.closest('form') || app.querySelector('[data-listing-controls]');
+    if (form) resetFilters(form);
+  }
+});
+app.addEventListener('submit', event => {
+  const form = event.target;
+  if (!form.matches('[data-listing-controls]')) return;
+  event.preventDefault();
+  location.hash = 'productos' + listingQueryString(listingStateFrom(form));
 });
 searchForm.addEventListener('keydown', event => {
   if (event.key !== 'Escape') return;
@@ -401,11 +673,13 @@ searchForm.addEventListener('keydown', event => {
 function editShipping(event) {
   const input = event.target;
   if (!(input instanceof HTMLInputElement || input instanceof HTMLSelectElement) || input.form?.id !== 'shipping-form') return;
+  if (!['firstName', 'secondName', 'firstSurname', 'secondSurname', 'email', 'landline', 'phoneCountry', 'mobile'].includes(input.name)) return;
   if (input.name === 'mobile') input.value = input.value.replace(/[^0-9]/g, '').slice(0, input.maxLength);
   shipping[input.name] = input.value;
   shippingReady = false;
   if (input.name === 'phoneCountry') {
     const mobile = input.form.elements.mobile;
+    phonePicker?.setCountry(input.value.toLowerCase());
     updateCountryFlag();
     mobile.maxLength = phoneMaxLength(input.value);
     if (mobile.value || mobile.hasAttribute('aria-invalid')) setFieldError(mobile, shippingError(mobile, input.form));
@@ -474,9 +748,17 @@ app.addEventListener('submit', event => {
     firstInvalid.focus();
     return;
   }
+  let verificationCode;
+  try {
+    verificationCode = createVerificationCode();
+  } catch (error) {
+    console.error(error);
+    document.querySelector('#form-error').textContent = 'No se pudo generar el código del pedido. Intenta nuevamente.';
+    return;
+  }
   document.querySelector('[data-pay]').disabled = true;
-  orderNumber += 1;
-  order = { reference: 'NUDO-' + String(orderNumber).padStart(4, '0'), items: cart.map(item => ({ ...item })), fulfillment: currentFulfillment(), deliveryFee: deliveryFee(currentFulfillment()) };
+  const fulfillment = currentFulfillment();
+  order = { reference: verificationCode, items: cart.map(item => ({ ...item })), fulfillment, paymentMethod: payment.method, deliveryFee: deliveryFee(fulfillment) };
   cart = [];
   shipping = {};
   shippingReady = false;
@@ -484,7 +766,7 @@ app.addEventListener('submit', event => {
   saveCart();
   // Sustituir Pago en el historial y vaciar el carrito impide repetir la simulación.
   replaceRoute('confirmacion');
-  announce('Pedido registrado. No se ha realizado ningún cobro.');
+  announce('Pedido registrado.');
 });
 document.querySelector('.skip-link').addEventListener('click', event => { event.preventDefault(); app.focus(); app.scrollIntoView(); });
 window.addEventListener('hashchange', () => render());

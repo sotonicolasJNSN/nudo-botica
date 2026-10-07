@@ -1,47 +1,47 @@
 # NUDO — Botica contemporánea
 
-Prototipo de tienda de cuidado capilar y personal en HTML, CSS y JavaScript nativos. Catálogo de 40 productos, colecciones, detalle, carrito y checkout simulado. Ilustraciones CSS y fuentes del sistema; sin backend, procesador de pagos ni certificación de seguridad o accesibilidad. No existen compras, cobros, correos ni entregas reales.
+Tienda estática de cuidado capilar y personal en HTML, CSS y JavaScript nativos, con 60 productos, colecciones, detalle, carrito y checkout. Ilustraciones CSS y fuentes del sistema; sin backend, procesador de pagos ni certificación de seguridad o accesibilidad. No existen compras, cobros, correos ni entregas reales.
 
 ## Actualización UI/UX — 7 de octubre de 2026
 
-El encabezado incluye iconos SVG locales para Inicio, Productos, Carrito y búsqueda. El cuadro de búsqueda se despliega lateralmente junto a la lupa, filtra nombre, categoría, descripción y etiqueta sin distinguir tildes, y permite agregar resultados al carrito. Las fichas muestran productos relacionados por categoría y colección. La portada y el catálogo muestran una fila de productos por categoría, adaptable al ancho de pantalla; «Ver todos» abre la categoría completa y mantiene las otras categorías visibles con su propia fila de productos. El catálogo incluye 40 productos y cinco categorías, entre ellas Rizos y ondas y Cuero cabelludo. El pie presenta correo, teléfonos y dirección en un diseño adaptable.
+El encabezado incluye iconos SVG locales para Inicio, Productos, Carrito y búsqueda. El cuadro de búsqueda se despliega junto a la lupa, busca nombre, categoría, descripción, etiqueta y beneficios sin distinguir tildes, y permite filtrar por categoría y rango de precio u ordenar por precio, nombre u orden de lista. Los mismos controles están disponibles en el catálogo y en los resultados de búsqueda; sus selecciones se reflejan en la ruta para conservar el estado al navegar. Las fichas muestran productos relacionados por categoría y colección. La portada y el catálogo muestran una fila de productos por categoría, adaptable al ancho de pantalla; «Ver todos» abre la categoría completa y mantiene las otras categorías visibles con su propia fila de productos. El catálogo incluye 60 productos y cinco categorías, entre ellas Rizos y ondas y Cuero cabelludo. Los precios usan el símbolo `$` una sola vez, delante del importe, con mayor jerarquía visual. El carrito confirma antes de quitar un artículo y ofrece vaciar todo. El pie presenta correo, teléfonos y dirección en un diseño adaptable.
 
-La búsqueda queda anclada al botón de lupa, usa un solo icono y se cierra al hacer clic fuera. En el resumen, la fila de envío solo aparece antes de elegir la entrega o al seleccionar domicilio; para retiros se omite. El ticket de retiro no muestra cargos ni datos de envío. La aclaración de pago no procesado aparece una sola vez al final del checkout, en la confirmación.
+La búsqueda queda anclada al botón de lupa, usa un solo icono y se cierra al hacer clic fuera. La cabecera permanece fija al desplazarse. En el resumen, la fila de envío solo aparece al elegir entrega a domicilio; para pagos/retiros se omite. El ticket de pago local no se presenta como ticket de retiro; los tickets de retiro o envío se muestran en el flujo en línea. Cada ticket incluye un código aleatorio de referencia, sin consulta automática ni verificación en servidor.
 
 ## Archivos y regla_runtime
 
-- `index.html`: estructura, navegación, búsqueda e iconos locales.
+- `index.html`: estructura, navegación, búsqueda e iconos locales; integra `intl-tel-input` 25.12.2 por CDN para selector de país con búsqueda y banderas.
 - `script.js`: catálogo, rutas hash, búsqueda tolerante a tildes, carrito, contacto, validación de prueba y tickets.
 - `styles.css`: presentación adaptable, iconografía SVG local, controles nativos y bandera/prefijo separados.
 - `README.md` y `AUDITORIA.md`: uso, alcance, evidencias y limitaciones.
 
-El historial de auditoría de la publicación en el commit `70597e0` se conserva como referencia documental; la actualización UI/UX del 7 de octubre sí modifica `index.html`, `script.js` y `styles.css`. **regla_runtime:** el único recurso externo automático es la imagen de bandera en `https://flagcdn.com/w40/${iso.toLowerCase()}.png`. Sí es un CDN externo en runtime; no se afirma cero recursos externos. No hay librerías remotas, analítica, API de pago ni consultas automáticas de teléfonos o direcciones. El enlace de ayuda al portal de código postal se abre solo por acción del usuario.
+El historial de auditoría de la publicación en el commit `70597e0` se conserva como referencia documental. **Recursos externos en runtime:** `intl-tel-input` 25.12.2 (JavaScript, CSS y sprites de banderas) se carga desde jsDelivr; si el CDN no está disponible, queda el selector nativo de países con fallback de bandera. También se conserva el fallback de imagen de bandera desde FlagCDN. No hay analítica, API de pago ni consultas automáticas de teléfonos o direcciones. El enlace de ayuda al portal de código postal se abre solo por acción del usuario.
 
-Abre `index.html` en un navegador moderno o sirve la carpeta con un servidor estático local. Las banderas gráficas necesitan conexión; si fallan, se muestra `countryFlag` Unicode o un símbolo global. La tienda no necesita instalar dependencias. La lupa del encabezado busca nombre, categoría y descripción sin distinguir tildes; las tarjetas permiten agregar al carrito sin salir del catálogo. Rutas principales: `#inicio`, `#productos`, `#buscar/shampoo`, `#detalle/shampoo`, `#carrito`, `#envio`, `#pago`, `#confirmacion`; se conservan filtros por categoría y colección.
+Abre `index.html` en un navegador moderno o sirve la carpeta con un servidor estático local. Las banderas gráficas necesitan conexión; si fallan, se muestra `countryFlag` Unicode o un símbolo global. La tienda no necesita instalar dependencias. La búsqueda y los filtros de categoría, precio y orden se ejecutan en el navegador; las tarjetas permiten agregar al carrito sin salir del catálogo. Rutas principales: `#inicio`, `#productos`, `#buscar/shampoo`, `#detalle/shampoo`, `#carrito`, `#envio`, `#pago`, `#confirmacion`; los criterios activos se guardan como parámetros de la ruta.
 
 ## Tres pasos exactos
 
-1. **Datos de compra/contacto:** primer nombre, primer apellido, correo y celular obligatorios; segundo nombre, segundo apellido y fijo opcionales. Usa datos ficticios. No hay dirección ni CP. Carrito y contacto muestran envío «Se define en Pago».
-2. **Pago:** local predeterminado y botón **Continuar**. No solicita destino ni tarjeta; genera un ticket de retiro pendiente. Online permite revisar el formato de tarjeta y elegir entrega a casa (predeterminada) o retiro. No hay procesador, cobro ni envío real. Cambiar modalidad actualiza controles, aviso local, botón y totales inmediatamente.
-3. **Confirmación:** ticket y resumen sin nombre, contacto ni dirección personal. No afirma un cobro real.
+1. **Datos de compra/contacto:** primer nombre, primer apellido, correo y celular obligatorios; segundo nombre, segundo apellido y fijo opcionales. No hay dirección ni CP en este paso.
+2. **Pago:** permite elegir pago en el local o pago en línea. El pago en el local crea un ticket de pago pendiente. La opción en línea valida los campos y presenta el pago como confirmado, con entrega a casa (predeterminada) o retiro. Es una presentación estática: no hay procesador ni cobro real.
+3. **Confirmación:** el pago pendiente genera un ticket de pago; la opción en línea genera ticket de retiro o envío según la entrega. Todos incluyen un código aleatorio de referencia. Ticket y resumen omiten nombre, contacto y dirección personal.
 
 | Fulfillment | Ticket/estado | Envío simulado |
 | --- | --- | --- |
-| `local-pickup` | Ticket de retiro; **Pago pendiente en el local**; 12 de Octubre y Veintimilla | $0; «No aplica» |
-| `online-pickup` | Ticket de retiro; **pago en línea simulado**; 12 de Octubre y Veintimilla | $0; «No aplica» |
-| `online-home` | Ticket de envío a casa; **pago en línea simulado** | Fijo $5.00 USD, mostrado como 5,00 US$ |
+| `local-pickup` | Ticket de pago pendiente; retiro previsto en 12 de Octubre y Veintimilla | $0; «No aplica» |
+| `online-pickup` | Pago presentado como confirmado; ticket de retiro en 12 de Octubre y Veintimilla | $0; «No aplica» |
+| `online-home` | Pago presentado como confirmado; ticket de envío a casa | Fijo $5,00 |
 
-Solo online/home muestra Ciudad, Dirección, Complemento opcional y CP. En su submit se recortan espacios exteriores y se exige CP de exactamente seis dígitos; nunca se trunca ni se infiere de la ciudad. Ciudad/dirección son obligatorias. Los retiros no muestran ni validan destino. Una sola función `deliveryFee` define el cargo: 500 centavos exclusivamente para online/home. El pedido guarda `deliveryFee` numérico en centavos y `fulfillment`, además de referencia y artículos.
+Solo online/home muestra Ciudad, Dirección, Complemento opcional y CP. En su submit se recortan espacios exteriores y se exige CP de exactamente seis dígitos; nunca se trunca ni se infiere de la ciudad. Ciudad/dirección son obligatorias. Los retiros no muestran ni validan destino. Una sola función `deliveryFee` define el cargo: 500 centavos exclusivamente para online/home. El pedido guarda `deliveryFee` numérico en centavos, `fulfillment`, modalidad de pago, código de referencia y artículos. El código sirve para identificar visualmente el ticket; sin backend no se puede verificar en otro dispositivo.
 
 ## Formato de pago
 
-Los campos de tarjeta se muestran únicamente al elegir pago en línea. La validación es de formato: número de 12 a 19 dígitos, vencimiento con mes `01`–`12` y año de dos dígitos, y CVV de 3 o 4 dígitos. La barra del vencimiento se inserta al escribir. No se comprueba una tarjeta fija, no se verifica el titular ni se conecta a un procesador; el aviso junto a los campos indica que no se ingresen datos reales.
+Los campos de tarjeta se muestran únicamente al elegir pago en línea. El número debe tener de 12 a 19 dígitos y superar la validación de Luhn; también admite espacios o guiones como separadores. El vencimiento requiere mes `01`–`12` y año de dos dígitos, y el CVV admite 3 o 4 dígitos. La barra del vencimiento se inserta al escribir. No se comprueba una tarjeta fija, no se verifica el titular ni se conecta a un procesador.
 
 Los valores de tarjeta no se copian al objeto `payment`, el pedido, el almacenamiento ni las solicitudes; cambiar de modalidad reconstruye los inputs y confirmar elimina la pantalla de pago. Los errores aparecen mientras se escribe, al salir del campo y al enviar, asociados mediante `aria-describedby` y `aria-invalid`; el envío enfoca el primer campo inválido. La entrega a casa valida ciudad, dirección y código postal mientras se completan. El destino se escapa al reconstruir inputs y las alertas usan texto.
 
 ## Celular y país
 
-Selector nativo accesible de 245 regiones. Cada opción contiene **solo el nombre localizado**, sin bandera, sigla ISO ni prefijo repetido. Ecuador es el predeterminado. La bandera real se muestra fuera del select como imagen de 24 × 18, alt descriptivo, `loading="eager"`, `referrerpolicy="no-referrer"`; src/alt cambian con el país y `onerror` usa `countryFlag` Unicode/global. El prefijo aparece en etiqueta visual separada (+593 inicialmente).
+`intl-tel-input` 25.12.2 en JavaScript nativo proporciona selector con búsqueda por país o prefijo y muestra las banderas tanto en la opción seleccionada como en los resultados. Ecuador es el valor predeterminado; al cambiar de país se actualiza el prefijo y el límite de dígitos. Si no carga el CDN, sigue disponible el selector nativo con bandera de fallback.
 
 Se conservan los metadatos locales de libphonenumber-js 1.12.6, sin instalar su librería. Celular: dígitos solamente; Ecuador exige nueve empezando en 9, sin cero inicial; internacional admite hasta 15 contando prefijo. Fijo opcional ecuatoriano: `0[2-7]` y siete dígitos, permitiendo espacios/guiones de presentación. Estas reglas no comprueban existencia o titularidad. Nombres admiten letras Unicode, espacios, guiones y apóstrofes, con al menos dos letras; correo requiere usuario, @ y dominio con punto.
 
