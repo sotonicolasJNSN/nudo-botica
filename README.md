@@ -21,9 +21,9 @@ Abre `index.html` en un navegador moderno o sirve la carpeta con un servidor est
 
 ## Tres pasos exactos
 
-1. **Datos de compra/contacto:** primer nombre, primer apellido, correo y celular obligatorios; segundo nombre, segundo apellido y fijo opcionales. No hay dirección ni CP en este paso.
+1. **Datos de compra/contacto:** primer nombre, primer apellido, correo y celular obligatorios; segundo nombre y segundo apellido opcionales. Ecuador limita el celular a nueve dígitos. No hay dirección ni CP en este paso.
 2. **Pago:** permite elegir pago en el local o pago en línea. El pago en el local crea un ticket de pago pendiente. La opción en línea valida los campos y presenta el pago como confirmado, con entrega a casa (predeterminada) o retiro. Es una presentación estática: no hay procesador ni cobro real.
-3. **Confirmación:** el pago pendiente genera un ticket de pago; la opción en línea genera ticket de retiro o envío según la entrega. Todos incluyen un código aleatorio de referencia. Ticket y resumen omiten nombre, contacto y dirección personal.
+3. **Confirmación:** el pago pendiente genera un ticket de pago; la opción en línea genera ticket de retiro o envío según la entrega. Todos incluyen un código aleatorio de referencia. Los tickets omiten nombre y contacto; el ticket de domicilio muestra la dirección ingresada, sin controles para editarla.
 
 | Fulfillment | Ticket/estado | Envío simulado |
 | --- | --- | --- |
@@ -35,15 +35,15 @@ Solo online/home muestra Ciudad, Dirección, Complemento opcional y CP. En su su
 
 ## Formato de pago
 
-Los campos de tarjeta se muestran únicamente al elegir pago en línea. El número debe tener de 12 a 19 dígitos y superar la validación de Luhn; también admite espacios o guiones como separadores. El vencimiento requiere mes `01`–`12` y año de dos dígitos, y el CVV admite 3 o 4 dígitos. La barra del vencimiento se inserta al escribir. No se comprueba una tarjeta fija, no se verifica el titular ni se conecta a un procesador.
+Los campos de tarjeta se muestran únicamente al elegir pago en línea. El número debe tener de 12 a 19 dígitos y superar la validación del número; también admite espacios o guiones como separadores. Si no es válido, se muestra un mensaje breve y genérico. El vencimiento requiere mes `01`–`12` y año de dos dígitos. Al escribir o pegar, no se aceptan meses fuera de ese rango. El CVV admite 3 o 4 dígitos. No se comprueba una tarjeta fija, no se verifica el titular ni se conecta a un procesador.
 
-Los valores de tarjeta no se copian al objeto `payment`, el pedido, el almacenamiento ni las solicitudes; cambiar de modalidad reconstruye los inputs y confirmar elimina la pantalla de pago. Los errores aparecen mientras se escribe, al salir del campo y al enviar, asociados mediante `aria-describedby` y `aria-invalid`; el envío enfoca el primer campo inválido. La entrega a casa valida ciudad, dirección y código postal mientras se completan. El destino se escapa al reconstruir inputs y las alertas usan texto.
+El número de tarjeta se agrupa visualmente cada cuatro dígitos. Los valores de tarjeta no se copian al objeto `payment`, el pedido, el almacenamiento ni las solicitudes; cambiar de modalidad reconstruye los inputs y confirmar elimina la pantalla de pago. Los errores aparecen mientras se escribe, al salir del campo y al enviar, asociados mediante `aria-describedby` y `aria-invalid`; el envío enfoca el primer campo inválido. La entrega a casa valida ciudad, dirección y código postal mientras se completan. El destino se escapa al reconstruir inputs y las alertas usan texto.
 
 ## Celular y país
 
-`intl-tel-input` 25.12.2 en JavaScript nativo proporciona selector con búsqueda por país o prefijo y muestra las banderas tanto en la opción seleccionada como en los resultados. Ecuador es el valor predeterminado; al cambiar de país se actualiza el prefijo y el límite de dígitos. Si no carga el CDN, sigue disponible el selector nativo con bandera de fallback.
+`intl-tel-input` 25.12.2 en JavaScript nativo proporciona selector con búsqueda por país o prefijo y muestra las banderas tanto en la opción seleccionada como en los resultados. Ecuador es el valor predeterminado; admite como máximo nueve dígitos nacionales y exige nueve iniciando en 9 para continuar. En otros países se permite hasta 15 dígitos contando el prefijo, ajustados al país seleccionado. Si no carga el CDN, sigue disponible el selector nativo de países con bandera de fallback.
 
-Se conservan los metadatos locales de libphonenumber-js 1.12.6, sin instalar su librería. Celular: dígitos solamente; Ecuador exige nueve empezando en 9, sin cero inicial; internacional admite hasta 15 contando prefijo. Fijo opcional ecuatoriano: `0[2-7]` y siete dígitos, permitiendo espacios/guiones de presentación. Estas reglas no comprueban existencia o titularidad. Nombres admiten letras Unicode, espacios, guiones y apóstrofes, con al menos dos letras; correo requiere usuario, @ y dominio con punto.
+Se conservan los metadatos locales de libphonenumber-js 1.12.6, sin instalar su librería. Celular: dígitos solamente; Ecuador limita la entrada a nueve dígitos y exige nueve empezando en 9, sin cero inicial; internacional admite hasta 15 contando prefijo. Estas reglas no comprueban existencia o titularidad. Nombres admiten letras Unicode, espacios, guiones y apóstrofes, con al menos dos letras; correo requiere usuario, @ y dominio con punto.
 
 ## Persistencia y privacidad
 

@@ -186,6 +186,9 @@
 .verification-code{display:flex;flex-direction:column;gap:6px;padding:16px;margin:16px 0;background:var(--porcelain);border:1px dashed #b9c5b3;border-radius:12px}
 .verification-code span{font-size:12px;color:var(--muted)}
 .verification-code strong{font:700 20px/1.2 var(--serif);letter-spacing:.08em;color:var(--forest);overflow-wrap:anywhere}
+.ticket-address{margin:22px 0;padding:16px;background:var(--porcelain);border-left:3px solid var(--sage)}
+.ticket-address h3{margin:0 0 8px;font-size:15px}
+.ticket-address address{font-style:normal;overflow-wrap:anywhere}
 .related-products{margin-top:70px}
 .related-products .section-head h2{margin-bottom:0}
 @media(min-width:1001px){.layout>.panel{position:sticky;top:20px;align-self:start}}
