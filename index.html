@@ -4,25 +4,67 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#203d35">
-  <meta name="description" content="NUDO. Botica capilar y cuidado personal. Un pequeño ritual para volver a ti. Tienda de demostración.">
+  <meta name="description" content="NUDO. Botica capilar y cuidado personal. Un pequeño ritual para volver a ti.">
   <title>NUDO | Botica contemporánea</title>
-  <link rel="stylesheet" href="styles.css">
-  <script src="script.js" defer></script>
+  <link rel="stylesheet" href="styles.css?v=20261007-category-previews">
+  <script src="script.js?v=20261007-category-previews" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#app">Saltar al contenido</a>
-  <div class="announcement">Un momento para ti. Un cuidado para cada día. <span>DEMO · SIN COBROS REALES</span></div>
+  <div class="announcement">Un momento para ti. Un cuidado para cada día. <span>NUDO · BOTICA CONTEMPORÁNEA</span></div>
   <header class="site-header">
     <a class="brand" href="#inicio" aria-label="NUDO, inicio">nudo<span>BOTICA CONTEMPORÁNEA</span></a>
     <nav aria-label="Navegación principal">
-      <a href="#inicio">Inicio</a>
-      <a href="#productos">Productos</a>
-      <a class="cart-link" href="#carrito">Carrito <span id="cart-count">0</span></a>
+      <a href="#inicio"><svg class="icon" aria-hidden="true"><use href="#icon-home"></use></svg><span>Inicio</span></a>
+      <a href="#productos"><svg class="icon" aria-hidden="true"><use href="#icon-bottle"></use></svg><span>Productos</span></a>
+      <a class="cart-link" href="#carrito"><svg class="icon" aria-hidden="true"><use href="#icon-cart"></use></svg><span class="cart-label">Carrito</span><span id="cart-count">0</span></a>
     </nav>
+    <div class="search-tools" id="search-tools">
+      <button class="search-toggle" id="search-toggle" type="button" aria-label="Buscar productos" aria-expanded="false" aria-controls="site-search">
+        <svg class="icon" aria-hidden="true"><use href="#icon-search"></use></svg>
+        <span class="sr-only">Buscar</span>
+      </button>
+      <form class="site-search" id="site-search" role="search" hidden>
+        <label class="sr-only" for="site-search-input">Buscar productos</label>
+        <input id="site-search-input" name="q" type="search" placeholder="Buscar productos" autocomplete="off">
+        <button type="submit">Buscar</button>
+        <button class="search-close" id="search-close" type="button" aria-label="Cerrar búsqueda">×</button>
+      </form>
+    </div>
   </header>
   <main id="app" tabindex="-1"></main>
+  <div id="cart-feedback" class="cart-feedback" role="status" aria-live="polite" hidden></div>
   <div id="status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
-  <noscript><p class="container">Activa JavaScript para recorrer esta tienda de demostración.</p></noscript>
-  <footer class="site-footer"><div><a class="brand" href="#inicio">nudo<span>EL CUIDADO EMPIEZA CONTIGO.</span></a><p>Cabello, piel y pequeños rituales cotidianos.</p></div><div><a href="#productos">Explorar la botica ↗</a><p>Prototipo ficticio · Precios en USD<br>Sin compras, cobros ni envíos reales.</p></div></footer>
+  <noscript><p class="container">Activa JavaScript para recorrer esta tienda.</p></noscript>
+  <footer class="site-footer">
+    <div class="footer-brand">
+      <a class="brand" href="#inicio">nudo<span>EL CUIDADO EMPIEZA CONTIGO.</span></a>
+      <p>Cabello, piel y pequeños rituales cotidianos.</p>
+      <a href="#productos">Explorar la botica ↗</a>
+    </div>
+    <div class="footer-contact">
+      <h2>Contacto</h2>
+      <a href="mailto:sotonicolas2004@gmail.com">sotonicolas2004@gmail.com</a>
+      <a href="tel:+593983773949">+593 98 377 3949</a>
+      <a href="tel:+59323443670">(02) 344 3670</a>
+    </div>
+    <div class="footer-address">
+      <h2>Visítanos</h2>
+      <address>12 de Octubre y Veintimilla<br>Quito, Ecuador</address>
+      <p>Precios en USD</p>
+    </div>
+  </footer>
+  <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="icon-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="icon-bottle" viewBox="0 0 24 24"><path d="M9 3h6v3l2 2v12a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V8l2-2zM9 6h6M7 11h10"/></symbol>
+    <symbol id="icon-cart" viewBox="0 0 24 24"><path d="M2 3h2l2.6 12.1a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 1.9-1.5L22 8H5M9 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm9 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/></symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="icon-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="icon-card" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 9h20m-15 6h4"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></symbol>
+    <symbol id="icon-hair" viewBox="0 0 24 24"><path d="M8 4c0 3 8 3 8 6s-8 3-8 6 8 3 8 6M5 4c0 3 8 3 8 6s-8 3-8 6 8 3 8 6"/></symbol>
+    <symbol id="icon-beard" viewBox="0 0 24 24"><path d="M5 4h14l-1 9a6 6 0 0 1-12 0zM8 20l4-3 4 3M8 9h.01M16 9h.01"/></symbol>
+    <symbol id="icon-care" viewBox="0 0 24 24"><path d="M12 21s-8-4.5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6.5-8 11-8 11Z"/></symbol>
+  </svg>
 </body>
 </html>
