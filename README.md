@@ -8,6 +8,8 @@ El backend utiliza por defecto el proyecto y la clave **publicable** definidos e
 
 Antes de iniciar con Supabase, revise si ya existe `public.products`. Para un proyecto nuevo, ejecute en el SQL Editor, en este orden, `database/001_schema.sql`, `database/002_seed_catalog.sql` y `database/003_supabase_rls.sql`. El último habilita RLS y permite leer productos a `anon` y `authenticated`; no elimina permisos ni políticas existentes, que deben revisarse por separado. El seed agrega solo identificadores que todavía no existen. Estos scripts no se han aplicado automáticamente al proyecto remoto.
 
+En el proyecto Supabase configurado se verificó la lectura pública de 60 productos el 4 de noviembre de 2026. La lectura comprobada por sí sola no verifica todas las políticas o permisos de escritura: deben revisarse en Supabase.
+
 Como alternativa, `database/supabase_setup.sql` reúne los tres scripts en una sola transacción para pegarlos una vez en el SQL Editor.
 
 Para usar nuevamente PostgreSQL local, establezca `$env:CATALOG_SOURCE='postgres'` antes de arrancar y configure las variables PG que se describen abajo. Reinicie el servidor después de cambiar la configuración. Si Supabase no responde o aún no se ha creado su tabla, la API responde con error y la interfaz conserva provisionalmente el catálogo local de demostración.
@@ -22,7 +24,9 @@ En PowerShell, instale con `cd backend` y `npm.cmd install`, y arranque con `npm
 
 El servidor escucha en `127.0.0.1` por defecto. Si el entorno de publicación necesita escuchar en otra interfaz, configure `HOST` explícitamente; para exponerlo a Internet debe utilizar una infraestructura apropiada con HTTPS.
 
-GitHub Pages publica la interfaz estática desde la raíz y redirige a `frontend/`. No ejecuta el backend Node.js: allí se utiliza el catálogo local de demostración y no se consulta Supabase. Para usar Supabase se necesita desplegar el backend en un servicio compatible y conectar la interfaz a esa API.
+GitHub Pages publica la interfaz estática desde la raíz y redirige a `frontend/`. No ejecuta el backend Node.js: allí se utiliza el catálogo local de demostración y no se consulta Supabase. Para usar Supabase, despliegue el backend en un servicio compatible, configure `HOST=0.0.0.0` y `FRONTEND_ORIGIN=https://sotonicolasjnsn.github.io`, y establezca en `frontend/app-config.js` la URL HTTPS de ese backend. Publique entonces la interfaz actualizada. `FRONTEND_ORIGIN` habilita el acceso solamente para ese origen; sin ella se mantiene el acceso desde el mismo origen.
+
+`render.yaml` prepara un servicio gratuito de Render desde la raíz del repositorio; se requiere conectar el repositorio a una cuenta de Render y crear el servicio. El plan gratuito se suspende después de inactividad y puede tardar en arrancar; el tiempo de espera actual de la interfaz puede hacer que use temporalmente el catálogo local. Consulte las condiciones actuales de Render antes de usarlo para producción.
 
 El carrito, el contacto y el checkout todavía se ejecutan en el navegador: no existe persistencia de pedidos ni pasarela de pago. La copia local del catálogo se mantiene provisionalmente para conservar el funcionamiento sin servidor. Las pantallas que aún están en `frontend/script.js` también están pendientes de extraerse a la vista.
 

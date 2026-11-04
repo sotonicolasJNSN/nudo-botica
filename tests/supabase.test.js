@@ -31,3 +31,11 @@ test('PostgreSQL local se puede seleccionar explícitamente', async () => {
   assert.deepEqual(await provider.repository.list(), []);
   await provider.close();
 });
+
+test('el catálogo configurado responde desde Supabase', { skip: !process.env.SUPABASE_INTEGRATION }, async () => {
+  const config = require('../backend/supabase-config.json');
+  const repository = createSupabaseProductRepository(config);
+  const products = await repository.list();
+  assert.ok(products.length > 0);
+  assert.ok(products.every(product => typeof product.id === 'string'));
+});

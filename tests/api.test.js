@@ -43,3 +43,14 @@ test('API consulta un PostgreSQL real cuando se configura PG_INTEGRATION', { ski
   assert.equal(products.length, 60);
   assert.equal(products[0].id, 'shampoo');
 });
+
+test('CORS permite únicamente el origen configurado', async t => {
+  const server = createApp({ list: async () => [] }, { frontendOrigin: 'https://example.github.io' });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const url = `http://127.0.0.1:${server.address().port}/api/products`;
+  const allowed = await fetch(url, { headers: { Origin: 'https://example.github.io' } });
+  assert.equal(allowed.headers.get('access-control-allow-origin'), 'https://example.github.io');
+  const other = await fetch(url, { headers: { Origin: 'https://other.example' } });
+  assert.equal(other.headers.get('access-control-allow-origin'), null);
+});

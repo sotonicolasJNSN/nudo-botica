@@ -10,13 +10,18 @@ const staticFiles = new Map([
   ['/', ['index.html', 'text/html']], ['/index.html', ['index.html', 'text/html']],
   ['/styles.css', ['styles.css', 'text/css']], ['/model.js', ['model.js', 'text/javascript']],
   ['/view.js', ['view.js', 'text/javascript']], ['/script.js', ['script.js', 'text/javascript']],
+  ['/app-config.js', ['app-config.js', 'text/javascript']],
   ['/catalog-repository.js', ['catalog-repository.js', 'text/javascript']],
   ['/cart-repository.js', ['cart-repository.js', 'text/javascript']]
 ]);
 
-function createApp(repository) {
+function createApp(repository, { frontendOrigin } = {}) {
   const listProducts = createProductController(createProductService(repository));
   return http.createServer(async (req, res) => {
+    if (frontendOrigin) {
+      res.setHeader('Vary', 'Origin');
+      if (req.headers.origin === frontendOrigin) res.setHeader('Access-Control-Allow-Origin', frontendOrigin);
+    }
     const pathname = new URL(req.url, 'http://localhost').pathname;
     if (req.method !== 'GET') { res.writeHead(405, { Allow: 'GET' }); return res.end(); }
     if (pathname === '/api/products') return listProducts(req, res);

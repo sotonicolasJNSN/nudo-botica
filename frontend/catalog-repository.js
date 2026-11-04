@@ -6,7 +6,9 @@ globalThis.NudoCatalogRepository = {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 3000);
     try {
-      const response = await fetch('/api/products', { signal: controller.signal });
+      const base = globalThis.NUDO_API_BASE;
+      const endpoint = base ? new URL('api/products', base.endsWith('/') ? base : base + '/').href : '/api/products';
+      const response = await fetch(endpoint, { signal: controller.signal });
       if (!response.ok) return false;
       const products = await response.json();
       if (!Array.isArray(products) || !products.length || !products.every(product =>
