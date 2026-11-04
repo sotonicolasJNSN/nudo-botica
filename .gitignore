@@ -4,3 +4,6 @@ IA/
 benchmark_databases.py
 benchmark_results.csv
 requirements-benchmark.txt
+backend/node_modules/
+backend/install.log
+backend/.env

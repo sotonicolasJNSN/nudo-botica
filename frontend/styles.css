@@ -312,7 +312,17 @@
 .totals .total dd{font-size:24px;color:var(--forest)}
 .cart-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
 .cart-actions .back{margin:0}
+.quantity button:disabled{border-color:#aeb4ad;color:#858b84;background:transparent;cursor:not-allowed;opacity:1}
 .empty-cart{min-height:44px;padding:9px 14px;gap:8px;font-size:13px}
+.ticket-buyer{margin:22px 0;padding:16px;background:var(--porcelain);border-left:3px solid var(--sage)}
+.ticket-buyer h3{margin:0 0 8px;font-size:15px}
+.ticket-buyer dl{display:grid;gap:8px;margin:0}
+.ticket-buyer dl>div{display:grid;grid-template-columns:minmax(90px,auto) minmax(0,1fr);gap:12px}
+.ticket-buyer dt{color:var(--muted);font-size:13px}
+.ticket-buyer dd{margin:0;overflow-wrap:anywhere}
+:focus-visible{outline-color:var(--forest)}
+#shipping-form .field input:focus:not([aria-invalid=true]),#shipping-form .field select:focus:not([aria-invalid=true]),#payment-form .field input:focus:not([aria-invalid=true]){border-color:var(--forest)}
+#shipping-form input[aria-invalid=true]:focus-visible,#shipping-form select[aria-invalid=true]:focus-visible,#payment-form input[aria-invalid=true]:focus-visible{outline-color:var(--error)}
 .confirm-dialog{width:min(440px,calc(100vw - 32px));padding:0;border:1px solid var(--line);border-radius:5px;background:var(--porcelain);color:var(--ink);box-shadow:0 18px 55px #17251f45}
 .confirm-dialog::backdrop{background:#17251f80}
 .confirm-dialog-content{padding:26px}

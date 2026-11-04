@@ -1,5 +1,31 @@
 # NUDO — Botica contemporánea
 
+## Arquitectura y puesta en marcha
+
+### Supabase
+
+El backend utiliza por defecto el proyecto y la clave **publicable** definidos en `backend/supabase-config.json`. La URL y la clave también pueden establecerse juntas mediante `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY`. No coloque claves secretas ni contraseñas en ese archivo. La aplicación consulta la Data API de Supabase desde el repositorio del backend; una clave publicable solo tiene los permisos que conceden PostgreSQL y RLS.
+
+Antes de iniciar con Supabase, revise si ya existe `public.products`. Para un proyecto nuevo, ejecute en el SQL Editor, en este orden, `database/001_schema.sql`, `database/002_seed_catalog.sql` y `database/003_supabase_rls.sql`. El último habilita RLS y permite leer productos a `anon` y `authenticated`; no elimina permisos ni políticas existentes, que deben revisarse por separado. El seed agrega solo identificadores que todavía no existen. Estos scripts no se han aplicado automáticamente al proyecto remoto.
+
+Como alternativa, `database/supabase_setup.sql` reúne los tres scripts en una sola transacción para pegarlos una vez en el SQL Editor.
+
+Para usar nuevamente PostgreSQL local, establezca `$env:CATALOG_SOURCE='postgres'` antes de arrancar y configure las variables PG que se describen abajo. Reinicie el servidor después de cambiar la configuración. Si Supabase no responde o aún no se ha creado su tabla, la API responde con error y la interfaz conserva provisionalmente el catálogo local de demostración.
+
+La migración a tres capas está en curso. `frontend/` contiene la vista, el controlador de la interfaz y sus repositorios HTTP y de carrito local. `backend/src/` contiene el controlador HTTP, el servicio y el repositorio de productos. `database/` contiene el esquema y los datos iniciales de PostgreSQL. El catálogo se consulta en `GET /api/products`; si la API no responde o no devuelve un catálogo válido, la interfaz utiliza la copia local de demostración.
+
+Requisitos: Node.js 18 o superior y PostgreSQL. Cree una base dedicada y ejecute `database/001_schema.sql` y luego `database/002_seed_catalog.sql` con `psql` o su cliente habitual. El seed conserva los productos que ya existan. Configure `DATABASE_URL` o las variables estándar `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER` y `PGPASSWORD` para una cuenta con permiso de lectura sobre `products`.
+
+En esta instalación se creó la base local `nudo` y se cargaron los 60 productos iniciales. Sin `DATABASE_URL` ni `PGDATABASE`, el backend usa `nudo` como nombre de base; el usuario y la contraseña de PostgreSQL deben configurarse mediante las variables de entorno indicadas arriba.
+
+En PowerShell, instale con `cd backend` y `npm.cmd install`, y arranque con `npm.cmd start`. Abra `http://localhost:3000`. El puerto puede cambiarse mediante `PORT`. Para las pruebas ejecute `npm.cmd test` desde `backend`.
+
+El servidor escucha en `127.0.0.1` por defecto. Si el entorno de publicación necesita escuchar en otra interfaz, configure `HOST` explícitamente; para exponerlo a Internet debe utilizar una infraestructura apropiada con HTTPS.
+
+GitHub Pages publica la interfaz estática desde la raíz y redirige a `frontend/`. No ejecuta el backend Node.js: allí se utiliza el catálogo local de demostración y no se consulta Supabase. Para usar Supabase se necesita desplegar el backend en un servicio compatible y conectar la interfaz a esa API.
+
+El carrito, el contacto y el checkout todavía se ejecutan en el navegador: no existe persistencia de pedidos ni pasarela de pago. La copia local del catálogo se mantiene provisionalmente para conservar el funcionamiento sin servidor. Las pantallas que aún están en `frontend/script.js` también están pendientes de extraerse a la vista.
+
 Tienda estática de cuidado capilar y personal en HTML, CSS y JavaScript nativos, con 60 productos, colecciones, detalle, carrito y checkout. Ilustraciones CSS y fuentes del sistema; sin backend, procesador de pagos ni certificación de seguridad o accesibilidad. No existen compras, cobros, correos ni entregas reales.
 
 ## Actualización UI/UX — 7 de octubre de 2026
@@ -10,20 +36,23 @@ La búsqueda queda anclada al botón de lupa, usa un solo icono y se cierra al h
 
 ## Archivos y regla_runtime
 
-- `index.html`: estructura, navegación, búsqueda e iconos locales; integra `intl-tel-input` 25.12.2 por CDN para selector de país con búsqueda y banderas.
-- `script.js`: catálogo, rutas hash, búsqueda tolerante a tildes, carrito, contacto, validación de prueba y tickets.
+- `frontend/index.html`: estructura, navegación, búsqueda e iconos locales; integra `intl-tel-input` 25.12.2 por CDN para selector de país con búsqueda y banderas.
+- `model.js`: catálogo y reglas de negocio (búsqueda, precios y validación de tarjeta).
+- `cart-repository.js`: lectura y escritura del carrito en `localStorage`.
+- `view.js`: componentes de presentación reutilizables.
+- `script.js`: controlador de rutas, estado, eventos y pantallas; la extracción de las pantallas a la vista sigue pendiente.
 - `styles.css`: presentación adaptable, iconografía SVG local, controles nativos y bandera/prefijo separados.
 - `README.md` y `AUDITORIA.md`: uso, alcance, evidencias y limitaciones.
 
 El historial de auditoría de la publicación en el commit `70597e0` se conserva como referencia documental. **Recursos externos en runtime:** `intl-tel-input` 25.12.2 (JavaScript, CSS y sprites de banderas) se carga desde jsDelivr; si el CDN no está disponible, queda el selector nativo de países con fallback de bandera. También se conserva el fallback de imagen de bandera desde FlagCDN. No hay analítica, API de pago ni consultas automáticas de teléfonos o direcciones. El enlace de ayuda al portal de código postal se abre solo por acción del usuario.
 
-Abre `index.html` en un navegador moderno o sirve la carpeta con un servidor estático local. Las banderas gráficas necesitan conexión; si fallan, se muestra `countryFlag` Unicode o un símbolo global. La tienda no necesita instalar dependencias. La búsqueda y los filtros de categoría, precio y orden se ejecutan en el navegador; las tarjetas permiten agregar al carrito sin salir del catálogo. Rutas principales: `#inicio`, `#productos`, `#buscar/shampoo`, `#detalle/shampoo`, `#carrito`, `#envio`, `#pago`, `#confirmacion`; los criterios activos se guardan como parámetros de la ruta.
+La demo también puede abrirse desde `frontend/index.html` sin servidor, utilizando el catálogo local. Las banderas gráficas necesitan conexión; si fallan, se muestra `countryFlag` Unicode o un símbolo global. La búsqueda y los filtros de categoría, precio y orden se ejecutan en el navegador y se actualizan al cambiar cada control; las tarjetas permiten agregar al carrito sin salir del catálogo. En el carrito, los controles de cantidad se desactivan en los límites y muestran ese estado visualmente. Rutas principales: `#inicio`, `#productos`, `#buscar/shampoo`, `#detalle/shampoo`, `#carrito`, `#envio`, `#pago`, `#confirmacion`; los criterios activos se guardan como parámetros de la ruta.
 
 ## Tres pasos exactos
 
-1. **Datos de compra/contacto:** primer nombre, primer apellido, correo y celular obligatorios; segundo nombre y segundo apellido opcionales. Ecuador limita el celular a nueve dígitos. No hay dirección ni CP en este paso.
+1. **Datos de compra/contacto:** nombre, apellido, correo y celular obligatorios. Ecuador limita el celular a nueve dígitos y bloquea el cero inicial porque el prefijo `+593` ya está seleccionado. No hay dirección ni CP en este paso.
 2. **Pago:** permite elegir pago en el local o pago en línea. El pago en el local crea un ticket de pago pendiente. La opción en línea valida los campos y presenta el pago como confirmado, con entrega a casa (predeterminada) o retiro. Es una presentación estática: no hay procesador ni cobro real.
-3. **Confirmación:** el pago pendiente genera un ticket de pago; la opción en línea genera ticket de retiro o envío según la entrega. Todos incluyen un código aleatorio de referencia. Los tickets omiten nombre y contacto; el ticket de domicilio muestra la dirección ingresada, sin controles para editarla.
+3. **Confirmación:** el pago pendiente genera un ticket de pago; la opción en línea genera ticket de retiro o envío según la entrega. Todos incluyen un código aleatorio de referencia y muestran nombre, apellido, correo y celular del comprador. El ticket de domicilio también muestra la dirección ingresada, sin controles para editarla.
 
 | Fulfillment | Ticket/estado | Envío simulado |
 | --- | --- | --- |
@@ -41,13 +70,13 @@ El número de tarjeta se agrupa visualmente cada cuatro dígitos. Los valores de
 
 ## Celular y país
 
-`intl-tel-input` 25.12.2 en JavaScript nativo proporciona selector con búsqueda por país o prefijo y muestra las banderas tanto en la opción seleccionada como en los resultados. Ecuador es el valor predeterminado; admite como máximo nueve dígitos nacionales y exige nueve iniciando en 9 para continuar. En otros países se permite hasta 15 dígitos contando el prefijo, ajustados al país seleccionado. Si no carga el CDN, sigue disponible el selector nativo de países con bandera de fallback.
+`intl-tel-input` 25.12.2 en JavaScript nativo proporciona selector con búsqueda por país o prefijo y muestra las banderas tanto en la opción seleccionada como en los resultados. Ecuador es el valor predeterminado; admite como máximo nueve dígitos nacionales, bloquea un cero inicial y exige nueve iniciando en 9 para continuar. En otros países se permite hasta 15 dígitos contando el prefijo, ajustados al país seleccionado. Si no carga el CDN, sigue disponible el selector nativo de países con bandera de fallback.
 
 Se conservan los metadatos locales de libphonenumber-js 1.12.6, sin instalar su librería. Celular: dígitos solamente; Ecuador limita la entrada a nueve dígitos y exige nueve empezando en 9, sin cero inicial; internacional admite hasta 15 contando prefijo. Estas reglas no comprueban existencia o titularidad. Nombres admiten letras Unicode, espacios, guiones y apóstrofes, con al menos dos letras; correo requiere usuario, @ y dominio con punto.
 
 ## Persistencia y privacidad
 
-Solo `localStorage['nudo-cart-v1']` guarda cart: identificadores y cantidades. No se escriben cookies ni sessionStorage. Contacto/destino viven en memoria y DOM hasta confirmar, recargar o vaciar el carrito. `emptyPayment` contiene exclusivamente method, delivery y destination; `editPayment` nunca guarda tarjeta. Confirmación no incluye PII ni datos de tarjeta.
+Solo `localStorage['nudo-cart-v1']` guarda cart: identificadores y cantidades. No se escriben cookies ni sessionStorage. Contacto/destino viven en memoria y DOM hasta confirmar, recargar o vaciar el carrito; el ticket de confirmación muestra los datos de contacto ingresados durante el pedido. `emptyPayment` contiene exclusivamente method, delivery y destination; `editPayment` nunca guarda tarjeta. La información no se envía a un servidor y se elimina al recargar.
 
 Confirmar vacía el carrito, contacto y borrador; sustituye Pago en el historial. Los guards exigen carrito/contacto validado y bloquean confirmación sin pedido. Cambiar carrito invalida contacto validado. La persistencia no sincroniza pestañas ni tiene caducidad; un fallo de escritura puede dejar un carrito anterior (H01–H03 de AUDITORIA). El autocompletado del navegador, extensiones y borrado forense están fuera de la garantía de la aplicación.
 

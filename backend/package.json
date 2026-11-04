@@ -1,0 +1,13 @@
+{
+  "name": "nudo-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API y servidor web para NUDO",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test ../tests/*.test.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": { "pg": "^8.13.1" }
+}
