@@ -43,7 +43,7 @@ test('las imágenes conocidas usan carga diferida y las prioritarias se anticipa
   const product = catalog[0];
   const normal = context.NudoView.art(product);
   assert.match(normal, /src="images\/products\/shampoo\.webp\?v=photos-20261116"/);
-  assert.match(normal, /Imagen referencial/);
+  assert.doesNotMatch(normal, /Imagen referencial/i);
   assert.match(normal, /width="512" height="512" loading="lazy"/);
   assert.match(context.NudoView.art(product, { priority: true }), /loading="eager"[^>]*fetchpriority="high"/);
   assert.doesNotMatch(context.NudoView.art({ ...product, id: '../otro' }), /<img/);

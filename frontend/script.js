@@ -1,7 +1,6 @@
 'use strict';
 document.addEventListener('error', event => {
   if (event.target?.classList?.contains('product-render')) {
-    event.target.parentElement?.querySelector('.product-image-note')?.remove();
     event.target.remove();
   }
 }, true);
@@ -146,7 +145,7 @@ const fulfillmentLabel = value => ({
   'online-pickup': 'Retiro en 12 de Octubre y Veintimilla.'
 })[value];
 const paymentButtonLabel = () => payment.method === 'local' ? 'Continuar' : 'Finalizar pedido';
-const paymentOption = (name, value, label) => `<label class="checkout-choice"><input type="radio" name="${name}" value="${value}" ${payment[name] === value ? 'checked' : ''}><span>${label}</span></label>`;
+const paymentOption = (name, value, label) => `<label class="checkout-choice"><input type="radio" name="${name}" value="${value}" tabindex="0" ${payment[name] === value ? 'checked' : ''}><span>${label}</span></label>`;
 function destinationFields() {
   if (currentFulfillment() !== 'online-home') return '';
   return `<fieldset class="checkout-options"><legend>Destino en Ecuador</legend><div class="fields">${[
@@ -156,7 +155,7 @@ function destinationFields() {
 }
 function cardFields() {
   if (payment.method !== 'online') return '';
-  return `<fieldset class="checkout-options"><legend>Pago en línea</legend><div class="fields">${[
+  return `<fieldset class="checkout-options"><legend>Pago en línea</legend><p class="fine">Simulación: no se realiza ningún cobro. No introduzcas datos reales de tarjeta.</p><div class="fields">${[
     ['cardNumber', 'Número de tarjeta', '0000 0000 0000 0000', 23],
     ['expiry', 'Vencimiento (MM/AA)', 'MM/AA', 5], ['cvv', 'CVV', '123', 4]
   ].map(([name, label, placeholder, max]) => `<div class="field"><label for="payment-${name}">${label} *</label><input id="payment-${name}" name="${name}" type="text" required autocomplete="off" inputmode="numeric" maxlength="${max}" placeholder="${placeholder}" aria-describedby="error-${name}"><span class="field-error" id="error-${name}" aria-live="polite" aria-atomic="true"></span></div>`).join('')}</div></fieldset>`;
@@ -358,7 +357,7 @@ function render(options = {}) {
   if (route === 'inicio') {
     app.innerHTML = `<section class="hero" aria-labelledby="home-title">
       <div class="hero-copy"><p class="eyebrow">Cuidado capilar & personal</p><h1 id="home-title" tabindex="-1">Tu naturaleza.<br>Tu <em>ritual.</em></h1><p>Para tu cabello, tu piel, para ti. Pequeños gestos de cuidado, todos los días.</p><a class="button" href="#productos">Explorar la botica <span aria-hidden="true">↗</span></a><p class="hero-note">Cuidado sin etiquetas. A tu manera.</p></div>
-      <div class="scene"><span class="scene-caption">LA COLECCIÓN / NUDO</span><span class="scene-stamp">Pequeños<br>rituales,<br>cada día.</span>${products.length ? art(products[0], { priority: true }) : ''}<span class="scene-bottom">CABELLO · PIEL · BIENESTAR</span></div>
+      <div class="scene"><span class="scene-caption">LA COLECCIÓN / NUDO</span><span class="scene-stamp">Pequeños<br>rituales,<br>cada día.</span><img class="scene-photo" src="images/portada-botanica.webp" width="960" height="960" fetchpriority="high" alt="Hojas verdes con gotas de agua"><span class="scene-bottom">CABELLO · PIEL · BIENESTAR</span></div>
       <aside class="hero-discovery" aria-labelledby="discovery-title"><h2 id="discovery-title">Encuentra tu ritual</h2><div class="discovery-links" aria-label="Explorar por categoría">${quickCategories.map(category => `<a class="discovery-link" href="${categoryHref(category)}"><span>${category}</span><span aria-hidden="true">↗</span></a>`).join('')}</div><div class="mini-products">${products.slice(0, 2).map(miniProduct).join('')}</div></aside>
       </section><div class="value-strip"><span>Una rutina para cada persona</span><span>Lo esencial, bien elegido</span><span>Tu momento de cuidado</span></div><div class="container home-selections">${categories.map((category, index) => { const items = products.filter(item => item.category === category); return '<section class="home-collection category-preview" aria-labelledby="home-category-' + index + '"><div class="section-head"><div><p class="eyebrow">La colección / NUDO</p><h2 id="home-category-' + index + '">' + category + '</h2></div></div><div class="grid home-grid">' + items.map(card).join('') + '</div><a class="explore-more" href="' + categoryHref(category) + '">Ver todos los productos de ' + category + ' <span aria-hidden="true">→</span></a></section>'; }).join('')}</div>`;
   } else if (isSearch) {
@@ -397,10 +396,10 @@ function render(options = {}) {
     <div class="phone-fields wide"><div class="field phone-country-field"><label for="shipping-phoneCountry">País del celular / prefijo</label><span class="phone-country-control"><span id="shipping-phoneCountry-flag" class="phone-country-flag">${countryFlag(phoneCountry)}</span><select id="shipping-phoneCountry" name="phoneCountry" aria-describedby="error-phoneCountry">${phoneCountryOptions(phoneCountry)}</select><span id="phone-prefix" class="phone-prefix">+${dialCodes[phoneCountry]}</span></span><span class="field-error" id="error-phoneCountry" aria-live="polite" aria-atomic="true"></span></div><div class="field phone-number-field"><label for="shipping-mobile">Celular *</label><input id="shipping-mobile" name="mobile" type="tel" required inputmode="tel" autocomplete="tel-national" maxlength="${phoneMaxLength(phoneCountry)}" value="${escapeHTML(shipping.mobile || '')}" aria-describedby="error-mobile help-mobile"><span class="field-error" id="error-mobile" aria-live="polite" aria-atomic="true"></span></div><span class="field-help wide" id="help-mobile">Para Ecuador: máximo nueve dígitos, empezando en 9 y sin cero inicial. En otros países, hasta 15 dígitos contando el prefijo seleccionado.</span></div>
     </div><div class="actions"><button type="submit">Continuar al pago →</button><a class="text-link" href="#carrito">← Volver al carrito</a></div><p class="fine">Los datos de contacto se usan para este pedido y aparecen en su confirmación; no se guardan al recargar la página.</p></form><aside class="panel"><h2>Tu selección</h2>${summary(cart)}</aside></div></div>`;
   } else if (route === 'pago') {
-    app.innerHTML = `<div class="container">${stepper(2)}${heading('Tu pedido / 02', 'Pago')}<div class="layout"><div><form id="payment-form" novalidate><div id="form-error" class="form-error" role="alert"></div><fieldset class="checkout-options"><legend>Elige cómo pagar</legend><div class="segmented">${paymentOption('method', 'local', 'Pagar y retirar en el local')}${paymentOption('method', 'online', 'Pago en línea')}</div></fieldset><p id="local-notice" ${payment.method === 'local' ? '' : 'hidden'}>Pago pendiente en el local. Retira en 12 de Octubre y Veintimilla. No necesitas indicar un destino.</p><fieldset id="delivery-options" class="checkout-options" ${payment.method === 'online' ? '' : 'hidden'}><legend>Entrega del pedido</legend><div class="segmented">${paymentOption('delivery', 'home', 'Enviar a casa')}${paymentOption('delivery', 'pickup', 'Retirar en el local')}</div></fieldset><div id="card-panel">${cardFields()}</div><div id="destination-panel">${destinationFields()}</div></form><h2>Contacto</h2><p class="shipping-summary">${escapeHTML(nameFields.map(key => shipping[key]).filter(Boolean).join(' '))}<br>Correo: ${escapeHTML(shipping.email)}<br>Celular: ${countryFlag(shipping.phoneCountry)} ${escapeHTML(phoneCountries.find(country => country.iso === shipping.phoneCountry)?.name || shipping.phoneCountry)} +${dialCodes[shipping.phoneCountry]} ${escapeHTML(shipping.mobile)}</p><a class="text-link" href="#envio">← Editar contacto</a></div><aside class="panel"><h2>Resumen del pedido</h2><div id="payment-summary">${summary(cart, currentFulfillment())}</div><p id="fulfillment-summary">${fulfillmentLabel(currentFulfillment())}</p><button class="button" type="submit" form="payment-form" data-pay>${paymentButtonLabel()}</button><a class="text-link" href="#carrito">Editar carrito</a></aside></div></div>`;
+    app.innerHTML = `<div class="container">${stepper(2)}${heading('Tu pedido / 02', 'Pago')}<div class="layout"><div>${ticketBuyer(shipping)}<a class="text-link" href="#envio">← Editar contacto</a><form id="payment-form" novalidate><div id="form-error" class="form-error" role="alert"></div><fieldset class="checkout-options"><legend>Elige cómo pagar</legend><div class="segmented">${paymentOption('method', 'local', 'Pagar y retirar en el local')}${paymentOption('method', 'online', 'Pago en línea')}</div></fieldset><p id="local-notice" ${payment.method === 'local' ? '' : 'hidden'}>Pago pendiente en el local. Retira en 12 de Octubre y Veintimilla. No necesitas indicar un destino.</p><fieldset id="delivery-options" class="checkout-options" ${payment.method === 'online' ? '' : 'hidden'}><legend>Entrega del pedido</legend><div class="segmented">${paymentOption('delivery', 'home', 'Enviar a casa')}${paymentOption('delivery', 'pickup', 'Retirar en el local')}</div></fieldset><div id="card-panel">${cardFields()}</div><div id="destination-panel">${destinationFields()}</div></form></div><aside class="panel"><h2>Resumen del pedido</h2><div id="payment-summary">${summary(cart, currentFulfillment())}</div><p id="fulfillment-summary">${fulfillmentLabel(currentFulfillment())}</p><button class="button" type="submit" form="payment-form" data-pay>${paymentButtonLabel()}</button><a class="text-link" href="#carrito">Editar carrito</a></aside></div></div>`;
   } else if (route === 'confirmacion') {
     const ticketTitle = order.paymentMethod === 'local' ? 'Ticket de pago' : order.fulfillment === 'online-home' ? 'Ticket de envío' : 'Ticket de retiro';
-    const paymentStatus = order.paymentMethod === 'local' ? 'Pago pendiente en el local.' : 'Pago confirmado.';
+    const paymentStatus = order.paymentMethod === 'local' ? 'Pago pendiente en el local.' : 'Pago en línea simulado; no se ha realizado ningún cobro.';
     app.innerHTML = `<div class="container confirmation">${stepper(3)}<div class="success-mark" aria-hidden="true">✓</div>${heading('Tu pedido / 03', ticketTitle)}<p class="confirmation-encouragement">Gracias por elegir NUDO. Sigue explorando y encuentra más esenciales para tu rutina.</p><p class="checkout-disclosure"><strong>${paymentStatus}</strong></p><div class="panel ticket-panel"><h2>Resumen del pedido</h2><p class="verification-code"><span>Código de verificación</span><strong>${order.reference}</strong></p>${summary(order.items, order.fulfillment)}<p>${order.paymentMethod === 'local' ? 'Punto de pago: 12 de Octubre y Veintimilla.' : fulfillmentLabel(order.fulfillment)}</p>${ticketBuyer(order.buyer)}${order.fulfillment === 'online-home' ? ticketDestination(order.destination) + '<p>Envío a casa · Cargo de envío: ' + money(order.deliveryFee) + '</p>' : ''}</div><div class="actions"><a class="button" href="#productos">Seguir explorando ↗</a><a class="text-link" href="#inicio">Volver al inicio</a></div></div>`;
   }
   initializePhonePicker();
@@ -598,6 +597,18 @@ app.addEventListener('submit', event => {
 });
 app.addEventListener('input', editPayment);
 app.addEventListener('change', editPayment);
+app.addEventListener('keydown', event => {
+  const input = event.target;
+  if (!(input instanceof HTMLInputElement) || input.type !== 'radio' || input.form?.id !== 'payment-form') return;
+  if (event.key === 'Tab') {
+    const radios = [...input.form.querySelectorAll(`input[type="radio"][name="${input.name}"]`)];
+    const target = radios[radios.indexOf(input) + (event.shiftKey ? -1 : 1)];
+    if (target) { event.preventDefault(); target.focus(); }
+  } else if (event.key === 'Enter') {
+    event.preventDefault();
+    if (!input.checked) { input.checked = true; input.dispatchEvent(new Event('change', { bubbles: true })); }
+  }
+});
 app.addEventListener('submit', event => {
   if (event.target.id !== 'payment-form') return;
   event.preventDefault();
