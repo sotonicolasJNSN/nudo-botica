@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Administración | NUDO</title>
+  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="admin.css">
+  <script defer src="app-config.js?v=20261116-api"></script><script defer src="admin.js?v=20261116-api"></script>
+</head>
+<body>
+<main class="container admin">
+  <p><a href="./">← Volver a la tienda</a></p>
+  <p class="eyebrow">NUDO / GESTIÓN</p><h1>Administración de productos</h1>
+  <p>Gestiona el catálogo de la base conectada. La sesión dura una hora.</p>
+  <p id="admin-status" class="admin-status" role="status" aria-live="polite">Sin sesión.</p>
+  <form id="login" class="admin-login">
+    <label for="password">Contraseña de administración</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <button>Iniciar sesión</button>
+  </form>
+  <section id="panel" hidden aria-label="Editor de productos">
+    <div class="admin-actions"><button type="button" id="new">Nuevo producto</button><button class="secondary" type="button" id="refresh">Actualizar lista</button><button class="secondary" type="button" id="logout">Cerrar sesión</button></div>
+    <label for="products">Selecciona un producto</label><select id="products"></select>
+    <form id="editor">
+      <h2>Datos del producto</h2>
+      <p class="muted">Para crear, elige un identificador único con letras minúsculas, números y guiones. Al editar, el identificador no cambia.</p>
+      <div class="fields">
+        <div class="field"><label for="product-id">Identificador</label><input id="product-id" name="id" required maxlength="80" pattern="[a-z0-9]+(-[a-z0-9]+)*" autocomplete="off"></div>
+        <div class="field"><label for="product-name">Nombre</label><input id="product-name" name="name" required maxlength="500"></div>
+        <div class="field"><label for="product-category">Categoría</label><input id="product-category" name="category" list="categories" required maxlength="500"><datalist id="categories"><option value="Cabello"><option value="Estilo y barba"><option value="Cuidado personal"><option value="Rizos y ondas"><option value="Cuero cabelludo"></datalist></div>
+        <div class="field"><label for="product-size">Presentación</label><input id="product-size" name="size" placeholder="250 ml" required maxlength="500"></div>
+        <div class="field"><label for="product-price">Precio en centavos</label><input id="product-price" name="price" type="number" min="0" max="10000000" step="1" required aria-describedby="price-help"><small id="price-help">Por ejemplo, 1250 equivale a $12,50.</small></div>
+        <div class="field"><label for="product-art">Estilo de ilustración</label><input id="product-art" name="art" placeholder="sage" required maxlength="500"></div>
+        <div class="field wide"><label for="product-label">Etiqueta breve</label><input id="product-label" name="label" required maxlength="500"></div>
+        <div class="field wide"><label for="product-description">Descripción</label><textarea id="product-description" name="description" rows="3" required maxlength="500"></textarea></div>
+        <div class="field wide"><label for="product-benefits">Beneficios, uno por línea</label><textarea id="product-benefits" name="benefits" rows="3"></textarea></div>
+        <div class="field wide"><label for="product-collections">Colecciones, separadas por comas</label><input id="product-collections" name="collections" placeholder="diario, shampoos"></div>
+      </div>
+      <div class="admin-actions"><button type="submit">Guardar producto</button><button class="secondary" type="button" id="delete">Eliminar producto</button></div>
+    </form>
+  </section>
+</main>
+</body>
+</html>

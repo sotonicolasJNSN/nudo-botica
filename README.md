@@ -1,10 +1,12 @@
 # NUDO — Botica contemporánea
 
+> **Estado 16-11-2026:** consulte [GUIA_PRACTICAS_NUDO.md](GUIA_PRACTICAS_NUDO.md) y [MATRIZ_PRACTICAS_NUDO.md](MATRIZ_PRACTICAS_NUDO.md) para los cambios y verificaciones actuales. Las secciones históricas siguientes pueden describir estados anteriores.
+
 ## Arquitectura y puesta en marcha
 
 ### Supabase
 
-El backend utiliza por defecto el proyecto y la clave **publicable** definidos en `backend/supabase-config.json`. La URL y la clave también pueden establecerse juntas mediante `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY`. No coloque claves secretas ni contraseñas en ese archivo. La aplicación consulta la Data API de Supabase desde el repositorio del backend; una clave publicable solo tiene los permisos que conceden PostgreSQL y RLS.
+El backend obtiene SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY y, para escrituras administrativas, SUPABASE_SECRET_KEY exclusivamente del entorno del servidor. No almacene claves ni contrasenas en archivos del repositorio o del frontend. La aplicacion consulta la Data API de Supabase desde el backend; la clave publicable solo tiene los permisos que conceden PostgreSQL y RLS.
 
 Antes de iniciar con Supabase, revise si ya existe `public.products`. Para un proyecto nuevo, ejecute en el SQL Editor, en este orden, `database/001_schema.sql`, `database/002_seed_catalog.sql` y `database/003_supabase_rls.sql`. El último habilita RLS y permite leer productos a `anon` y `authenticated`; no elimina permisos ni políticas existentes, que deben revisarse por separado. El seed agrega solo identificadores que todavía no existen. Estos scripts no se han aplicado automáticamente al proyecto remoto.
 
@@ -20,11 +22,11 @@ Requisitos: Node.js 18 o superior y PostgreSQL. Cree una base dedicada y ejecute
 
 En esta instalación se creó la base local `nudo` y se cargaron los 60 productos iniciales. Sin `DATABASE_URL` ni `PGDATABASE`, el backend usa `nudo` como nombre de base; el usuario y la contraseña de PostgreSQL deben configurarse mediante las variables de entorno indicadas arriba.
 
-En PowerShell, instale con `cd backend` y `npm.cmd install`, y arranque con `npm.cmd start`. Abra `http://localhost:3000`. El puerto puede cambiarse mediante `PORT`. Para las pruebas ejecute `npm.cmd test` desde `backend`.
+En PowerShell, instale con `cd backend` y `npm.cmd ci`. Para Supabase, configure las variables de entorno anteriores y `$env:CATALOG_SOURCE='supabase'`; para PostgreSQL local use `$env:CATALOG_SOURCE='postgres'` y configure las variables PG o `DATABASE_URL`. Arranque con `npm.cmd start` y abra `http://localhost:3000`. El puerto puede cambiarse mediante `PORT`. Para las pruebas ejecute `npm.cmd test` desde `backend`.
 
 El servidor escucha en `127.0.0.1` por defecto. Si el entorno de publicación necesita escuchar en otra interfaz, configure `HOST` explícitamente; para exponerlo a Internet debe utilizar una infraestructura apropiada con HTTPS.
 
-GitHub Pages publica la interfaz estática desde la raíz y redirige a `frontend/`. No ejecuta el backend Node.js: allí se utiliza el catálogo local de demostración y no se consulta Supabase. Para usar Supabase, despliegue el backend en un servicio compatible, configure `HOST=0.0.0.0` y `FRONTEND_ORIGIN=https://sotonicolasjnsn.github.io`, y establezca en `frontend/app-config.js` la URL HTTPS de ese backend. Publique entonces la interfaz actualizada. `FRONTEND_ORIGIN` habilita el acceso solamente para ese origen; sin ella se mantiene el acceso desde el mismo origen.
+GitHub Pages publica la interfaz estatica desde la raiz y redirige a `frontend/`; no ejecuta el backend Node.js. `frontend/app-config.js` conecta el sitio publicado en `sotonicolasjnsn.github.io` con `https://nudo-botica.onrender.com/`, y mantiene el modo same-origin en desarrollo local. Render usa `render.yaml` con `npm ci --prefix backend` y `npm start --prefix backend`; configure alli `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` y `ADMIN_PASSWORD` como variables privadas, ademas de `HOST=0.0.0.0`, `CATALOG_SOURCE=supabase` y `FRONTEND_ORIGIN=https://sotonicolasjnsn.github.io`. Las claves y la contrasena no deben anadirse al repositorio ni a GitHub Pages.
 
 `render.yaml` prepara un servicio gratuito de Render desde la raíz del repositorio; se requiere conectar el repositorio a una cuenta de Render y crear el servicio. El plan gratuito se suspende después de inactividad y puede tardar en arrancar; el tiempo de espera actual de la interfaz puede hacer que use temporalmente el catálogo local. Consulte las condiciones actuales de Render antes de usarlo para producción.
 

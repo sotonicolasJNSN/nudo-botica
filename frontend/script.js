@@ -1,33 +1,16 @@
 'use strict';
 (async () => {
-await globalThis.NudoCatalogRepository.load();
+const catalogState = await globalThis.NudoCatalogRepository.load();
+const catalogNotice = document.getElementById('catalog-status');
+catalogNotice.textContent = catalogState === 'demo' ? 'Catálogo de demostración: la API no está disponible.' : catalogState === 'empty' ? 'El catálogo de la base de datos está vacío.' : 'Catálogo conectado a la API.';
 // Controlador: coordina estado, eventos y navegaci?n.
 const { products, categories, priceRanges, sortOptions, collections, collectionProducts, relatedProducts, normalizeSearch, filteredProducts, total, deliveryFee, passesLuhn } = globalThis.NudoModel;
 const { money, escapeHTML, icon, categoryIcon, art, heading, card, miniProduct, totals, summary, stepper } = globalThis.NudoView;
 
-function filterFields(prefix, state) {
-  return `<label for="${prefix}-category">Categoría<select id="${prefix}-category" name="category">${[['', 'Todas las categorías'], ...categories.map(category => [category, category])].map(([value, label]) => `<option value="${escapeHTML(value)}" ${state.category === value ? 'selected' : ''}>${escapeHTML(label)}</option>`).join('')}</select></label>
-    <label for="${prefix}-price">Precio<select id="${prefix}-price" name="price">${priceRanges.map(range => `<option value="${range.value}" ${state.price === range.value ? 'selected' : ''}>${range.label}</option>`).join('')}</select></label>
-    <label class="sort-field" for="${prefix}-sort">Ordenar por<select id="${prefix}-sort" name="sort">${sortOptions.map(option => `<option value="${option.value}" ${state.sort === option.value ? 'selected' : ''}>${option.label}</option>`).join('')}</select></label>`;
-}
-function listingStateFrom(form) {
-  return {
-    category: form.elements.category.value,
-    price: form.elements.price.value,
-    sort: form.elements.sort.value
-  };
-}
-function listingQueryString(state) {
-  const params = new URLSearchParams();
-  if (state.category) params.set('categoria', state.category);
-  if (state.price !== 'all') params.set('precio', state.price);
-  if (state.sort !== 'list') params.set('orden', state.sort);
-  const query = params.toString();
-  return query ? '?' + query : '';
-}
-function listingControls(state) {
-  return `<form class="listing-controls" data-listing-controls><div class="filter-fields">${filterFields('catalog', state)}</div><div class="filter-actions"><button type="button" class="filter-reset" data-reset-filters>Limpiar filtros</button></div></form>`;
-}
+const listingOptions = { categories, priceRanges, sortOptions };
+const filterFields = (prefix, state) => NudoListing.filterFields(prefix, state, listingOptions, escapeHTML);
+const listingControls = state => NudoListing.controls(state, listingOptions, escapeHTML);
+const listingStateFrom = NudoListing.stateFrom;
 const quickCategories = categories;
 const app = document.querySelector('#app');
 const status = document.querySelector('#status');
@@ -369,13 +352,12 @@ function render(options = {}) {
   if (route === 'inicio') {
     app.innerHTML = `<section class="hero" aria-labelledby="home-title">
       <div class="hero-copy"><p class="eyebrow">Cuidado capilar & personal</p><h1 id="home-title" tabindex="-1">Tu naturaleza.<br>Tu <em>ritual.</em></h1><p>Para tu cabello, tu piel, para ti. Pequeños gestos de cuidado, todos los días.</p><a class="button" href="#productos">Explorar la botica <span aria-hidden="true">↗</span></a><p class="hero-note">Cuidado sin etiquetas. A tu manera.</p></div>
-      <div class="scene"><span class="scene-caption">LA COLECCIÓN / NUDO</span><span class="scene-stamp">Pequeños<br>rituales,<br>cada día.</span><div class="plinth" aria-hidden="true"></div>${art(products[0])}${art(products[1])}${art(products[2])}<span class="scene-bottom">CABELLO · PIEL · BIENESTAR</span></div>
-      <aside class="hero-discovery" aria-labelledby="discovery-title"><h2 id="discovery-title">Encuentra tu ritual</h2><div class="discovery-links" aria-label="Explorar por categoría">${quickCategories.map(category => `<a class="discovery-link" href="${categoryHref(category)}"><span>${category}</span><span aria-hidden="true">↗</span></a>`).join('')}</div><div class="mini-products">${[products[0], products[1]].map(miniProduct).join('')}</div></aside>
+      <div class="scene"><span class="scene-caption">LA COLECCIÓN / NUDO</span><span class="scene-stamp">Pequeños<br>rituales,<br>cada día.</span><div class="plinth" aria-hidden="true"></div>${products.slice(0, 3).map(art).join('')}<span class="scene-bottom">CABELLO · PIEL · BIENESTAR</span></div>
+      <aside class="hero-discovery" aria-labelledby="discovery-title"><h2 id="discovery-title">Encuentra tu ritual</h2><div class="discovery-links" aria-label="Explorar por categoría">${quickCategories.map(category => `<a class="discovery-link" href="${categoryHref(category)}"><span>${category}</span><span aria-hidden="true">↗</span></a>`).join('')}</div><div class="mini-products">${products.slice(0, 2).map(miniProduct).join('')}</div></aside>
       </section><div class="value-strip"><span>Una rutina para cada persona</span><span>Lo esencial, bien elegido</span><span>Tu momento de cuidado</span></div><div class="container home-selections">${categories.map((category, index) => { const items = products.filter(item => item.category === category); return '<section class="home-collection category-preview" aria-labelledby="home-category-' + index + '"><div class="section-head"><div><p class="eyebrow">La colección / NUDO</p><h2 id="home-category-' + index + '">' + category + '</h2></div></div><div class="grid home-grid">' + items.map(card).join('') + '</div><a class="explore-more" href="' + categoryHref(category) + '">Ver todos los productos de ' + category + ' <span aria-hidden="true">→</span></a></section>'; }).join('')}</div>`;
   } else if (isSearch) {
     const results = filteredProducts(products, listingState, searchQuery);
-    const hasFilters = listingState.category || listingState.price !== 'all' || listingState.sort !== 'list';
-    app.innerHTML = `<div class="container search-results"><a class="back" href="#productos">← Volver a productos</a>${heading('Búsqueda / NUDO', `Resultados para “${escapeHTML(searchQuery)}”`)}${listingControls(listingState)}${results.length ? `<div class="grid search-grid">${results.map(card).join('')}</div>` : `<div class="search-empty">${icon('search')}<h2>No hay productos con estos filtros</h2><p class="muted">Prueba con otro término, categoría o rango de precio.</p>${hasFilters ? '<button class="secondary" type="button" data-reset-filters>Limpiar filtros</button>' : '<a class="button" href="#productos">Explorar todos los productos</a>'}</div>`}</div>`;
+    app.innerHTML = NudoListing.searchScreen({query:searchQuery, state:listingState, results, heading, card, icon, escapeHTML, options:listingOptions});
   } else if (isCatalog) {
     const selected = categoryIndex < 0 ? (listingState.category || null) : categories[categoryIndex];
     const catalogSection = (title, id, items, preview) => '<section class="category-section" aria-labelledby="' + id + '"><div class="category-heading"><h2 id="' + id + '">' + title + '</h2></div><div class="grid' + (preview ? ' home-grid' : '') + '">' + items.map(card).join('') + '</div>' + (preview ? '<a class="explore-more" href="' + categoryHref(title) + '">Ver todos los productos de ' + title + ' <span aria-hidden="true">→</span></a>' : '') + '</section>';
@@ -394,9 +376,9 @@ function render(options = {}) {
           : results.length ? catalogSection(listingState.category || 'Productos', 'filtered-products', results, false) : `<div class="search-empty"><h2>No hay productos con estos filtros</h2><p class="muted">Prueba con otra categoría o rango de precio.</p></div>`;
     app.innerHTML = '<div class="container"><div class="catalog-intro"><div>' + heading('La colección / NUDO', collection ? collection.title : selected || 'Tu próxima rutina.') + '<p class="muted">' + (collection ? collection.description : selected ? 'Descubre toda la colección de ' + selected.toLowerCase() + ' y encuentra tus esenciales.' : 'Cabello, estilo y cuidado personal. Elige lo que acompaña tu rutina.') + '</p></div></div>' + listingControls(listingState) + catalogContent + '</div>';
   } else if (product) {
-    app.innerHTML = `<div class="container"><a class="back" href="#productos">← Volver a la colección</a><div class="detail">${art(product)}<div class="detail-copy">${heading(product.category + ' / NUDO', product.name)}<p>${product.description}</p><p>Presentación · <strong>${product.size}</strong></p><ul class="benefits">${product.benefits.map(benefit => `<li>${icon('check')}${benefit}</li>`).join('')}</ul><div class="detail-price">${money(product.price)}</div><button class="button" data-add="${product.id}">${icon('cart')}<span>Agregar al carrito</span></button><p class="fine">Se agrega una unidad. Podrás ajustar la cantidad en el carrito.</p></div></div><section class="related-products" aria-labelledby="related-title"><div class="section-head"><div><p class="eyebrow">Completa tu rutina</p><h2 id="related-title">Productos que podrían interesarte</h2></div><a class="text-link" href="#productos">Ver todos ↗</a></div><div class="grid">${relatedProducts(product).map(card).join('')}</div></section></div>`;
+    app.innerHTML = `<div class="container"><a class="back" href="#productos">← Volver a la colección</a><div class="detail">${art(product)}<div class="detail-copy">${heading(escapeHTML(product.category) + ' / NUDO', escapeHTML(product.name))}<p>${escapeHTML(product.description)}</p><p>Presentación · <strong>${escapeHTML(product.size)}</strong></p><ul class="benefits">${product.benefits.map(benefit => `<li>${icon('check')}${escapeHTML(benefit)}</li>`).join('')}</ul><div class="detail-price">${money(product.price)}</div><button class="button" data-add="${escapeHTML(product.id)}">${icon('cart')}<span>Agregar al carrito</span></button><p class="fine">Se agrega una unidad. Podrás ajustar la cantidad en el carrito.</p></div></div><section class="related-products" aria-labelledby="related-title"><div class="section-head"><div><p class="eyebrow">Completa tu rutina</p><h2 id="related-title">Productos que podrían interesarte</h2></div><a class="text-link" href="#productos">Ver todos ↗</a></div><div class="grid">${relatedProducts(product).map(card).join('')}</div></section></div>`;
   } else if (route === 'carrito') {
-    app.innerHTML = `<div class="container">${heading('Tu selección', 'Carrito')}${cart.length ? `<div class="layout"><div class="cart-items"><div class="cart-actions"><a class="back" href="#productos">← Seguir explorando</a><button class="secondary empty-cart" type="button" data-empty-cart>Vaciar carrito</button></div>${cart.map(item => `<article class="cart-row">${art(item.product)}<div><h2><a href="#detalle/${item.product.id}">${item.product.name}</a></h2><p>${item.product.size} · ${money(item.product.price)} / unidad</p><strong class="cart-price">${money(item.product.price * item.quantity)}</strong><div class="quantity"><button class="secondary" data-change="-1" data-id="${item.product.id}" aria-label="Restar una unidad de ${item.product.name}" ${item.quantity === 1 ? 'disabled' : ''}>−</button><span aria-label="Cantidad: ${item.quantity}">${item.quantity}</span><button class="secondary" data-change="1" data-id="${item.product.id}" aria-label="Sumar una unidad de ${item.product.name}" ${item.quantity >= 99 ? 'disabled' : ''}>+</button><button class="remove" data-remove="${item.product.id}" aria-label="Eliminar ${item.product.name}">Eliminar</button></div></div></article>`).join('')}</div><aside class="panel" aria-label="Resumen del carrito"><h2>${icon('cart')}Tu ritual, listo.</h2>${totals(cart)}<a class="button" href="#envio">Continuar a datos de compra/contacto →</a></aside></div>` : `<div class="empty"><div class="empty-icon">${icon('cart')}</div><h2>Tu ritual está por empezar.</h2><p class="muted">Tu carrito está vacío. Explora nuestros esenciales y encuentra un momento para ti.</p><a class="button" href="#productos">Explorar productos ↗</a></div>`}</div>`;
+    app.innerHTML = `<div class="container">${heading('Tu selección', 'Carrito')}${cart.length ? `<div class="layout"><div class="cart-items"><div class="cart-actions"><a class="back" href="#productos">← Seguir explorando</a><button class="secondary empty-cart" type="button" data-empty-cart>Vaciar carrito</button></div>${cart.map(item => `<article class="cart-row">${art(item.product)}<div><h2><a href="#detalle/${escapeHTML(item.product.id)}">${escapeHTML(item.product.name)}</a></h2><p>${escapeHTML(item.product.size)} · ${money(item.product.price)} / unidad</p><strong class="cart-price">${money(item.product.price * item.quantity)}</strong><div class="quantity"><button class="secondary" data-change="-1" data-id="${escapeHTML(item.product.id)}" aria-label="Restar una unidad de ${escapeHTML(item.product.name)}" ${item.quantity === 1 ? 'disabled' : ''}>−</button><span aria-label="Cantidad: ${item.quantity}">${item.quantity}</span><button class="secondary" data-change="1" data-id="${escapeHTML(item.product.id)}" aria-label="Sumar una unidad de ${escapeHTML(item.product.name)}" ${item.quantity >= 99 ? 'disabled' : ''}>+</button><button class="remove" data-remove="${escapeHTML(item.product.id)}" aria-label="Eliminar ${escapeHTML(item.product.name)}">Eliminar</button></div></div></article>`).join('')}</div><aside class="panel" aria-label="Resumen del carrito"><h2>${icon('cart')}Tu ritual, listo.</h2>${totals(cart)}<a class="button" href="#envio">Continuar a datos de compra/contacto →</a></aside></div>` : `<div class="empty"><div class="empty-icon">${icon('cart')}</div><h2>Tu ritual está por empezar.</h2><p class="muted">Tu carrito está vacío. Explora nuestros esenciales y encuentra un momento para ti.</p><a class="button" href="#productos">Explorar productos ↗</a></div>`}</div>`;
   } else if (route === 'envio') {
     const fields = [
       ['firstName', 'Nombre', 'given-name', true],
@@ -512,10 +494,7 @@ searchForm.addEventListener('submit', event => {
   event.preventDefault();
   const query = searchInput.value.trim();
   closeSearch();
-  const listingQuery = listingQueryString(listingStateFrom(searchForm));
-  location.hash = query
-    ? 'buscar/' + encodeURIComponent(query) + listingQuery
-    : 'productos' + listingQuery;
+  location.hash = NudoListing.route(listingStateFrom(searchForm), query);
 });
 function resetFilters(form) {
   form.elements.category.value = '';
@@ -524,11 +503,8 @@ function resetFilters(form) {
   form.requestSubmit();
 }
 function applyListingFilters(form) {
-  const listingQuery = listingQueryString(listingStateFrom(form));
-  const query = form === searchForm ? searchInput.value.trim() : '';
-  location.hash = query
-    ? 'buscar/' + encodeURIComponent(query) + listingQuery
-    : 'productos' + listingQuery;
+  const query = form === searchForm || location.hash.slice(1).startsWith('buscar/') ? searchInput.value.trim() : '';
+  location.hash = NudoListing.route(listingStateFrom(form), query);
 }
 searchForm.addEventListener('click', event => {
   if (event.target.closest('[data-reset-filters]')) resetFilters(searchForm);

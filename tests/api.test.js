@@ -23,7 +23,7 @@ test('API, archivos y errores de base de datos', async t => {
   response = await fetch(`${base}/`);
   assert.equal(response.status, 200);
   assert.match(await response.text(), /catalog-repository\.js/);
-  assert.equal((await fetch(`${base}/api/products`, { method: 'POST' })).status, 405);
+  assert.equal((await fetch(`${base}/api/products`, { method: 'POST' })).status, 401);
   assert.equal((await fetch(`${base}/missing`)).status, 404);
   fail = true;
   response = await fetch(`${base}/api/products`);

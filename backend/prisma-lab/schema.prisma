@@ -1,0 +1,21 @@
+generator client {
+  provider = "prisma-client-js"
+  output = "../node_modules/.prisma/nudo-lab"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("LAB_DATABASE_URL")
+}
+model Categoria {
+  id Int @id @default(autoincrement())
+  nombre String @unique
+  productos Producto[]
+}
+model Producto {
+  id Int @id @default(autoincrement())
+  nombre String
+  precio Int
+  stock Int
+  categoriaId Int
+  categoria Categoria @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+}

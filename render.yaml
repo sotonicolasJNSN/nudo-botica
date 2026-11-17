@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: nudo-backend
+    name: nudo-botica
     runtime: node
     plan: free
     buildCommand: npm ci --prefix backend
@@ -12,3 +12,13 @@ services:
         value: 0.0.0.0
       - key: FRONTEND_ORIGIN
         value: https://sotonicolasjnsn.github.io
+      - key: CATALOG_SOURCE
+        value: supabase
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false

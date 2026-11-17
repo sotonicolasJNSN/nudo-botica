@@ -2,14 +2,9 @@
 const { Pool } = require('pg');
 const { createApp } = require('./app');
 const { createCatalogProvider } = require('./repositories/catalog-provider');
-const supabaseConfig = require('../supabase-config.json');
 
 // Las variables PGHOST, PGPORT, PGDATABASE, PGUSER y PGPASSWORD son admitidas por pg.
 const env = { ...process.env };
-if (env.CATALOG_SOURCE !== 'postgres' && !env.SUPABASE_URL && !env.SUPABASE_PUBLISHABLE_KEY) {
-  env.SUPABASE_URL = supabaseConfig.url;
-  env.SUPABASE_PUBLISHABLE_KEY = supabaseConfig.publishableKey;
-}
 const provider = createCatalogProvider(env, options => new Pool(options));
 const port = Number(process.env.PORT || 3000);
 const host = process.env.HOST || '127.0.0.1';
