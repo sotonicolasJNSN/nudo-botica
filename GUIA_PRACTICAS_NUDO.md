@@ -6,7 +6,7 @@ Estado al 16 de noviembre de 2026: API, panel y Prisma probados con PostgreSQL l
 
 1. `cd C:\EJEMPLOS\PeluqueriaTurnos\backend`
 2. `npm.cmd ci`
-3. Defina `$env:ADMIN_PASSWORD` con una contraseña propia de al menos 16 caracteres. La variable vive en el proceso; no la escriba en un archivo versionado.
+3. Defina `$env:ADMIN_PASSWORD` con una contraseña propia de al menos 14 caracteres. La variable vive en el proceso; no la escriba en un archivo versionado.
 4. Para Supabase, configure `$env:SUPABASE_URL`, `$env:SUPABASE_PUBLISHABLE_KEY` y `$env:SUPABASE_SECRET_KEY` en el entorno del servidor. La URL y clave publicable anteriores se usan por defecto si no se proporcionan. La clave secreta tiene amplios permisos y nunca debe ir en el navegador ni en Git. Use una base/proyecto de prueba para las pruebas de escritura.
 5. `npm.cmd start`; abra `http://127.0.0.1:3000/` y `http://127.0.0.1:3000/admin.html`. Para pruebas, `npm.cmd test`.
 

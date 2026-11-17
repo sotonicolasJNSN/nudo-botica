@@ -35,7 +35,7 @@ function createApp(repository, { frontendOrigin, adminPassword = process.env.ADM
     if (++attempt.count > 10) return res.status(429).json({ error: 'Demasiados intentos; espera un minuto' });
     attempts.set(req.ip, attempt);
     const supplied = typeof req.body?.password === 'string' ? req.body.password : '';
-    const valid = typeof adminPassword === 'string' && adminPassword.length >= 16 &&
+    const valid = typeof adminPassword === 'string' && adminPassword.length >= 14 &&
       Buffer.byteLength(supplied) === Buffer.byteLength(adminPassword) &&
       timingSafeEqual(Buffer.from(supplied), Buffer.from(adminPassword));
     if (!valid) return res.status(401).json({ error: 'Credenciales inválidas o administración no configurada' });

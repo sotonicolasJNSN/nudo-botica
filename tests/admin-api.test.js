@@ -6,7 +6,7 @@ const product = { id: 'prueba', name: 'Producto de prueba', category: 'Cabello',
 test('CRUD con sesión, validaciones, errores y CORS', async t => {
   const rows = new Map();
   const repo = { list: async () => [...rows.values()], get: async id => rows.get(id), create: async p => { if (rows.has(p.id)) { const e = Error('Duplicado'); e.status = 409; throw e; } rows.set(p.id,p); return p; }, update: async (id,p) => { if (!rows.has(id)) return; rows.set(id,p); return p; }, remove: async id => rows.delete(id) };
-  const server = createApp(repo, { adminPassword: 'contraseña-de-prueba-segura', frontendOrigin: 'https://example.com' });
+  const server = createApp(repo, { adminPassword: 'test-password1', frontendOrigin: 'https://example.com' });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   t.after(() => new Promise(resolve => server.close(resolve)));
   const base = `http://127.0.0.1:${server.address().port}`;
@@ -14,7 +14,7 @@ test('CRUD con sesión, validaciones, errores y CORS', async t => {
   assert.equal((await call('/api/products','POST',product)).status, 401);
   assert.equal((await fetch(base+'/api/products',{method:'POST',headers:{Authorization:'invalid-token'}})).status,401);
   assert.equal((await call('/api/session','POST',{ password: 'incorrecta' })).status, 401);
-  let response = await call('/api/session','POST',{ password: 'contraseña-de-prueba-segura' });
+  let response = await call('/api/session','POST',{ password: 'test-password1' });
   assert.equal(response.status,200); const { token } = await response.json();
   response = await call('/api/products','POST',{...product,price:-1},token); assert.equal(response.status,400);
   response = await call('/api/products','POST',product,token); assert.equal(response.status,201); assert.equal(response.headers.get('location'),'/api/products/prueba'); assert.ok(response.headers.get('x-request-id')); assert.equal((await response.json()).id,product.id);
