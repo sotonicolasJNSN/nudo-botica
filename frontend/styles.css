@@ -340,3 +340,6 @@
   .cart-actions{align-items:flex-start;flex-direction:column}
   .confirm-dialog-content{padding:22px}
 }
+
+/* Renders estáticos; la ilustración existente queda debajo si falla la imagen. */
+.art .product-render{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:3}
