@@ -341,5 +341,12 @@
   .confirm-dialog-content{padding:22px}
 }
 
-/* Renders estáticos; la ilustración existente queda debajo si falla la imagen. */
+/* Fotografías estáticas; la ilustración existente queda debajo si falla la imagen. */
 .art .product-render{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:3}
+.product-image-note{position:absolute;right:7px;bottom:7px;z-index:4;padding:3px 6px;background:#ffffffde;color:#26342e;font-size:10px;line-height:1.2;border-radius:2px}
+.mini-product .product-image-note{display:none}
+.hero .scene>.art.has-product-render{inset:0;width:100%;height:100%;transform:none;z-index:1}
+.hero .scene .scene-caption,.hero .scene .scene-stamp,.hero .scene .scene-bottom{z-index:4}
+.hero .scene .scene-caption,.hero .scene .scene-bottom{background:#f8f6edd9;padding:4px 6px}
+.hero .scene .scene-stamp{background:#f8f6ede8}
+.hero .scene .product-image-note{bottom:26px}

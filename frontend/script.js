@@ -1,6 +1,9 @@
 'use strict';
 document.addEventListener('error', event => {
-  if (event.target?.classList?.contains('product-render')) event.target.remove();
+  if (event.target?.classList?.contains('product-render')) {
+    event.target.parentElement?.querySelector('.product-image-note')?.remove();
+    event.target.remove();
+  }
 }, true);
 (async () => {
 const catalogState = await globalThis.NudoCatalogRepository.load();
@@ -355,7 +358,7 @@ function render(options = {}) {
   if (route === 'inicio') {
     app.innerHTML = `<section class="hero" aria-labelledby="home-title">
       <div class="hero-copy"><p class="eyebrow">Cuidado capilar & personal</p><h1 id="home-title" tabindex="-1">Tu naturaleza.<br>Tu <em>ritual.</em></h1><p>Para tu cabello, tu piel, para ti. Pequeños gestos de cuidado, todos los días.</p><a class="button" href="#productos">Explorar la botica <span aria-hidden="true">↗</span></a><p class="hero-note">Cuidado sin etiquetas. A tu manera.</p></div>
-      <div class="scene"><span class="scene-caption">LA COLECCIÓN / NUDO</span><span class="scene-stamp">Pequeños<br>rituales,<br>cada día.</span><div class="plinth" aria-hidden="true"></div>${products.slice(0, 3).map(product => art(product, { illustration: true })).join('')}<span class="scene-bottom">CABELLO · PIEL · BIENESTAR</span></div>
+      <div class="scene"><span class="scene-caption">LA COLECCIÓN / NUDO</span><span class="scene-stamp">Pequeños<br>rituales,<br>cada día.</span>${products.length ? art(products[0], { priority: true }) : ''}<span class="scene-bottom">CABELLO · PIEL · BIENESTAR</span></div>
       <aside class="hero-discovery" aria-labelledby="discovery-title"><h2 id="discovery-title">Encuentra tu ritual</h2><div class="discovery-links" aria-label="Explorar por categoría">${quickCategories.map(category => `<a class="discovery-link" href="${categoryHref(category)}"><span>${category}</span><span aria-hidden="true">↗</span></a>`).join('')}</div><div class="mini-products">${products.slice(0, 2).map(miniProduct).join('')}</div></aside>
       </section><div class="value-strip"><span>Una rutina para cada persona</span><span>Lo esencial, bien elegido</span><span>Tu momento de cuidado</span></div><div class="container home-selections">${categories.map((category, index) => { const items = products.filter(item => item.category === category); return '<section class="home-collection category-preview" aria-labelledby="home-category-' + index + '"><div class="section-head"><div><p class="eyebrow">La colección / NUDO</p><h2 id="home-category-' + index + '">' + category + '</h2></div></div><div class="grid home-grid">' + items.map(card).join('') + '</div><a class="explore-more" href="' + categoryHref(category) + '">Ver todos los productos de ' + category + ' <span aria-hidden="true">→</span></a></section>'; }).join('')}</div>`;
   } else if (isSearch) {

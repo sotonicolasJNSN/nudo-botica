@@ -7,6 +7,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const root = path.join(__dirname, '..');
 const catalog = require('../tools/product-renders/catalog.json');
+const sources = require('../tools/product-photos/sources.json');
 const directory = path.join(root, 'frontend/images/products');
 
 function viewContext() {
@@ -23,6 +24,9 @@ test('los 60 productos tienen un WebP único y el índice coincide con el catál
   assert.equal(ids.length, 60);
   assert.equal(new Set(ids).size, 60);
   assert.deepEqual([...context.NudoProductImages].sort(), [...ids].sort());
+  assert.deepEqual(sources.map(source => source.product_id).sort(), [...ids].sort());
+  assert.equal(new Set(sources.map(source => source.photo_id)).size, 60);
+  assert.ok(sources.every(source => source.source.startsWith('https://www.pexels.com/photo/')));
   const files = fs.readdirSync(directory).filter(f => f.endsWith('.webp'));
   assert.deepEqual(files.sort(), ids.map(id => `${id}.webp`).sort());
   const hashes = files.map(file => {
@@ -38,7 +42,8 @@ test('las imágenes conocidas usan carga diferida y las prioritarias se anticipa
   const context = viewContext();
   const product = catalog[0];
   const normal = context.NudoView.art(product);
-  assert.match(normal, /src="images\/products\/shampoo\.webp"/);
+  assert.match(normal, /src="images\/products\/shampoo\.webp\?v=photos-20261116"/);
+  assert.match(normal, /Imagen referencial/);
   assert.match(normal, /width="512" height="512" loading="lazy"/);
   assert.match(context.NudoView.art(product, { priority: true }), /loading="eager"[^>]*fetchpriority="high"/);
   assert.doesNotMatch(context.NudoView.art({ ...product, id: '../otro' }), /<img/);
