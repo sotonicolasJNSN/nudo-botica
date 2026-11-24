@@ -1,134 +1,127 @@
-# NUDO — Botica contemporánea
+# NUDO Botica
 
-> **Estado 16-11-2026:** consulte [GUIA_PRACTICAS_NUDO.md](GUIA_PRACTICAS_NUDO.md) y [MATRIZ_PRACTICAS_NUDO.md](MATRIZ_PRACTICAS_NUDO.md) para los cambios y verificaciones actuales. Las secciones históricas siguientes pueden describir estados anteriores.
+Aplicación de catálogo y administración de productos de una botica. El proyecto combina un frontend estático, una API en Node.js y una base de datos PostgreSQL alojada en Supabase. La práctica incorpora Prisma, migraciones, pruebas automatizadas y un flujo de integración y despliegue continuo.
 
-## Prisma, pruebas y despliegue controlado
+## Enlaces principales
 
-El backend conserva la arquitectura controlador → servicio → repositorio. Para usar Prisma, configure `CATALOG_SOURCE=prisma` y `DATABASE_URL` en el entorno del servidor, genere el cliente con `npm run prisma:generate` desde `backend` e inicie con `npm start`. La API conserva las rutas y respuestas existentes. También siguen disponibles los proveedores `postgres` y `supabase`; Render selecciona Prisma para el catálogo y conserva las variables Supabase para facilitar una reversión controlada.
-
-Versiones de referencia: Node.js 22 en Render y CI; `package-lock.json` fija Express 5.3.0, pg 8.23.1 y Prisma/Prisma Client 6.12.0. El mínimo real de Prisma 6.12 es Node 18.18. Instale las dependencias con `npm ci` desde `backend`. Para revisar ambos esquemas y generar clientes use `npm run prisma:validate`, `npm run prisma:lab:validate`, `npm run prisma:generate` y `npm run prisma:lab:generate`.
-
-La migración `prisma/migrations/202611160001_existing_products` crea `products` y es exclusivamente una línea base para una base vacía. **No la ejecute ni marque aplicada en Supabase existente sin una revisión y autorización específicas.** Antes de cualquier adopción en producción deben compararse esquema, restricciones, RLS y datos, revisar respaldo y definir la línea base. No usar `migrate reset` ni `db push` en producción. El esquema de laboratorio y sus migraciones son independientes y solo se usan con una base de pruebas.
-
-El workflow `.github/workflows/ci.yml` instala dependencias, valida y genera ambos clientes, aplica sus migraciones a PostgreSQL temporal y ejecuta la suite. Las pruebas de escritura usan la base aislada `nudo_test`, no credenciales de Supabase. Las pruebas de Supabase permanecen deshabilitadas en CI. La autenticación de confianza del contenedor es exclusiva del servicio efímero de CI.
-
-Render está configurado con `Auto-Deploy: After CI Checks Pass`, también expresado como `autoDeployTrigger: checksPass` en `render.yaml`. Así, los cambios en `main` pueden desplegarse automáticamente después de superar las comprobaciones de CI. La aplicación de migraciones en CI se limita a PostgreSQL temporal: ningún despliegue ejecuta migraciones sobre Supabase. Compruebe el resultado final en Render y el estado de la API, no solo el éxito de CI.
-
-El workflow incluye además un despliegue manual opcional desde `main` después de ejecutar las pruebas. Requiere configurar por separado el secreto `RENDER_DEPLOY_HOOK_URL` y revisar la protección del entorno `production`; el hook es secreto. El hook solicita el SHA probado y, según la documentación de Render, desplegar un SHA mediante hook desactiva el autodespliegue: https://render.com/docs/deploys#deploying-a-specific-commit . Este mecanismo opcional no está configurado por defecto; el flujo automático usa la integración nativa de Render con CI.
-
-La URL de la base de datos es una credencial distinta de la clave secreta de la Data API: ambas deben mantenerse privadas. Render usa un pool de sesiones IPv4 de Supabase mediante `DATABASE_URL`. Para migraciones use una conexión directa o de sesión; en la configuración actual el CLI usa `DATABASE_URL`, por lo que debe proporcionarse la conexión apropiada mediante el entorno de prueba. No ejecutar migraciones en producción desde CI.
-
-## Arquitectura y puesta en marcha
-
-### Supabase
-
-El backend obtiene SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY y, para escrituras administrativas, SUPABASE_SECRET_KEY exclusivamente del entorno del servidor. No almacene claves ni contrasenas en archivos del repositorio o del frontend. La aplicacion consulta la Data API de Supabase desde el backend; la clave publicable solo tiene los permisos que conceden PostgreSQL y RLS.
-
-Antes de iniciar con Supabase, revise si ya existe `public.products`. Para un proyecto nuevo, ejecute en el SQL Editor, en este orden, `database/001_schema.sql`, `database/002_seed_catalog.sql` y `database/003_supabase_rls.sql`. El último habilita RLS y permite leer productos a `anon` y `authenticated`; no elimina permisos ni políticas existentes, que deben revisarse por separado. El seed agrega solo identificadores que todavía no existen. Estos scripts no se han aplicado automáticamente al proyecto remoto.
-
-En el proyecto Supabase configurado se verificó la lectura pública de 60 productos el 4 de noviembre de 2026. La lectura comprobada por sí sola no verifica todas las políticas o permisos de escritura: deben revisarse en Supabase.
-
-Como alternativa, `database/supabase_setup.sql` reúne los tres scripts en una sola transacción para pegarlos una vez en el SQL Editor.
-
-Para usar nuevamente PostgreSQL local, establezca `$env:CATALOG_SOURCE='postgres'` antes de arrancar y configure las variables PG que se describen abajo. Reinicie el servidor después de cambiar la configuración. Si Supabase no responde o aún no se ha creado su tabla, la API responde con error y la interfaz conserva provisionalmente el catálogo local de demostración.
-
-La migración a tres capas está en curso. `frontend/` contiene la vista, el controlador de la interfaz y sus repositorios HTTP y de carrito local. `backend/src/` contiene el controlador HTTP, el servicio y el repositorio de productos. `database/` contiene el esquema y los datos iniciales de PostgreSQL. El catálogo se consulta en `GET /api/products`; si la API no responde o no devuelve un catálogo válido, la interfaz utiliza la copia local de demostración.
-
-Requisitos: Node.js 18 o superior y PostgreSQL. Cree una base dedicada y ejecute `database/001_schema.sql` y luego `database/002_seed_catalog.sql` con `psql` o su cliente habitual. El seed conserva los productos que ya existan. Configure `DATABASE_URL` o las variables estándar `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER` y `PGPASSWORD` para una cuenta con permiso de lectura sobre `products`.
-
-En esta instalación se creó la base local `nudo` y se cargaron los 60 productos iniciales. Sin `DATABASE_URL` ni `PGDATABASE`, el backend usa `nudo` como nombre de base; el usuario y la contraseña de PostgreSQL deben configurarse mediante las variables de entorno indicadas arriba.
-
-En PowerShell, instale con `cd backend` y `npm.cmd ci`. Para Supabase, configure las variables de entorno anteriores y `$env:CATALOG_SOURCE='supabase'`; para PostgreSQL local use `$env:CATALOG_SOURCE='postgres'` y configure las variables PG o `DATABASE_URL`. Arranque con `npm.cmd start` y abra `http://localhost:3000`. El puerto puede cambiarse mediante `PORT`. Para las pruebas ejecute `npm.cmd test` desde `backend`.
-
-El servidor escucha en `127.0.0.1` por defecto. Si el entorno de publicación necesita escuchar en otra interfaz, configure `HOST` explícitamente; para exponerlo a Internet debe utilizar una infraestructura apropiada con HTTPS.
-
-GitHub Pages publica la interfaz estatica desde la raiz y redirige a `frontend/`; no ejecuta el backend Node.js. `frontend/app-config.js` conecta el sitio publicado en `sotonicolasjnsn.github.io` con `https://nudo-botica.onrender.com/`, y mantiene el modo same-origin en desarrollo local. Render instala con `npm ci --prefix backend`, genera el cliente con `npm run prisma:generate --prefix backend` y arranca con `npm start --prefix backend`; configura `DATABASE_URL` y `ADMIN_PASSWORD` como variables privadas, ademas de `HOST=0.0.0.0`, `CATALOG_SOURCE=prisma` y `FRONTEND_ORIGIN=https://sotonicolasjnsn.github.io`. Las claves y la contrasena no deben anadirse al repositorio ni a GitHub Pages.
-
-`render.yaml` prepara un servicio gratuito de Render desde la raíz del repositorio; se requiere conectar el repositorio a una cuenta de Render y crear el servicio. El plan gratuito se suspende después de inactividad y puede tardar en arrancar; el tiempo de espera actual de la interfaz puede hacer que use temporalmente el catálogo local. Consulte las condiciones actuales de Render antes de usarlo para producción.
-
-El carrito, el contacto y el checkout todavía se ejecutan en el navegador: no existe persistencia de pedidos ni pasarela de pago. La copia local del catálogo se mantiene provisionalmente para conservar el funcionamiento sin servidor. Las pantallas que aún están en `frontend/script.js` también están pendientes de extraerse a la vista.
-
-Tienda estática de cuidado capilar y personal en HTML, CSS y JavaScript nativos, con 60 productos, colecciones, detalle, carrito y checkout. Ilustraciones CSS y fuentes del sistema; sin backend, procesador de pagos ni certificación de seguridad o accesibilidad. No existen compras, cobros, correos ni entregas reales.
-
-## Actualización UI/UX — 7 de octubre de 2026
-
-El encabezado incluye iconos SVG locales para Inicio, Productos, Carrito y búsqueda. El cuadro de búsqueda se despliega junto a la lupa, busca nombre, categoría, descripción, etiqueta y beneficios sin distinguir tildes, y permite filtrar por categoría y rango de precio u ordenar por precio, nombre u orden de lista. Los mismos controles están disponibles en el catálogo y en los resultados de búsqueda; sus selecciones se reflejan en la ruta para conservar el estado al navegar. Las fichas muestran productos relacionados por categoría y colección. La portada y el catálogo muestran una fila de productos por categoría, adaptable al ancho de pantalla; «Ver todos» abre la categoría completa y mantiene las otras categorías visibles con su propia fila de productos. El catálogo incluye 60 productos y cinco categorías, entre ellas Rizos y ondas y Cuero cabelludo. Los precios usan el símbolo `$` una sola vez, delante del importe, con mayor jerarquía visual. El carrito confirma antes de quitar un artículo y ofrece vaciar todo. El pie presenta correo, teléfonos y dirección en un diseño adaptable.
-
-La búsqueda queda anclada al botón de lupa, usa un solo icono y se cierra al hacer clic fuera. La cabecera permanece fija al desplazarse. En el resumen, la fila de envío solo aparece al elegir entrega a domicilio; para pagos/retiros se omite. El ticket de pago local no se presenta como ticket de retiro; los tickets de retiro o envío se muestran en el flujo en línea. Cada ticket incluye un código aleatorio de referencia, sin consulta automática ni verificación en servidor.
-
-## Archivos y regla_runtime
-
-- `frontend/index.html`: estructura, navegación, búsqueda e iconos locales; integra `intl-tel-input` 25.12.2 por CDN para selector de país con búsqueda y banderas.
-- `model.js`: catálogo y reglas de negocio (búsqueda, precios y validación de tarjeta).
-- `cart-repository.js`: lectura y escritura del carrito en `localStorage`.
-- `view.js`: componentes de presentación reutilizables.
-- `script.js`: controlador de rutas, estado, eventos y pantallas; la extracción de las pantallas a la vista sigue pendiente.
-- `styles.css`: presentación adaptable, iconografía SVG local, controles nativos y bandera/prefijo separados.
-- `README.md` y `AUDITORIA.md`: uso, alcance, evidencias y limitaciones.
-
-El historial de auditoría de la publicación en el commit `70597e0` se conserva como referencia documental. **Recursos externos en runtime:** `intl-tel-input` 25.12.2 (JavaScript, CSS y sprites de banderas) se carga desde jsDelivr; si el CDN no está disponible, queda el selector nativo de países con fallback de bandera. También se conserva el fallback de imagen de bandera desde FlagCDN. No hay analítica, API de pago ni consultas automáticas de teléfonos o direcciones. El enlace de ayuda al portal de código postal se abre solo por acción del usuario.
-
-La demo también puede abrirse desde `frontend/index.html` sin servidor, utilizando el catálogo local. Las banderas gráficas necesitan conexión; si fallan, se muestra `countryFlag` Unicode o un símbolo global. La búsqueda y los filtros de categoría, precio y orden se ejecutan en el navegador y se actualizan al cambiar cada control; las tarjetas permiten agregar al carrito sin salir del catálogo. En el carrito, los controles de cantidad se desactivan en los límites y muestran ese estado visualmente. Rutas principales: `#inicio`, `#productos`, `#buscar/shampoo`, `#detalle/shampoo`, `#carrito`, `#envio`, `#pago`, `#confirmacion`; los criterios activos se guardan como parámetros de la ruta.
-
-## Tres pasos exactos
-
-1. **Datos de compra/contacto:** nombre, apellido, correo y celular obligatorios. Ecuador limita el celular a nueve dígitos y bloquea el cero inicial porque el prefijo `+593` ya está seleccionado. No hay dirección ni CP en este paso.
-2. **Pago:** permite elegir pago en el local o pago en línea. El pago en el local crea un ticket de pago pendiente. La opción en línea valida los campos y presenta el pago como confirmado, con entrega a casa (predeterminada) o retiro. Es una presentación estática: no hay procesador ni cobro real.
-3. **Confirmación:** el pago pendiente genera un ticket de pago; la opción en línea genera ticket de retiro o envío según la entrega. Todos incluyen un código aleatorio de referencia y muestran nombre, apellido, correo y celular del comprador. El ticket de domicilio también muestra la dirección ingresada, sin controles para editarla.
-
-| Fulfillment | Ticket/estado | Envío simulado |
+| Recurso | Enlace | Uso |
 | --- | --- | --- |
-| `local-pickup` | Ticket de pago pendiente; retiro previsto en 12 de Octubre y Veintimilla | $0; «No aplica» |
-| `online-pickup` | Pago presentado como confirmado; ticket de retiro en 12 de Octubre y Veintimilla | $0; «No aplica» |
-| `online-home` | Pago presentado como confirmado; ticket de envío a casa | Fijo $5,00 |
+| Repositorio | [github.com/sotonicolasJNSN/nudo-botica](https://github.com/sotonicolasJNSN/nudo-botica) | Código, documentación e historial. |
+| Tienda | [NUDO Botica en GitHub Pages](https://sotonicolasjnsn.github.io/nudo-botica/) | Interfaz pública. |
+| Panel administrativo | [Panel de administración](https://sotonicolasjnsn.github.io/nudo-botica/frontend/admin.html) | Gestión de productos; requiere contraseña y sesión. |
+| Backend | [Servicio en Render](https://nudo-botica.onrender.com/) | Servidor Node.js de la aplicación. |
+| API de catálogo | [GET /api/products](https://nudo-botica.onrender.com/api/products) | Catálogo público en JSON. |
+| API versionada | [GET /api/v1/products](https://nudo-botica.onrender.com/api/v1/products) | Las mismas operaciones bajo la ruta versionada. |
+| Integración continua | [GitHub Actions](https://github.com/sotonicolasJNSN/nudo-botica/actions) | Ejecuciones de pruebas y publicación de Pages. |
+| Configuración de Render | [render.yaml](render.yaml) | Comandos, versión y variables del servicio. |
+| Plataforma de datos | [Supabase](https://supabase.com/dashboard) | Administración del proyecto PostgreSQL; requiere acceso autorizado. |
 
-Solo online/home muestra Ciudad, Dirección, Complemento opcional y CP. En su submit se recortan espacios exteriores y se exige CP de exactamente seis dígitos; nunca se trunca ni se infiere de la ciudad. Ciudad/dirección son obligatorias. Los retiros no muestran ni validan destino. Una sola función `deliveryFee` define el cargo: 500 centavos exclusivamente para online/home. El pedido guarda `deliveryFee` numérico en centavos, `fulfillment`, modalidad de pago, código de referencia y artículos. El código sirve para identificar visualmente el ticket; sin backend no se puede verificar en otro dispositivo.
+El servicio de Render puede tardar en responder después de un periodo de inactividad. Las credenciales, la URL privada de PostgreSQL y los tokens no se publican en este repositorio.
 
-## Formato de pago
+## Arquitectura
 
-Los campos de tarjeta se muestran únicamente al elegir pago en línea. El número debe tener de 12 a 19 dígitos y superar la validación del número; también admite espacios o guiones como separadores. Si no es válido, se muestra un mensaje breve y genérico. El vencimiento requiere mes `01`–`12` y año de dos dígitos. Al escribir o pegar, no se aceptan meses fuera de ese rango. El CVV admite 3 o 4 dígitos. No se comprueba una tarjeta fija, no se verifica el titular ni se conecta a un procesador.
+```text
+Navegador: tienda / panel administrativo
+                  │ HTTPS / JSON
+                  ▼
+          API Node.js + Express (Render)
+                  │
+          Rutas → Controlador → Servicio → Repositorio
+                                              │
+                         Prisma / pg / Data API de Supabase
+                                              │
+                               PostgreSQL en Supabase
+```
 
-El número de tarjeta se agrupa visualmente cada cuatro dígitos. Los valores de tarjeta no se copian al objeto `payment`, el pedido, el almacenamiento ni las solicitudes; cambiar de modalidad reconstruye los inputs y confirmar elimina la pantalla de pago. Los errores aparecen mientras se escribe, al salir del campo y al enviar, asociados mediante `aria-describedby` y `aria-invalid`; el envío enfoca el primer campo inválido. La entrega a casa valida ciudad, dirección y código postal mientras se completan. El destino se escapa al reconstruir inputs y las alertas usan texto.
+El frontend publicado en GitHub Pages consulta al backend; `frontend/app-config.js` define la dirección de la API. El servidor recibe la petición, el **controlador** prepara la respuesta HTTP, el **servicio** aplica validaciones y el **repositorio** realiza el acceso a datos. Esta separación por capas y el patrón repositorio permiten cambiar el mecanismo de persistencia sin cambiar las rutas públicas.
 
-## Celular y país
+Con `CATALOG_SOURCE=prisma`, el repositorio utiliza Prisma Client para consultar PostgreSQL. También hay proveedores alternativos: `postgres`, con la biblioteca `pg`, y `supabase`, mediante la Data API. **Supabase es la plataforma donde se aloja PostgreSQL; Prisma es la herramienta de acceso**, no otra base de datos. La configuración versionada de Render selecciona Prisma.
 
-`intl-tel-input` 25.12.2 en JavaScript nativo proporciona selector con búsqueda por país o prefijo y muestra las banderas tanto en la opción seleccionada como en los resultados. Ecuador es el valor predeterminado; admite como máximo nueve dígitos nacionales, bloquea un cero inicial y exige nueve iniciando en 9 para continuar. En otros países se permite hasta 15 dígitos contando el prefijo, ajustados al país seleccionado. Si no carga el CDN, sigue disponible el selector nativo de países con bandera de fallback.
+La tabla `products` contiene `id`, `position` y `data` (JSONB). El modelo `Product` se asigna a esta tabla existente mediante `@@map("products")`. El carrito y el checkout son de demostración: no existe registro de pedidos, pasarela de pago ni cobro real.
 
-Se conservan los metadatos locales de libphonenumber-js 1.12.6, sin instalar su librería. Celular: dígitos solamente; Ecuador limita la entrada a nueve dígitos y exige nueve empezando en 9, sin cero inicial; internacional admite hasta 15 contando prefijo. Estas reglas no comprueban existencia o titularidad. Nombres admiten letras Unicode, espacios, guiones y apóstrofes, con al menos dos letras; correo requiere usuario, @ y dominio con punto.
+## Estructura del repositorio
 
-## Persistencia y privacidad
+| Ubicación | Contenido |
+| --- | --- |
+| [`frontend/`](frontend/) | Tienda, panel administrativo, configuración de la API y recursos estáticos. |
+| [`backend/src/app.js`](backend/src/app.js) | Rutas HTTP, sesiones, CORS y manejo de errores. |
+| [`backend/src/server.js`](backend/src/server.js) | Inicio del servidor y selección del proveedor. |
+| [`backend/src/controllers/`](backend/src/controllers/) | Controlador de productos y respuestas HTTP. |
+| [`backend/src/services/`](backend/src/services/) | Operaciones y validaciones del catálogo. |
+| [`backend/src/repositories/`](backend/src/repositories/) | Selector de proveedor e implementaciones Prisma, PostgreSQL y Supabase. |
+| [`backend/prisma/`](backend/prisma/) | Esquema Prisma del catálogo y migración inicial. |
+| [`backend/prisma-lab/`](backend/prisma-lab/) | Esquema y migraciones del laboratorio aislado de Prisma. |
+| [`database/`](database/) | Scripts SQL históricos de esquema, catálogo inicial y políticas RLS. |
+| [`tests/`](tests/) | Pruebas automatizadas de API, administración, proveedores y laboratorio. |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Validaciones, pruebas y despliegue manual opcional. |
+| [`auditorias/`](auditorias/) | Auditorías históricas; su fecha determina el estado que describen. |
 
-Solo `localStorage['nudo-cart-v1']` guarda cart: identificadores y cantidades. No se escriben cookies ni sessionStorage. Contacto/destino viven en memoria y DOM hasta confirmar, recargar o vaciar el carrito; el ticket de confirmación muestra los datos de contacto ingresados durante el pedido. `emptyPayment` contiene exclusivamente method, delivery y destination; `editPayment` nunca guarda tarjeta. La información no se envía a un servidor y se elimina al recargar.
+## API HTTP
 
-Confirmar vacía el carrito, contacto y borrador; sustituye Pago en el historial. Los guards exigen carrito/contacto validado y bloquean confirmación sin pedido. Cambiar carrito invalida contacto validado. La persistencia no sincroniza pestañas ni tiene caducidad; un fallo de escritura puede dejar un carrito anterior (H01–H03 de AUDITORIA). El autocompletado del navegador, extensiones y borrado forense están fuera de la garantía de la aplicación.
+**URL base:** `https://nudo-botica.onrender.com`. Las rutas `/api/products` y `/api/v1/products` admiten las mismas operaciones de productos. Los enlaces GET se pueden abrir en el navegador; POST, PUT y DELETE se invocan con un cliente HTTP y requieren sesión administrativa.
 
-## Validación local — 7 de octubre de 2026
+| Método | Ruta | Función | Acceso |
+| --- | --- | --- | --- |
+| GET | [`/api/products`](https://nudo-botica.onrender.com/api/products) | Lista los productos. | Público |
+| GET | `/api/products/:id` | Consulta un producto por identificador. | Público |
+| POST | `/api/session` | Inicia sesión con `{"password":"…"}` y devuelve un token temporal. | Contraseña administrativa |
+| DELETE | `/api/session` | Cierra la sesión. | Token |
+| POST | `/api/products` | Crea un producto. | Token |
+| PUT | `/api/products/:id` | Actualiza un producto completo. | Token |
+| DELETE | `/api/products/:id` | Elimina un producto. | Token |
 
-`node --check script.js` y `git diff --check` correctos. En navegador local se comprobó que los errores de contacto, tarjeta y destino aparecen al escribir y desaparecen al corregir el valor; también se verificó la inserción automática de `/`, la aceptación del formato genérico y los recorridos hasta confirmación.
+Las operaciones protegidas requieren `Authorization: Bearer <token>`. La sesión dura una hora y se guarda en memoria del servidor, por lo que puede perderse si este se reinicia. Los cuerpos JSON utilizan `Content-Type: application/json`. No incluya contraseñas o tokens en URL, capturas públicas o archivos del repositorio.
 
-- Tres pasos en contacto/Pago/confirmación; envío desconocido antes de Pago.
-- 245 opciones de nombre solo, Ecuador/+593, atributos de imagen, cambio a US/+1 y fallback `onerror` provocado.
-- Local predeterminado → Continuar → ticket pendiente con ubicación; sin destino ni tarjeta.
-- Online/pickup → sin destino/CP → campos de tarjeta de formato genérico → ticket de retiro sin cobro.
-- Online/home: destino requerido y CP de seis dígitos; total de envío actualizado y ticket con cargo simulado.
-- Número de tarjeta por longitud de dígitos, vencimiento MM/AA con barra automática y CVV de 3–4 dígitos; sin PAN permitido fijo.
-- Tarjeta ausente del estado/pedido/almacenamiento; volver a local elimina inputs y regresar a online los deja vacíos. localStorage solo cart, sessionStorage vacío y sin cookies.
-- Cadena HTML de prueba conservada como texto en destino sin crear elementos.
-- Viewports 390 × 844 y 1237 × 844 sin overflow horizontal en contacto, local, online/home, online/pickup y confirmación.
-- Cero excepciones JavaScript. Solicitudes observadas exclusivamente GET locales y al CDN flagcdn, sin payload de formulario ni PII/tarjeta en URL. No se usaron datos reales.
+El listado acepta `category`, `sort=price`, `limit` y `offset`. Por ejemplo: [consultar cinco productos ordenados por precio](https://nudo-botica.onrender.com/api/products?sort=price&limit=5&offset=0). El límite debe estar entre 1 y 100 y el desplazamiento ser un entero no negativo.
 
-El primer intento del arnés no cargó correctamente; la ejecución completa pasó después de servir tipos MIME con charset UTF-8 explícito. Estas son pruebas locales automatizadas de la versión publicada, no una certificación ni pruebas completas del sitio público. No se verificaron lector de pantalla, zoom, contraste, autocompletado real, otros navegadores ni entrega/pago reales. La comprobación pública de esta versión se limita a lo registrado a continuación; las comprobaciones históricas se conservan en AUDITORIA.
+Para crear o actualizar, el producto incluye `id`, `name`, `category`, `description`, `label`, `size`, `art`, `price`, `benefits` y `collections`. El precio se expresa como **centavos enteros**; los dos últimos campos son arreglos de texto. En una actualización el `id` del cuerpo debe coincidir con el de la ruta. El servidor valida el contenido antes de usar el repositorio.
 
-## Revisión pública del commit 70597e0 — 5 de octubre de 2026
+Respuestas habituales: `200` consulta o actualización; `201` creación; `204` eliminación o cierre de sesión; `400` datos inválidos; `401` sesión ausente o vencida; `404` registro o ruta inexistente; `409` producto duplicado; `429` demasiados intentos de inicio de sesión; `503` fallo de acceso al catálogo. Estos códigos dependen del caso y del proveedor. El servidor agrega `X-Request-Id` para facilitar el diagnóstico.
 
-GitHub Pages confirmó el build del commit **`70597e09c612851efcf48118d8302d34e1d06784`** (`70597e0`), status **`built`**, error **`null`**. La versión está publicada en [NUDO](https://sotonicolasjnsn.github.io/nudo-botica/). En el navegador público se comprobó:
+## Versiones y configuración
 
-- Checkout de exactamente tres pasos.
-- Pago local predeterminado: CTA **Continuar**, cero inputs de tarjeta o destino y aviso **Pago pendiente en el local**, con ubicación **12 de Octubre y Veintimilla**.
-- Al cambiar a online aparecen tres campos de formato de tarjeta; con entrega home aparecen cuatro campos de destino.
-- Al cambiar a online/pickup desaparece el destino; el checkout conserva tres pasos.
-- El carrito de prueba se borró al terminar.
+| Componente | Versión o configuración |
+| --- | --- |
+| Node.js | 22 en CI y Render; mínimo declarado: 18.18. |
+| Express | `^5.3.0` en `package.json`. |
+| PostgreSQL | Servicio PostgreSQL de Supabase; CI utiliza la imagen `postgres:18`. |
+| `pg` | `^8.13.1` en `package.json`. |
+| Prisma y `@prisma/client` | `6.12.0`. |
+| Dependencias exactas | [`backend/package-lock.json`](backend/package-lock.json). |
 
-La comprobación pública registrada corresponde a una versión histórica y no incluye el flujo actual. Los tickets local-pickup, online-pickup y online-home y las validaciones actuales se comprobaron en navegador **local**. No se afirma pago real, certificación ni prueba exhaustiva de producción.
+Las variables de entorno se definen fuera del código. Las principales son `CATALOG_SOURCE`, `DATABASE_URL`, `ADMIN_PASSWORD`, `FRONTEND_ORIGIN`, `HOST` y `PORT`. Si se utiliza el proveedor Supabase Data API también se configuran `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY`; para sus escrituras administrativas se requiere `SUPABASE_SECRET_KEY`. La contraseña administrativa debe tener al menos 14 caracteres. `DATABASE_URL`, `ADMIN_PASSWORD` y las claves secretas son privadas: no deben incluirse en GitHub.
 
-El CDN flagcdn es el único recurso externo automático. La bandera actual es una imagen fuera del selector, con prefijo separado y opciones de solo nombre; sustituye la descripción anterior de bandera Unicode dentro de la opción.
+## Ejecución local
+
+Se necesita Node.js y una base PostgreSQL **de prueba** compatible. Configure en el entorno `DATABASE_URL` para esa base, `CATALOG_SOURCE=prisma` y, si necesita probar administración, `ADMIN_PASSWORD` con una contraseña elegida por usted. No copie credenciales de producción ni utilice productos reales para pruebas de escritura.
+
+```bash
+cd backend
+npm ci
+npm run prisma:validate
+npm run prisma:generate
+npm start
+```
+
+El servidor escucha por defecto en `http://127.0.0.1:3000`. Para ejecutar la suite use `npm test` desde `backend`. En Windows se puede utilizar `npm.cmd` si PowerShell bloquea los scripts de npm. Las pruebas de integración requieren configuración y bases de prueba adicionales; algunas se omiten si faltan sus variables. Consulte [`backend/package.json`](backend/package.json) y [el flujo de CI](.github/workflows/ci.yml) para conocer los comandos exactos.
+
+## Migraciones y SQL
+
+[`backend/prisma/migrations/202611160001_existing_products/`](backend/prisma/migrations/202611160001_existing_products/) contiene una migración inicial para crear `products` en una **base vacía**. CI la aplica a PostgreSQL temporal. No debe aplicarse directamente a la tabla existente de Supabase sin revisar su estado, respaldo y estrategia de línea base, y sin autorización específica. No use `prisma migrate reset` ni `prisma db push` sobre producción.
+
+El laboratorio [`backend/prisma-lab/`](backend/prisma-lab/) es independiente y utiliza `LAB_DATABASE_URL` y datos de prueba. Los scripts de [`database/`](database/) son recursos para crear o poblar un entorno nuevo y configurar RLS; no hay que ejecutarlos en la base existente como parte de la puesta en marcha. CI no ejecuta migraciones en Supabase de producción.
+
+## Pruebas y CI/CD
+
+El flujo [GitHub Actions](.github/workflows/ci.yml) instala dependencias con `npm ci`, valida y genera los dos clientes Prisma, levanta PostgreSQL temporal, aplica las migraciones en prueba y ejecuta `npm test`. Consulte los resultados reales en [Actions](https://github.com/sotonicolasJNSN/nudo-botica/actions); una prueba omitida no cuenta como aprobada.
+
+La configuración [`render.yaml`](render.yaml) indica Node 22, genera Prisma durante el build y usa `autoDeployTrigger: checksPass`: Render puede desplegar cambios de la rama conectada después de que pasen las comprobaciones de CI. El workflow también define un despliegue manual opcional mediante un secreto y el entorno `production`; su disponibilidad depende de la configuración de GitHub. Los despliegues y cambios de datos reales requieren autorización específica. Confirme siempre el estado final en Render y con una consulta a la API.
+
+## Documentación y evidencia
+
+- [Práctica Prisma y CI](PRACTICA_PRISMA_CI.md): procedimiento, decisiones y evidencias de la práctica.
+- [Auditorías del proyecto](auditorias/): revisiones por tema, incluida la arquitectura y el backend.
+- [Matriz de prácticas](MATRIZ_PRACTICAS_NUDO.md) y [guía de prácticas](GUIA_PRACTICAS_NUDO.md): documentos históricos que pueden describir un estado anterior; prevalecen el código y la configuración actuales.
+- [Ejecución de CI del commit de activación de Prisma](https://github.com/sotonicolasJNSN/nudo-botica/actions/runs/45328377223): ejecución registrada como satisfactoria.
+
+En la comprobación de lectura realizada el 24 de noviembre de 2026, `GET /api/products` respondió `200` y devolvió 60 productos. Esta observación es puntual: no prueba por sí sola las escrituras ni garantiza la disponibilidad futura. Las operaciones de escritura deben verificarse en un entorno aislado; el uso de producción requiere autorización específica.
