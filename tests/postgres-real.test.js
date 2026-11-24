@@ -4,12 +4,39 @@ const assert = require('node:assert/strict');
 const { randomUUID } = require('node:crypto');
 const { createApp } = require('../backend/src/app');
 const { createProductRepository } = require('../backend/src/repositories/product-repository');
+const { createCatalogProvider } = require('../backend/src/repositories/catalog-provider');
 const connection = process.env.NUDO_TEST_DATABASE_URL;
 function validateDatabase() {
   const url = new URL(connection);
   if (!['127.0.0.1','localhost'].includes(url.hostname) || url.pathname !== '/nudo_test') throw Error('Solo se permite una base local aislada llamada nudo_test');
 }
 function fixture(id) { return { id, name:'Producto de prueba', category:'Cabello', size:'50 ml', price:1200, art:'sage', label:'Prueba', description:'Producto temporal', benefits:['Suave'], collections:['diario'] }; }
+
+test('API y repositorio Prisma conservan el CRUD administrativo', {skip: !connection}, async t => {
+  validateDatabase();
+  const { PrismaClient } = require('../backend/node_modules/@prisma/client');
+  const prisma = new PrismaClient({datasources:{db:{url:connection}}});
+  const provider = createCatalogProvider({ CATALOG_SOURCE: 'prisma', DATABASE_URL: connection }, () => { throw Error('No debe usar pg'); });
+  const server = createApp(provider.repository, { adminPassword: 'contrasena-temporal-1234' });
+  const id = `prueba-${randomUUID()}`;
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(async () => { await prisma.product.deleteMany({where:{id}}); await new Promise(resolve => server.close(resolve)); await provider.close(); await prisma.$disconnect(); });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const login = await fetch(base+'/api/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:'contrasena-temporal-1234'})});
+  assert.equal(login.status, 200);
+  const { token } = await login.json();
+  const call = (method, path, body) => fetch(base+path,{method,headers:{Authorization:`Bearer ${token}`, ...(body ? {'Content-Type':'application/json'} : {})}, ...(body ? {body:JSON.stringify(body)} : {})});
+  assert.equal((await call('POST','/api/products',fixture(id))).status, 201);
+  assert.equal((await call('POST','/api/products',fixture(id))).status, 409);
+  assert.ok((await (await fetch(base+'/api/products')).json()).some(product => product.id === id));
+  assert.equal((await (await fetch(base+`/api/v1/products/${id}`)).json()).price, 1200);
+  assert.equal((await call('PUT',`/api/products/${id}`,{...fixture(id),price:1750})).status, 200);
+  assert.equal((await (await fetch(base+`/api/products/${id}`)).json()).price, 1750);
+  assert.equal((await call('DELETE',`/api/products/${id}`)).status, 204);
+  assert.equal((await call('DELETE',`/api/products/${id}`)).status, 404);
+  assert.equal((await call('PUT',`/api/products/${id}`,fixture(id))).status, 404);
+  assert.equal((await fetch(base+`/api/products/${id}`)).status, 404);
+});
 
 test('API CRUD sobre PostgreSQL real con limpieza', {skip: !connection}, async t => {
   validateDatabase();

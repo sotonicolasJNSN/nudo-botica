@@ -2,6 +2,20 @@
 
 > **Estado 16-11-2026:** consulte [GUIA_PRACTICAS_NUDO.md](GUIA_PRACTICAS_NUDO.md) y [MATRIZ_PRACTICAS_NUDO.md](MATRIZ_PRACTICAS_NUDO.md) para los cambios y verificaciones actuales. Las secciones históricas siguientes pueden describir estados anteriores.
 
+## Prisma, pruebas y despliegue controlado
+
+El backend conserva la arquitectura controlador → servicio → repositorio. Para usar Prisma en una base de prueba, configure `CATALOG_SOURCE=prisma` y `DATABASE_URL` en el entorno del servidor, genere el cliente con `npm run prisma:generate` desde `backend` e inicie con `npm start`. La API conserva las rutas y respuestas existentes. Sin esa selección explícita siguen disponibles los proveedores `postgres` y `supabase`; el `render.yaml` actual conserva `supabase` y no activa Prisma en producción.
+
+Versiones de referencia: Node.js 22 en Render y CI; `package-lock.json` fija Express 5.3.0, pg 8.23.1 y Prisma/Prisma Client 6.12.0. El mínimo real de Prisma 6.12 es Node 18.18. Instale las dependencias con `npm ci` desde `backend`. Para revisar ambos esquemas y generar clientes use `npm run prisma:validate`, `npm run prisma:lab:validate`, `npm run prisma:generate` y `npm run prisma:lab:generate`.
+
+La migración `prisma/migrations/202611160001_existing_products` crea `products` y es exclusivamente una línea base para una base vacía. **No la ejecute ni marque aplicada en Supabase existente sin una revisión y autorización específicas.** Antes de cualquier adopción en producción deben compararse esquema, restricciones, RLS y datos, revisar respaldo y definir la línea base. No usar `migrate reset` ni `db push` en producción. El esquema de laboratorio y sus migraciones son independientes y solo se usan con una base de pruebas.
+
+El workflow `.github/workflows/ci.yml` instala dependencias, valida y genera ambos clientes, aplica sus migraciones a PostgreSQL temporal y ejecuta la suite. Las pruebas de escritura usan la base aislada `nudo_test`, no credenciales de Supabase. Las pruebas de Supabase permanecen deshabilitadas en CI. La autenticación de confianza del contenedor es exclusiva del servicio efímero de CI.
+
+El despliegue queda preparado como ejecución manual en GitHub Actions, únicamente desde `main`, después de que su trabajo de pruebas termine correctamente. El hook recibe el SHA probado. Antes de usarlo, con autorización separada, hay que desactivar en Render cualquier autodespliegue que omita CI, configurar el secreto `RENDER_DEPLOY_HOOK_URL` y revisar la protección del entorno `production`; el hook es secreto. La petición de despliegue no confirma por sí sola que Render lo haya completado. Render documenta que desplegar un SHA concreto mediante hook desactiva el autodespliegue del servicio: https://render.com/docs/deploys#deploying-a-specific-commit . No se crean secretos ni se despliega desde este repositorio automáticamente al hacer push.
+
+Para una futura conexión Prisma con Supabase, la URL de base de datos es una credencial distinta de la clave secreta de la Data API: conservar cada una sin exponerla. Revisar la conexión y el pool de Supabase antes de activar Prisma; las migraciones requieren conexión directa o de sesión, no un pool de transacciones. En la configuración actual el CLI usa `DATABASE_URL`, por lo que para migraciones debe proporcionarse la conexión apropiada mediante el entorno de prueba. No ejecutar migraciones en producción desde CI.
+
 ## Arquitectura y puesta en marcha
 
 ### Supabase

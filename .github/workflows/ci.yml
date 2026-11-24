@@ -1,0 +1,66 @@
+name: Pruebas y despliegue controlado
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Solicitar despliegue de main a Render después de las pruebas'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: nudo_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d nudo_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: postgresql://postgres@127.0.0.1:5432/nudo_test?schema=public
+      NUDO_TEST_DATABASE_URL: postgresql://postgres@127.0.0.1:5432/nudo_test?schema=public
+      LAB_DATABASE_URL: postgresql://postgres@127.0.0.1:5432/nudo_test?schema=nudo_lab
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run prisma:validate && npm run prisma:lab:validate
+      - run: npm run prisma:generate && npm run prisma:lab:generate
+      - run: npx prisma migrate deploy --schema prisma/schema.prisma
+      - run: npx prisma migrate deploy --schema prisma-lab/schema.prisma
+      - run: npm test
+
+  deploy:
+    needs: test
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Solicitar despliegue en Render
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          test -n "$RENDER_DEPLOY_HOOK_URL" || { echo 'Falta configurar RENDER_DEPLOY_HOOK_URL'; exit 1; }
+          separator='?'
+          [[ "$RENDER_DEPLOY_HOOK_URL" == *\?* ]] && separator='&'
+          curl --fail --silent --show-error --request POST "${RENDER_DEPLOY_HOOK_URL}${separator}ref=${GITHUB_SHA}" > /dev/null
