@@ -12,18 +12,22 @@ class Element {
   constructor() { this.hidden = false; this.value = ''; this.disabled = false; this.textContent = ''; this.listeners = {}; this.options = []; this.elements = {}; }
   addEventListener(type, handler) { this.listeners[type] = handler; }
   add(option) { this.options.push(option); }
+  appendChild(option) { this.options.push(option); }
   replaceChildren() { this.options = []; }
   reset() { if (this.elements.password) this.elements.password.value = ''; }
   async dispatch(type) { return this.listeners[type]({ preventDefault() {} }); }
 }
 
 function makeHarness() {
-  const selectors = ['#admin-status', '#login', '#panel', '#products', '#editor', '#delete', '#new', '#refresh', '#logout'];
+  const selectors = ['#admin-status', '#login', '#panel', '#products', '#editor', '#delete', '#new', '#refresh', '#logout', '#supplier', '#supplier-list', '#supplier-form'];
   const elements = Object.fromEntries(selectors.map(selector => [selector, new Element()]));
   const fields = ['id', 'name', 'category', 'size', 'price', 'art', 'label', 'description', 'benefits', 'collections'];
   elements['#login'].elements.password = new Element();
+  elements['#login'].elements.username = new Element();
+  elements['#supplier-form'].elements.name = new Element();
   elements['#editor'].elements = Object.fromEntries(fields.map(field => [field, new Element()]));
   const rows = new Map();
+  const supplierRows = [{ id:'proveedor-prueba', name:'Proveedor de prueba' }];
   const calls = [];
   let serverToken = '';
   let failLogout = false;
@@ -35,7 +39,7 @@ function makeHarness() {
     calls.push({ origin: url.origin, path: url.pathname, method, token });
     const respond = (status, data) => ({ status, ok: status >= 200 && status < 300, json: async () => data });
     if (url.pathname === '/api/session' && method === 'POST') {
-      if (JSON.parse(options.body).password !== 'valid-test-password') return respond(401, { error: 'Invalid credentials' });
+      if (JSON.parse(options.body).username !== 'usuario-prueba' || JSON.parse(options.body).password !== 'valid-test-password') return respond(401, { error: 'Invalid credentials' });
       serverToken = 'session-token';
       return respond(200, { token: serverToken });
     }
@@ -44,6 +48,16 @@ function makeHarness() {
       if (failLogout) return respond(503, { error: 'API unavailable' });
       serverToken = '';
       return respond(204, null);
+    }
+    if (url.pathname === '/api/suppliers' && method === 'GET') return respond(200, supplierRows);
+    if (url.pathname === '/api/suppliers' && method === 'POST') { const row = {id:'otro-proveedor',name:JSON.parse(options.body).name}; supplierRows.push(row); return respond(201,row); }
+    if (url.pathname === '/api/product-suppliers' && method === 'GET') return respond(200, [...rows.keys()].map(productId => ({ productId, supplierId:'proveedor-prueba' })));
+    if (url.pathname.startsWith('/api/admin/products')) {
+      if (token !== serverToken) return respond(401, { error: 'Session required' });
+      const {product, supplierId} = JSON.parse(options.body);
+      if (supplierId !== 'proveedor-prueba') return respond(400, {error:'Proveedor inválido'});
+      rows.set(product.id, product);
+      return respond(method === 'POST' ? 201 : 200, product);
     }
     if (url.pathname.startsWith('/api/products')) {
       if (method !== 'GET' && token !== serverToken) return respond(401, { error: 'Session required' });
@@ -68,7 +82,7 @@ function makeHarness() {
     }
     return respond(404, { error: 'Route not found' });
   };
-  const context = { location: { hostname: 'sotonicolasjnsn.github.io', origin: 'https://sotonicolasjnsn.github.io' }, document: { querySelector: selector => elements[selector] }, fetch, URL, Option: class { constructor(text, value) { this.text = text; this.value = value; } }, confirm: () => true };
+  const context = { location: { hostname: 'sotonicolasjnsn.github.io', origin: 'https://sotonicolasjnsn.github.io' }, document: { querySelector: selector => elements[selector], createElement: () => new Element() }, fetch, URL, Option: class { constructor(text, value) { this.text = text; this.value = value; } }, confirm: () => true };
   vm.createContext(context);
   vm.runInContext(configSource, context);
   vm.runInContext(adminSource, context);
@@ -77,17 +91,23 @@ function makeHarness() {
 
 test('admin panel uses deployed API for login and CRUD and reports logout errors', async () => {
   const { elements, rows, calls, setFailLogout } = makeHarness();
+  elements['#login'].elements.username.value = 'usuario-prueba';
   elements['#login'].elements.password.value = 'valid-test-password';
   await elements['#login'].dispatch('submit');
   assert.equal(elements['#panel'].hidden, false);
   assert.match(elements['#admin-status'].textContent, /activa/);
+  elements['#supplier-form'].elements.name.value = 'Nuevo proveedor';
+  await elements['#supplier-form'].dispatch('submit');
+  assert.match(elements['#admin-status'].textContent, /Proveedor agregado/);
+  assert.ok(elements['#supplier'].options.some(option => option.text === 'Nuevo proveedor'));
 
   const editor = elements['#editor'];
   const product = { id:'temporal-admin-test', name:'Temporary product', category:'Cabello', size:'50 ml', price:'1200', art:'sage', label:'Test', description:'Temporary test', benefits:'Test benefit', collections:'diario' };
   for (const [field, value] of Object.entries(product)) editor.elements[field].value = value;
+  elements['#supplier'].value = 'proveedor-prueba';
   await editor.dispatch('submit');
   assert.equal(rows.get(product.id).price, 1200);
-  assert.match(elements['#admin-status'].textContent, /guardado/);
+  assert.match(elements['#admin-status'].textContent, /guardados/);
 
   elements['#products'].value = product.id;
   await elements['#products'].dispatch('change');
@@ -110,7 +130,7 @@ test('admin panel uses deployed API for login and CRUD and reports logout errors
 
   assert.ok(calls.every(call => call.origin === 'https://nudo-botica.onrender.com'));
   assert.ok(calls.some(call => call.method === 'POST' && call.path === '/api/session'));
-  assert.ok(calls.some(call => call.method === 'POST' && call.path === '/api/products' && call.token === 'session-token'));
+  assert.ok(calls.some(call => call.method === 'POST' && call.path === '/api/admin/products' && call.token === 'session-token'));
   assert.ok(calls.some(call => call.method === 'PUT' && call.token === 'session-token'));
   assert.ok(calls.some(call => call.method === 'DELETE' && call.path.startsWith('/api/products/') && call.token === 'session-token'));
 });

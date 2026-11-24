@@ -5,8 +5,10 @@ const path = require('node:path');
 const express = require('express');
 const { createProductService } = require('./services/product-service');
 const { createProductController } = require('./controllers/product-controller');
+const { createSupplierService } = require('./services/supplier-service');
+const { createSupplierController } = require('./controllers/supplier-controller');
 
-function createApp(repository, { frontendOrigin, adminPassword = process.env.ADMIN_PASSWORD } = {}) {
+function createApp(repository, { frontendOrigin, adminPassword = process.env.ADMIN_PASSWORD, adminUsers, suppliers } = {}) {
   const app = express();
   const controller = createProductController(createProductService(repository));
   const sessions = new Map();
@@ -28,21 +30,24 @@ function createApp(repository, { frontendOrigin, adminPassword = process.env.ADM
   });
   app.use(express.json({ limit: '32kb' }));
   app.use('/api', (req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
-  app.post('/api/session', (req, res) => {
+  app.post('/api/session', async (req, res, next) => {
+    try {
     const now = Date.now();
     const attempt = attempts.get(req.ip) || { count: 0, until: now + 60000 };
     if (now > attempt.until) { attempt.count = 0; attempt.until = now + 60000; }
     if (++attempt.count > 10) return res.status(429).json({ error: 'Demasiados intentos; espera un minuto' });
     attempts.set(req.ip, attempt);
     const supplied = typeof req.body?.password === 'string' ? req.body.password : '';
-    const valid = typeof adminPassword === 'string' && adminPassword.length >= 14 &&
+    const legacyValid = typeof adminPassword === 'string' && adminPassword.length >= 14 &&
       Buffer.byteLength(supplied) === Buffer.byteLength(adminPassword) &&
       timingSafeEqual(Buffer.from(supplied), Buffer.from(adminPassword));
+    const valid = req.body?.username ? !!adminUsers && await adminUsers.verify(req.body.username, supplied) : legacyValid;
     if (!valid) return res.status(401).json({ error: 'Credenciales inválidas o administración no configurada' });
     attempts.delete(req.ip);
     const token = randomBytes(32).toString('hex');
     sessions.set(token, now + 60 * 60 * 1000);
     res.json({ token, expiresIn: 3600 });
+    } catch (error) { next(error); }
   });
   function authorize(req, res, next) {
     const token = /^Bearer ([0-9a-f]{64})$/.exec(req.get('Authorization') || '')?.[1];
@@ -52,6 +57,14 @@ function createApp(repository, { frontendOrigin, adminPassword = process.env.ADM
   }
   app.delete('/api/session', authorize, (req, res) => { sessions.delete(req.sessionToken); res.status(204).end(); });
   const asyncRoute = fn => (req, res, next) => Promise.resolve(fn(req, res)).catch(next);
+  if (suppliers) {
+    const admin = createSupplierController(createSupplierService(suppliers));
+    app.get('/api/suppliers', authorize, asyncRoute(admin.list));
+    app.post('/api/suppliers', authorize, asyncRoute(admin.create));
+    app.get('/api/product-suppliers', authorize, asyncRoute(admin.links));
+    app.post('/api/admin/products', authorize, asyncRoute(admin.createProduct));
+    app.put('/api/admin/products/:id', authorize, asyncRoute(admin.updateProduct));
+  }
   for (const base of ['/api/products', '/api/v1/products']) {
     const router = express.Router();
     router.get('/', asyncRoute(controller.list));

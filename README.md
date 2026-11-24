@@ -64,13 +64,26 @@ La tabla `products` contiene `id`, `position` y `data` (JSONB). El modelo `Produ
 | --- | --- | --- | --- |
 | GET | [`/api/products`](https://nudo-botica.onrender.com/api/products) | Lista los productos. | Público |
 | GET | `/api/products/:id` | Consulta un producto por identificador. | Público |
-| POST | `/api/session` | Inicia sesión con `{"password":"…"}` y devuelve un token temporal. | Contraseña administrativa |
+| POST | `/api/session` | Inicia sesión con `{"username":"…","password":"…"}` y devuelve un token temporal. | Usuario y contraseña |
 | DELETE | `/api/session` | Cierra la sesión. | Token |
 | POST | `/api/products` | Crea un producto. | Token |
 | PUT | `/api/products/:id` | Actualiza un producto completo. | Token |
 | DELETE | `/api/products/:id` | Elimina un producto. | Token |
+| GET / POST | `/api/suppliers` | Consulta o crea proveedores comerciales. | Token |
+| GET | `/api/product-suppliers` | Consulta las relaciones entre productos y proveedores. | Token |
+| POST / PUT | `/api/admin/products` / `/api/admin/products/:id` | Guarda un producto y su proveedor en una transacción. | Token |
 
-Las operaciones protegidas requieren `Authorization: Bearer <token>`. La sesión dura una hora y se guarda en memoria del servidor, por lo que puede perderse si este se reinicia. Los cuerpos JSON utilizan `Content-Type: application/json`. No incluya contraseñas o tokens en URL, capturas públicas o archivos del repositorio.
+Las operaciones protegidas requieren `Authorization: Bearer <token>`. La sesión dura una hora y se guarda en memoria del servidor, por lo que puede perderse si este se reinicia. El acceso con usuario requiere crear la tabla `admin_users` y cargar las cuentas autorizadas; las contraseñas se almacenan como hashes con scrypt y sal, no en texto plano. Hasta completar ese paso, se conserva el acceso anterior por contraseña dejando el campo de usuario vacío. Los cuerpos JSON utilizan `Content-Type: application/json`. No incluya contraseñas o tokens en URL, capturas públicas o archivos del repositorio.
+
+### Flujo de productos
+
+1. **Consulta:** la tienda solicita `GET /api/products` al servidor de Render.
+2. **Procesamiento:** la ruta envía la solicitud al controlador y este llama al servicio.
+3. **Datos:** el servicio utiliza el repositorio Prisma; Prisma consulta la tabla `products` de PostgreSQL en Supabase.
+4. **Respuesta:** los productos vuelven como JSON a la tienda, que los muestra en el catálogo.
+5. **Administración:** una persona inicia sesión y recibe un token. El panel envía ese token junto con la solicitud de crear, modificar o eliminar; el servidor comprueba la sesión y valida los datos antes de ejecutar la operación. La tienda refleja los cambios cuando vuelve a consultar el catálogo.
+
+Las escrituras se prueban con registros temporales en una base aislada; la base de producción contiene el catálogo real. El panel permite crear proveedores comerciales y elegir uno para cada producto. La relación se guarda en `product_suppliers` sin alterar la estructura de `products`; los proveedores iniciales identificados como ficticios son ejemplos, no empresas verificadas.
 
 El listado acepta `category`, `sort=price`, `limit` y `offset`. Por ejemplo: [consultar cinco productos ordenados por precio](https://nudo-botica.onrender.com/api/products?sort=price&limit=5&offset=0). El límite debe estar entre 1 y 100 y el desplazamiento ser un entero no negativo.
 
@@ -108,6 +121,8 @@ El servidor escucha por defecto en `http://127.0.0.1:3000`. Para ejecutar la sui
 ## Migraciones y SQL
 
 [`backend/prisma/migrations/202611160001_existing_products/`](backend/prisma/migrations/202611160001_existing_products/) contiene una migración inicial para crear `products` en una **base vacía**. CI la aplica a PostgreSQL temporal. No debe aplicarse directamente a la tabla existente de Supabase sin revisar su estado, respaldo y estrategia de línea base, y sin autorización específica. No use `prisma migrate reset` ni `prisma db push` sobre producción.
+
+Las migraciones posteriores describen las tablas `admin_users`, `suppliers` y `product_suppliers`. La asignación de los proveedores ficticios al catálogo existente es una carga de datos separada de la creación de la estructura. Antes de aplicar cambios en una base existente, revise qué tablas ya existen; no ejecute la migración inicial de `products` sobre una tabla existente.
 
 El laboratorio [`backend/prisma-lab/`](backend/prisma-lab/) es independiente y utiliza `LAB_DATABASE_URL` y datos de prueba. Los scripts de [`database/`](database/) son recursos para crear o poblar un entorno nuevo y configurar RLS; no hay que ejecutarlos en la base existente como parte de la puesta en marcha. CI no ejecuta migraciones en Supabase de producción.
 

@@ -2,6 +2,8 @@
 const { createProductRepository } = require('./product-repository');
 const { createSupabaseProductRepository } = require('./supabase-product-repository');
 const { createPrismaProductRepository } = require('./prisma-product-repository');
+const { createAdminUserRepository } = require('./admin-user-repository');
+const { createSupplierRepository } = require('./supplier-repository');
 
 function createCatalogProvider(env, createPool) {
   if (env.CATALOG_SOURCE && !['postgres', 'supabase', 'prisma'].includes(env.CATALOG_SOURCE)) {
@@ -11,7 +13,7 @@ function createCatalogProvider(env, createPool) {
     if (!env.DATABASE_URL) throw new Error('Configure DATABASE_URL para Prisma');
     const { PrismaClient } = require('@prisma/client');
     const prisma = new PrismaClient({ datasources: { db: { url: env.DATABASE_URL } } });
-    return { repository: createPrismaProductRepository(prisma), close: () => prisma.$disconnect() };
+    return { repository: createPrismaProductRepository(prisma), adminUsers: createAdminUserRepository(prisma), suppliers: createSupplierRepository(prisma), close: () => prisma.$disconnect() };
   }
   if (env.CATALOG_SOURCE === 'postgres') {
     const pool = createPool(env.DATABASE_URL ? { connectionString: env.DATABASE_URL } : { database: env.PGDATABASE || 'nudo' });

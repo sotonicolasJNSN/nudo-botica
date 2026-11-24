@@ -9,5 +9,27 @@ model Product {
   id       String @id
   position Int
   data     Json
+  supplierLink ProductSupplier?
   @@map("products")
+}
+
+model Supplier {
+  id String @id
+  name String @unique
+  products ProductSupplier[]
+  @@map("suppliers")
+}
+
+model ProductSupplier {
+  productId String @id @map("product_id")
+  supplierId String @map("supplier_id")
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  @@map("product_suppliers")
+}
+
+model AdminUser {
+  username     String @id
+  passwordHash String @map("password_hash")
+  @@map("admin_users")
 }

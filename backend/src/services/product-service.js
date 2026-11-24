@@ -19,4 +19,4 @@ function createProductService(repository) {
     remove: id => repository.remove(id)
   };
 }
-module.exports = { createProductService };
+module.exports = { createProductService, validate };
