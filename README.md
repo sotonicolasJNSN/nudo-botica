@@ -70,6 +70,7 @@ La tabla `products` contiene `id`, `position` y `data` (JSONB). El modelo `Produ
 | PUT | `/api/products/:id` | Actualiza un producto completo. | Token |
 | DELETE | `/api/products/:id` | Elimina un producto. | Token |
 | GET / POST | `/api/suppliers` | Consulta o crea proveedores comerciales. | Token |
+| DELETE | `/api/suppliers/:id` | Elimina un proveedor sin productos asignados. | Token |
 | GET | `/api/product-suppliers` | Consulta las relaciones entre productos y proveedores. | Token |
 | POST / PUT | `/api/admin/products` / `/api/admin/products/:id` | Guarda un producto y su proveedor en una transacción. | Token |
 
@@ -84,6 +85,8 @@ Las operaciones protegidas requieren `Authorization: Bearer <token>`. La sesión
 5. **Administración:** una persona inicia sesión y recibe un token. El panel envía ese token junto con la solicitud de crear, modificar o eliminar; el servidor comprueba la sesión y valida los datos antes de ejecutar la operación. La tienda refleja los cambios cuando vuelve a consultar el catálogo.
 
 Las escrituras se prueban con registros temporales en una base aislada; la base de producción contiene el catálogo real. El panel permite crear proveedores comerciales y elegir uno para cada producto. La relación se guarda en `product_suppliers` sin alterar la estructura de `products`; los proveedores iniciales identificados como ficticios son ejemplos, no empresas verificadas.
+
+Para crear un producto en el panel, seleccione su proveedor y categoría, complete los datos y escriba el precio en dólares. El identificador se genera automáticamente y el backend conserva el precio en centavos. Los productos anteriores mantienen su categoría, identificador y campos visuales al editarlos. No se puede eliminar un proveedor mientras tenga productos asignados; primero hay que reasignarlos.
 
 El listado acepta `category`, `sort=price`, `limit` y `offset`. Por ejemplo: [consultar cinco productos ordenados por precio](https://nudo-botica.onrender.com/api/products?sort=price&limit=5&offset=0). El límite debe estar entre 1 y 100 y el desplazamiento ser un entero no negativo.
 

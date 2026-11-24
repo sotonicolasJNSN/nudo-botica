@@ -5,6 +5,7 @@ function createSupplierService(repository) {
   return {
     list: () => repository.list(),
     links: () => repository.links(),
+    remove: id => repository.remove(id),
     create(input) {
       const name = typeof input?.name === 'string' ? input.name.trim() : '';
       if (!name || name.length > 120) throw invalid('Nombre de proveedor inválido');

@@ -5,6 +5,7 @@
   const status = document.querySelector('#admin-status'), login = document.querySelector('#login'), panel = document.querySelector('#panel');
   const select = document.querySelector('#products'), editor = document.querySelector('#editor');
   const supplierSelect = document.querySelector('#supplier'), supplierList = document.querySelector('#supplier-list'), supplierForm = document.querySelector('#supplier-form');
+  const supplierToDelete = document.querySelector('#supplier-to-delete');
   let token = '', products = [], suppliers = [], links = [], selected = '';
   const message = value => { status.textContent = value; };
   async function request(path, options = {}) {
@@ -16,27 +17,42 @@
   function showSession() { login.hidden = !!token; panel.hidden = !token; }
   function showProduct() {
     const product = products.find(p => p.id === selected) || { id:'', name:'', category:'', size:'', price:0, art:'sage', label:'', description:'', benefits:[], collections:[] };
-    for (const field of ['id','name','category','size','price','art','label','description']) editor.elements[field].value = product[field];
+    for (const field of ['name','size','description']) editor.elements[field].value = product[field];
+    const category = editor.elements.category;
+    category.replaceChildren();
+    category.add(new Option('Selecciona una categoría', ''));
+    for (const value of ['Paquete de 12','Paquete de 24']) category.add(new Option(value, value));
+    if (product.category && !['Paquete de 12','Paquete de 24'].includes(product.category)) category.add(new Option(product.category + ' (actual)', product.category));
+    category.value = product.category;
+    editor.elements.price.value = (product.price / 100).toFixed(2);
     editor.elements.benefits.value = product.benefits.join('\n');
     editor.elements.collections.value = product.collections.join(', ');
     supplierSelect.value = links.find(link => link.productId === selected)?.supplierId || '';
-    editor.elements.id.disabled = !!selected;
     document.querySelector('#delete').disabled = !selected;
   }
   function readProduct() {
+    const existing = products.find(p => p.id === selected);
     const product = {};
-    for (const field of ['id','name','category','size','art','label','description']) product[field] = editor.elements[field].value.trim();
-    product.price = Number(editor.elements.price.value);
+    for (const field of ['name','category','size','description']) product[field] = editor.elements[field].value.trim();
+    const slug = product.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60).replace(/-$/,'') || 'producto';
+    product.id = existing?.id || `${slug}-${globalThis.crypto.randomUUID().slice(0,8)}`;
+    product.art = existing?.art || 'sage';
+    product.label = existing?.label || product.name;
+    const price = editor.elements.price.value;
+    if (!/^\d+(?:\.\d{1,2})?$/.test(price) || Number(price) > 100000) throw Error('Escribe un precio válido con hasta dos decimales');
+    product.price = Math.round(Number(price) * 100);
     product.benefits = editor.elements.benefits.value.split(/\r?\n/).map(value => value.trim()).filter(Boolean);
     product.collections = editor.elements.collections.value.split(',').map(value => value.trim()).filter(Boolean);
     return product;
   }
   async function refresh() {
     [products, suppliers, links] = await Promise.all([request('/api/products'), request('/api/suppliers'), request('/api/product-suppliers')]);
-    select.replaceChildren(); supplierSelect.replaceChildren(); supplierList.replaceChildren();
+    select.replaceChildren(); supplierSelect.replaceChildren(); supplierList.replaceChildren(); supplierToDelete.replaceChildren();
     supplierSelect.add(new Option('Selecciona un proveedor', ''));
+    supplierToDelete.add(new Option('Selecciona un proveedor', ''));
     suppliers.forEach(supplier => {
       supplierSelect.add(new Option(supplier.name, supplier.id));
+      supplierToDelete.add(new Option(supplier.name, supplier.id));
       const item = document.createElement('li'); item.textContent = supplier.name; supplierList.appendChild(item);
     });
     select.add(new Option('Nuevo producto', ''));
@@ -45,9 +61,10 @@
     select.value = selected; showProduct();
   }
   supplierForm.addEventListener('submit', async e => { e.preventDefault(); try { await request('/api/suppliers', { method:'POST', body:JSON.stringify({name:supplierForm.elements.name.value.trim()}) }); supplierForm.reset(); await refresh(); message('Proveedor agregado.'); } catch (error) { message(error.message); } });
-  login.addEventListener('submit', async e => { e.preventDefault(); try { const result = await request('/api/session', { method:'POST', body:JSON.stringify({username:login.elements.username.value.trim(), password:login.elements.password.value}) }); token = result.token; login.reset(); showSession(); await refresh(); message('Sesión activa.'); } catch (error) { message(error.message); } });
+  document.querySelector('#delete-supplier').addEventListener('click', async () => { try { const id=supplierToDelete.value; if (!id) throw Error('Selecciona un proveedor'); if (!confirm('¿Eliminar el proveedor seleccionado?')) return; await request(`/api/suppliers/${encodeURIComponent(id)}`, {method:'DELETE'}); await refresh(); message('Proveedor eliminado.'); } catch (error) { message(error.message); } });
+  login.addEventListener('submit', async e => { e.preventDefault(); try { const result = await request('/api/session', { method:'POST', body:JSON.stringify({password:login.elements.password.value}) }); token = result.token; login.reset(); showSession(); await refresh(); message('Sesión activa.'); } catch (error) { message(error.message); } });
   select.addEventListener('change', () => { selected = select.value; showProduct(); });
-  document.querySelector('#new').addEventListener('click', () => { selected = ''; select.value = ''; showProduct(); editor.elements.id.focus(); });
+  document.querySelector('#new').addEventListener('click', () => { selected = ''; select.value = ''; showProduct(); editor.elements.name.focus(); });
   document.querySelector('#refresh').addEventListener('click', async () => { try { await refresh(); message('Lista actualizada.'); } catch (error) { message(error.message); } });
   document.querySelector('#logout').addEventListener('click', async () => {
     try {

@@ -61,6 +61,7 @@ function createApp(repository, { frontendOrigin, adminPassword = process.env.ADM
     const admin = createSupplierController(createSupplierService(suppliers));
     app.get('/api/suppliers', authorize, asyncRoute(admin.list));
     app.post('/api/suppliers', authorize, asyncRoute(admin.create));
+    app.delete('/api/suppliers/:id', authorize, asyncRoute(admin.remove));
     app.get('/api/product-suppliers', authorize, asyncRoute(admin.links));
     app.post('/api/admin/products', authorize, asyncRoute(admin.createProduct));
     app.put('/api/admin/products/:id', authorize, asyncRoute(admin.updateProduct));

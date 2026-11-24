@@ -19,11 +19,10 @@ class Element {
 }
 
 function makeHarness() {
-  const selectors = ['#admin-status', '#login', '#panel', '#products', '#editor', '#delete', '#new', '#refresh', '#logout', '#supplier', '#supplier-list', '#supplier-form'];
+  const selectors = ['#admin-status', '#login', '#panel', '#products', '#editor', '#delete', '#new', '#refresh', '#logout', '#supplier', '#supplier-list', '#supplier-form', '#supplier-to-delete', '#delete-supplier'];
   const elements = Object.fromEntries(selectors.map(selector => [selector, new Element()]));
   const fields = ['id', 'name', 'category', 'size', 'price', 'art', 'label', 'description', 'benefits', 'collections'];
   elements['#login'].elements.password = new Element();
-  elements['#login'].elements.username = new Element();
   elements['#supplier-form'].elements.name = new Element();
   elements['#editor'].elements = Object.fromEntries(fields.map(field => [field, new Element()]));
   const rows = new Map();
@@ -39,7 +38,7 @@ function makeHarness() {
     calls.push({ origin: url.origin, path: url.pathname, method, token });
     const respond = (status, data) => ({ status, ok: status >= 200 && status < 300, json: async () => data });
     if (url.pathname === '/api/session' && method === 'POST') {
-      if (JSON.parse(options.body).username !== 'usuario-prueba' || JSON.parse(options.body).password !== 'valid-test-password') return respond(401, { error: 'Invalid credentials' });
+      if (JSON.parse(options.body).password !== 'valid-test-password') return respond(401, { error: 'Invalid credentials' });
       serverToken = 'session-token';
       return respond(200, { token: serverToken });
     }
@@ -51,6 +50,7 @@ function makeHarness() {
     }
     if (url.pathname === '/api/suppliers' && method === 'GET') return respond(200, supplierRows);
     if (url.pathname === '/api/suppliers' && method === 'POST') { const row = {id:'otro-proveedor',name:JSON.parse(options.body).name}; supplierRows.push(row); return respond(201,row); }
+    if (url.pathname === '/api/suppliers/otro-proveedor' && method === 'DELETE') { supplierRows.splice(1,1); return respond(204,null); }
     if (url.pathname === '/api/product-suppliers' && method === 'GET') return respond(200, [...rows.keys()].map(productId => ({ productId, supplierId:'proveedor-prueba' })));
     if (url.pathname.startsWith('/api/admin/products')) {
       if (token !== serverToken) return respond(401, { error: 'Session required' });
@@ -82,7 +82,7 @@ function makeHarness() {
     }
     return respond(404, { error: 'Route not found' });
   };
-  const context = { location: { hostname: 'sotonicolasjnsn.github.io', origin: 'https://sotonicolasjnsn.github.io' }, document: { querySelector: selector => elements[selector], createElement: () => new Element() }, fetch, URL, Option: class { constructor(text, value) { this.text = text; this.value = value; } }, confirm: () => true };
+  const context = { location: { hostname: 'sotonicolasjnsn.github.io', origin: 'https://sotonicolasjnsn.github.io' }, document: { querySelector: selector => elements[selector], createElement: () => new Element() }, crypto:{randomUUID:()=>'12345678-abcd-4000-8000-123456789012'}, fetch, URL, Option: class { constructor(text, value) { this.text = text; this.value = value; } }, confirm: () => true };
   vm.createContext(context);
   vm.runInContext(configSource, context);
   vm.runInContext(adminSource, context);
@@ -91,7 +91,6 @@ function makeHarness() {
 
 test('admin panel uses deployed API for login and CRUD and reports logout errors', async () => {
   const { elements, rows, calls, setFailLogout } = makeHarness();
-  elements['#login'].elements.username.value = 'usuario-prueba';
   elements['#login'].elements.password.value = 'valid-test-password';
   await elements['#login'].dispatch('submit');
   assert.equal(elements['#panel'].hidden, false);
@@ -100,23 +99,28 @@ test('admin panel uses deployed API for login and CRUD and reports logout errors
   await elements['#supplier-form'].dispatch('submit');
   assert.match(elements['#admin-status'].textContent, /Proveedor agregado/);
   assert.ok(elements['#supplier'].options.some(option => option.text === 'Nuevo proveedor'));
+  elements['#supplier-to-delete'].value = 'otro-proveedor';
+  await elements['#delete-supplier'].dispatch('click');
+  assert.match(elements['#admin-status'].textContent, /Proveedor eliminado/);
 
   const editor = elements['#editor'];
-  const product = { id:'temporal-admin-test', name:'Temporary product', category:'Cabello', size:'50 ml', price:'1200', art:'sage', label:'Test', description:'Temporary test', benefits:'Test benefit', collections:'diario' };
+  const product = { name:'Temporary product', category:'Paquete de 12', size:'50 ml', price:'12.00', description:'Temporary test', benefits:'Test benefit', collections:'diario' };
+  const productId = 'temporary-product-12345678';
   for (const [field, value] of Object.entries(product)) editor.elements[field].value = value;
   elements['#supplier'].value = 'proveedor-prueba';
   await editor.dispatch('submit');
-  assert.equal(rows.get(product.id).price, 1200);
+  assert.equal(rows.get(productId).price, 1200);
+  assert.equal(rows.get(productId).category, 'Paquete de 12');
   assert.match(elements['#admin-status'].textContent, /guardados/);
 
-  elements['#products'].value = product.id;
+  elements['#products'].value = productId;
   await elements['#products'].dispatch('change');
-  editor.elements.price.value = '1750';
+  editor.elements.price.value = '17.50';
   await editor.dispatch('submit');
-  assert.equal(rows.get(product.id).price, 1750);
+  assert.equal(rows.get(productId).price, 1750);
 
   await elements['#delete'].dispatch('click');
-  assert.equal(rows.has(product.id), false);
+  assert.equal(rows.has(productId), false);
   assert.match(elements['#admin-status'].textContent, /eliminado/);
 
   setFailLogout(true);
@@ -133,4 +137,21 @@ test('admin panel uses deployed API for login and CRUD and reports logout errors
   assert.ok(calls.some(call => call.method === 'POST' && call.path === '/api/admin/products' && call.token === 'session-token'));
   assert.ok(calls.some(call => call.method === 'PUT' && call.token === 'session-token'));
   assert.ok(calls.some(call => call.method === 'DELETE' && call.path.startsWith('/api/products/') && call.token === 'session-token'));
+});
+
+test('editar un producto anterior conserva su identificador, categoría y campos ocultos', async () => {
+  const { elements, rows } = makeHarness();
+  const original={id:'shampoo',name:'Shampoo',category:'Cabello',size:'250 ml',price:1250,art:'cream',label:'Limpieza suave',description:'Descripción',benefits:[],collections:[]};
+  rows.set(original.id,original);
+  elements['#login'].elements.password.value='valid-test-password';
+  await elements['#login'].dispatch('submit');
+  elements['#products'].value=original.id;
+  await elements['#products'].dispatch('change');
+  assert.equal(elements['#editor'].elements.price.value,'12.50');
+  elements['#editor'].elements.price.value='13.25';
+  await elements['#editor'].dispatch('submit');
+  assert.equal(rows.get('shampoo').category,'Cabello');
+  assert.equal(rows.get('shampoo').art,'cream');
+  assert.equal(rows.get('shampoo').label,'Limpieza suave');
+  assert.equal(rows.get('shampoo').price,1325);
 });

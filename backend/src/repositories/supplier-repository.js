@@ -8,6 +8,19 @@ function createSupplierRepository(prisma) {
       try { return await prisma.supplier.create({ data: { id: randomUUID(), name } }); }
       catch (error) { if (error.code === 'P2002') { error.status = 409; error.message = 'El proveedor ya existe'; } throw error; }
     },
+    async remove(id) {
+      return prisma.$transaction(async tx => {
+        const rows = await tx.$queryRaw`SELECT id FROM suppliers WHERE id = ${id} FOR UPDATE`;
+        if (!rows.length) return false;
+        if (await tx.productSupplier.count({ where: { supplierId: id } })) {
+          const error = Error('Este proveedor tiene productos asignados. Cambia sus proveedores antes de eliminarlo.');
+          error.status = 409;
+          throw error;
+        }
+        await tx.supplier.delete({ where: { id } });
+        return true;
+      });
+    },
     async saveProduct(product, supplierId, isNew) {
       try {
         return await prisma.$transaction(async tx => {

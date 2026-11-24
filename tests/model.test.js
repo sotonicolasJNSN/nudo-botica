@@ -16,6 +16,11 @@ test('búsqueda sin tildes, filtros y orden de precios', () => {
   assert.ok(filtered.every((product, index) => product.price < 1000 && (!index || filtered[index - 1].price <= product.price)));
 });
 
+test('la búsqueda encuentra productos nuevos con categoría de paquete', () => {
+  const item={id:'nuevo',name:'Crema de prueba',category:'Paquete de 12',description:'Producto nuevo',label:'Crema',benefits:[],collections:[],price:1250};
+  assert.equal(model.filteredProducts([item],{category:'',price:'all',sort:'list'},'crema de prueba')[0].id,'nuevo');
+});
+
 test('totales, envío y validación Luhn', () => {
   assert.equal(model.total([{ product: { price: 1250 }, quantity: 2 }]), 2500);
   assert.equal(model.deliveryFee('online-home'), 500);
