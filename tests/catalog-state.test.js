@@ -2,13 +2,21 @@
 const test = require('node:test'), assert = require('node:assert/strict'), vm = require('node:vm'), fs = require('node:fs'), path = require('node:path');
 const source = fs.readFileSync(path.join(__dirname,'../frontend/catalog-repository.js'),'utf8');
 async function load(response) {
- const demo = [{id:'demo'}]; const context = { location:{protocol:'http:'}, NudoModel:{products:demo}, fetch:async()=>response, AbortController, setTimeout, clearTimeout, URL };
- vm.createContext(context); vm.runInContext(source,context); return {state:await context.NudoCatalogRepository.load(), products:demo};
+ const demo = [{id:'demo'}]; const categories=['Cabello']; const context = { location:{protocol:'http:'}, NudoModel:{products:demo,categories}, fetch:async()=>response, AbortController, setTimeout, clearTimeout, URL };
+ vm.createContext(context); vm.runInContext(source,context); return {state:await context.NudoCatalogRepository.load(), products:demo, categories};
 }
 test('catálogo distingue vacío real, respuesta inválida y caída', async () => {
  let result = await load({ok:true,json:async()=>[]}); assert.equal(result.state,'empty'); assert.equal(result.products.length,0);
  result = await load({ok:true,json:async()=>[{id:'incompleto'}]}); assert.equal(result.state,'demo'); assert.equal(result.products[0].id,'demo');
  result = await load({ok:false}); assert.equal(result.state,'demo'); assert.equal(result.products[0].id,'demo');
+});
+
+test('los productos de paquete aparecen en las categorías de la tienda', async () => {
+ const product={id:'ejemplo',name:'Ejemplo',category:'Paquete de 12',description:'Prueba',label:'Ejemplo',size:'12 unidades',art:'sage',price:1200,benefits:[],collections:[]};
+ const result=await load({ok:true,json:async()=>[product]});
+ assert.equal(result.state,'api');
+ assert.ok(result.categories.includes('Paquete de 12'));
+ assert.ok(!result.categories.includes('Paquete de 24'));
 });
 
 test('tarjeta y arte escapan contenido del catálogo', () => {

@@ -17,6 +17,12 @@ globalThis.NudoCatalogRepository = {
         typeof product.art === 'string' && Number.isSafeInteger(product.price) && product.price >= 0 &&
         Array.isArray(product.benefits) && Array.isArray(product.collections))) return 'demo';
       globalThis.NudoModel.products.splice(0, globalThis.NudoModel.products.length, ...products);
+      // Las categorías de paquete solo aparecen en la tienda cuando tienen productos.
+      for (const category of ['Paquete de 12', 'Paquete de 24']) {
+        if (products.some(product => product.category === category) && !globalThis.NudoModel.categories.includes(category)) {
+          globalThis.NudoModel.categories.push(category);
+        }
+      }
       return products.length ? 'api' : 'empty';
     } catch { return 'demo'; }
     finally { clearTimeout(timer); }
