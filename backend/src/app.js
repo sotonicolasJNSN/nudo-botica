@@ -5,12 +5,15 @@ const path = require('node:path');
 const express = require('express');
 const { createProductService } = require('./services/product-service');
 const { createProductController } = require('./controllers/product-controller');
+const { createInventoryService } = require('./services/inventory-service');
+const { createInventoryController } = require('./controllers/inventory-controller');
 const { createSupplierService } = require('./services/supplier-service');
 const { createSupplierController } = require('./controllers/supplier-controller');
 
 function createApp(repository, { frontendOrigin, adminPassword = process.env.ADMIN_PASSWORD, adminUsers, suppliers } = {}) {
   const app = express();
   const controller = createProductController(createProductService(repository));
+  const inventory = createInventoryController(createInventoryService(repository));
   const sessions = new Map();
   const attempts = new Map();
   const orderAttempts = new Map();
@@ -75,6 +78,8 @@ function createApp(repository, { frontendOrigin, adminPassword = process.env.ADM
     orderAttempts.set(req.ip, attempt);
     next();
   }, asyncRoute(controller.placeOrder));
+  app.get('/api/admin/inventory-movements', authorize, asyncRoute(inventory.listMovements));
+  app.post('/api/admin/inventory-receipts', authorize, asyncRoute(inventory.receiveStock));
   for (const base of ['/api/products', '/api/v1/products']) {
     const router = express.Router();
     router.get('/', asyncRoute(controller.list));

@@ -65,6 +65,8 @@ La tabla `products` contiene `id`, `position` y `data` (JSONB). El modelo `Produ
 | GET | [`/api/products`](https://nudo-botica.onrender.com/api/products) | Lista los productos. | Público |
 | GET | `/api/products/:id` | Consulta un producto por identificador. | Público |
 | POST | `/api/orders` | Valida y descuenta inventario de forma atómica e idempotente. | Público |
+| GET | `/api/admin/inventory-movements` | Consulta el kardex y sus saldos anteriores/posteriores. | Token |
+| POST | `/api/admin/inventory-receipts` | Registra una compra/entrada y aumenta existencias. | Token |
 | POST | `/api/session` | Inicia sesión con `{"username":"…","password":"…"}` y devuelve un token temporal. | Usuario y contraseña |
 | DELETE | `/api/session` | Cierra la sesión. | Token |
 | POST | `/api/products` | Crea un producto. | Token |
@@ -130,7 +132,9 @@ El servidor escucha por defecto en `http://127.0.0.1:3000`. Para ejecutar la sui
 
 Las migraciones posteriores describen las tablas `admin_users`, `suppliers` y `product_suppliers`. La asignación de los proveedores ficticios al catálogo existente es una carga de datos separada de la creación de la estructura. Antes de aplicar cambios en una base existente, revise qué tablas ya existen; no ejecute la migración inicial de `products` sobre una tabla existente.
 
-El laboratorio [`backend/prisma-lab/`](backend/prisma-lab/) es independiente y utiliza `LAB_DATABASE_URL` y datos de prueba. Los scripts de [`database/`](database/) son recursos SQL independientes; no los ejecute en una base existente sin revisar el estado, respaldo y autorización. `database/004_inventory.sql` crea la función transaccional e idempotente que requiere `POST /api/orders`; debe aplicarse una vez en la base conectada antes de habilitar pedidos. Los productos antiguos sin `stock` se consideran en cero: cargue existencias reales desde el panel antes de vender. Esta migración no se ha aplicado automáticamente a Supabase de producción. CI no ejecuta migraciones en Supabase de producción.
+El laboratorio [`backend/prisma-lab/`](backend/prisma-lab/) es independiente y utiliza `LAB_DATABASE_URL` y datos de prueba. Los scripts de [`database/`](database/) son recursos SQL independientes; no los ejecute en una base existente sin revisar el estado, respaldo y autorización. `database/004_inventory.sql` crea la función transaccional e idempotente que requiere `POST /api/orders`; `database/005_kardex.sql` agrega el registro de ventas, compras/ingresos y ajustes que muestra el panel. Aplique ambos, en ese orden, una vez en la base conectada antes de habilitar el inventario; estas migraciones no se ejecutan automáticamente sobre Supabase de producción. Los productos antiguos sin `stock` se consideran en cero: cargue existencias reales desde el panel antes de vender.
+
+El panel `/admin.html` muestra los últimos 100 movimientos desde que se aplica la migración. Las ventas se registran al confirmar un pedido; las compras/entradas deben anotarse con el formulario del kardex. La edición directa del campo de stock queda registrada como ajuste. El registro es por unidades; no calcula costos ni márgenes y no reconstruye movimientos históricos anteriores a la migración. El pago sigue siendo simulado.
 
 ## Pruebas y CI/CD
 

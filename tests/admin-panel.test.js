@@ -19,14 +19,20 @@ class Element {
 }
 
 function makeHarness() {
-  const selectors = ['#admin-status', '#login', '#panel', '#products', '#editor', '#delete', '#new', '#refresh', '#logout', '#supplier', '#supplier-list', '#supplier-form', '#supplier-to-delete', '#delete-supplier', '#supplier-add-message', '#supplier-delete-message', '#product-message'];
+  const selectors = ['#admin-status', '#login', '#panel', '#products', '#editor', '#delete', '#new', '#refresh', '#logout', '#supplier', '#supplier-list', '#supplier-form', '#supplier-to-delete', '#delete-supplier', '#supplier-add-message', '#supplier-delete-message', '#product-message', '#kardex-product', '#kardex-rows', '#kardex-status', '#receipt-product', '#inventory-receipt-form', '#refresh-kardex', '#kardex-purchases', '#kardex-sales', '#kardex-adjustments'];
   const elements = Object.fromEntries(selectors.map(selector => [selector, new Element()]));
   const fields = ['id', 'name', 'category', 'size', 'price', 'stock', 'art', 'label', 'description', 'benefits', 'collections'];
   elements['#login'].elements.password = new Element();
   elements['#supplier-form'].elements.name = new Element();
   elements['#editor'].elements = Object.fromEntries(fields.map(field => [field, new Element()]));
+  elements['#inventory-receipt-form'].elements = {
+    productId: elements['#receipt-product'],
+    quantity: new Element(),
+    notes: new Element()
+  };
   const rows = new Map();
   const supplierRows = [{ id:'proveedor-prueba', name:'Proveedor de prueba' }];
+  const ledger = [{ id:'1', productId:'shampoo', productName:'Shampoo', movementType:'sale', quantity:2, stockBefore:5, stockAfter:3, reference:'NUDO-A1B2-C3D4-E5F6-A7B8', notes:'Pedido confirmado', createdAt:'2026-11-24T12:00:00.000Z' }];
   const calls = [];
   let serverToken = '';
   let failLogout = false;
@@ -36,7 +42,8 @@ function makeHarness() {
     const method = options.method || 'GET';
     const headers = options.headers || {};
     const token = (headers.Authorization || '').replace(/^Bearer /, '');
-    calls.push({ origin: url.origin, path: url.pathname, method, token });
+    const body = options.body ? JSON.parse(options.body) : undefined;
+    calls.push({ origin: url.origin, path: url.pathname, method, token, body });
     const respond = (status, data) => ({ status, ok: status >= 200 && status < 300, json: async () => data });
     if (url.pathname === '/api/session' && method === 'POST') {
       if (JSON.parse(options.body).password !== 'valid-test-password') return respond(401, { error: 'Invalid credentials' });
@@ -53,9 +60,21 @@ function makeHarness() {
     if (url.pathname === '/api/suppliers' && method === 'POST') { const row = {id:'otro-proveedor',name:JSON.parse(options.body).name}; supplierRows.push(row); return respond(201,row); }
     if (url.pathname === '/api/suppliers/otro-proveedor' && method === 'DELETE') { supplierRows.splice(1,1); return respond(204,null); }
     if (url.pathname === '/api/product-suppliers' && method === 'GET') return respond(200, [...rows.keys()].map(productId => ({ productId, supplierId:'proveedor-prueba' })));
+    if (url.pathname === '/api/admin/inventory-movements' && method === 'GET') {
+      if (token !== serverToken) return respond(401, { error: 'Session required' });
+      return respond(200, ledger.filter(item => !url.searchParams.get('productId') || item.productId === url.searchParams.get('productId')));
+    }
+    if (url.pathname === '/api/admin/inventory-receipts' && method === 'POST') {
+      if (token !== serverToken) return respond(401, { error: 'Session required' });
+      const { reference, items, notes } = body;
+      const item = items[0], product = rows.get(item.id);
+      product.stock += item.quantity;
+      ledger.unshift({ id:String(ledger.length + 1), productId:item.id, productName:product.name, movementType:'purchase', quantity:item.quantity, stockBefore:product.stock - item.quantity, stockAfter:product.stock, reference, notes, createdAt:'2026-11-24T12:00:00.000Z' });
+      return respond(201, { reference, stock:[{id:item.id,stock:product.stock}] });
+    }
     if (url.pathname.startsWith('/api/admin/products')) {
       if (token !== serverToken) return respond(401, { error: 'Session required' });
-      const {product, supplierId} = JSON.parse(options.body);
+      const {product, supplierId} = body;
       if (supplierId !== 'proveedor-prueba') return respond(400, {error:'Proveedor inválido'});
       rows.set(product.id, product);
       return respond(method === 'POST' ? 201 : 200, product);
@@ -64,7 +83,7 @@ function makeHarness() {
       if (method !== 'GET' && token !== serverToken) return respond(401, { error: 'Session required' });
       if (url.pathname === '/api/products' && method === 'GET') return respond(200, [...rows.values()]);
       if (url.pathname === '/api/products' && method === 'POST') {
-        const product = JSON.parse(options.body);
+        const product = body;
         if (rows.has(product.id)) return respond(409, { error: 'Duplicate' });
         rows.set(product.id, product);
         return respond(201, product);
@@ -72,7 +91,7 @@ function makeHarness() {
       const id = decodeURIComponent(url.pathname.slice('/api/products/'.length));
       if (method === 'PUT') {
         if (!rows.has(id)) return respond(404, { error: 'Not found' });
-        const product = JSON.parse(options.body);
+        const product = body;
         rows.set(id, product);
         return respond(200, product);
       }
@@ -83,11 +102,11 @@ function makeHarness() {
     }
     return respond(404, { error: 'Route not found' });
   };
-  const context = { location: { hostname: 'sotonicolasjnsn.github.io', origin: 'https://sotonicolasjnsn.github.io' }, document: { querySelector: selector => elements[selector], createElement: () => new Element() }, crypto:{randomUUID:()=>'12345678-abcd-4000-8000-123456789012'}, fetch, URL, Option: class { constructor(text, value) { this.text = text; this.value = value; } }, confirm: () => true };
+  const context = { location: { hostname: 'sotonicolasjnsn.github.io', origin: 'https://sotonicolasjnsn.github.io' }, document: { querySelector: selector => elements[selector], createElement: () => new Element() }, crypto:{randomUUID:()=>'12345678-abcd-4000-8000-123456789012'}, fetch, URL, URLSearchParams, Option: class { constructor(text, value) { this.text = text; this.value = value; } }, confirm: () => true };
   vm.createContext(context);
   vm.runInContext(configSource, context);
   vm.runInContext(adminSource, context);
-  return { elements, rows, calls, setFailLogout(value) { failLogout = value; }, setFailRefresh(value) { failRefresh = value; } };
+  return { elements, rows, calls, ledger, setFailLogout(value) { failLogout = value; }, setFailRefresh(value) { failRefresh = value; } };
 }
 
 test('admin panel uses deployed API for login and CRUD and reports logout errors', async () => {
@@ -96,6 +115,8 @@ test('admin panel uses deployed API for login and CRUD and reports logout errors
   await elements['#login'].dispatch('submit');
   assert.equal(elements['#panel'].hidden, false);
   assert.match(elements['#admin-status'].textContent, /activa/);
+  assert.equal(elements['#kardex-sales'].textContent, '2');
+  assert.equal(elements['#kardex-rows'].options.length, 1);
   elements['#supplier-form'].elements.name.value = 'Nuevo proveedor';
   await elements['#supplier-form'].dispatch('submit');
   assert.match(elements['#supplier-add-message'].textContent, /Proveedor agregado correctamente/);
@@ -142,6 +163,43 @@ test('admin panel uses deployed API for login and CRUD and reports logout errors
   assert.ok(calls.some(call => call.method === 'POST' && call.path === '/api/admin/products' && call.token === 'session-token'));
   assert.ok(calls.some(call => call.method === 'PUT' && call.token === 'session-token'));
   assert.ok(calls.some(call => call.method === 'DELETE' && call.path.startsWith('/api/products/') && call.token === 'session-token'));
+});
+
+test('administra ingresos de compra y actualiza cantidades del kardex', async () => {
+  const { elements, rows, calls, ledger } = makeHarness();
+  rows.set('shampoo', { id:'shampoo', name:'Shampoo', category:'Cabello', size:'250 ml', price:1200, stock:10, art:'sage', label:'Shampoo', description:'Producto', benefits:[], collections:[] });
+  elements['#login'].elements.password.value = 'valid-test-password';
+  await elements['#login'].dispatch('submit');
+  const form = elements['#inventory-receipt-form'];
+  form.elements.productId.value = 'shampoo';
+  form.elements.quantity.value = '12';
+  form.elements.notes.value = 'Factura 123';
+  await form.dispatch('submit');
+
+  const call = calls.find(item => item.path === '/api/admin/inventory-receipts');
+  assert.equal(call.method, 'POST');
+  assert.equal(call.token, 'session-token');
+  assert.equal(call.body.items[0].quantity, 12);
+  assert.match(call.body.reference, /^COMPRA-[0-9A-F-]{36}$/);
+  assert.equal(rows.get('shampoo').stock, 22);
+  assert.equal(ledger[0].movementType, 'purchase');
+  assert.equal(elements['#kardex-purchases'].textContent, '12');
+  assert.match(elements['#kardex-status'].textContent, /movimientos cargados/);
+});
+
+test('no envía al kardex cantidades de compra fraccionarias', async () => {
+  const { elements, rows, calls } = makeHarness();
+  rows.set('shampoo', { id:'shampoo', name:'Shampoo', category:'Cabello', size:'250 ml', price:1200, stock:10, art:'sage', label:'Shampoo', description:'Producto', benefits:[], collections:[] });
+  elements['#login'].elements.password.value = 'valid-test-password';
+  await elements['#login'].dispatch('submit');
+  const form = elements['#inventory-receipt-form'];
+  form.elements.productId.value = 'shampoo';
+  form.elements.quantity.value = '1.5';
+  await form.dispatch('submit');
+
+  assert.equal(calls.some(item => item.path === '/api/admin/inventory-receipts'), false);
+  assert.equal(rows.get('shampoo').stock, 10);
+  assert.match(elements['#kardex-status'].textContent, /entero positivo/);
 });
 
 test('si falla la actualización de la lista, informa que el producto sí se guardó', async () => {

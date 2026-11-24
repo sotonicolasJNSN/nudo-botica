@@ -17,28 +17,76 @@ function createSupabaseProductRepository({ url, publishableKey, secretKey, fetch
     return rows;
   }
   async function placeOrder(order) {
+    return callInventoryRpc('nudo_place_order', {
+      p_order_id: order.reference,
+      p_items: order.items
+    });
+  }
+  async function callInventoryRpc(name, body) {
     if (!secretKey) { const error = new Error('Escritura en Supabase no configurada'); error.status = 503; throw error; }
-    const endpoint = new URL('/rest/v1/rpc/nudo_place_order', base);
+    const endpoint = new URL(`/rest/v1/rpc/${name}`, base);
     const response = await fetchImpl(endpoint, {
       method: 'POST',
       headers: { apikey: secretKey, Accept: 'application/json', 'Content-Type': 'application/json' },
-      body: JSON.stringify({ p_order_id: order.reference, p_items: order.items }),
+      body: JSON.stringify(body),
       signal: AbortSignal.timeout(8000)
     });
     if (!response.ok) {
       let payload = {};
       try { payload = await response.json(); } catch {}
       const error = new Error(payload.message || `Supabase devolvió HTTP ${response.status}`);
-      if (payload.code === 'P0001' || payload.code === '22023') {
-        error.status = payload.code === 'P0001' ? 409 : 400;
-        error.message = payload.message === 'INSUFFICIENT_STOCK' ? 'Stock insuficiente para completar el pedido' : 'No se pudo validar el inventario';
+      if (payload.code === 'P0001') {
+        error.status = payload.message === 'PRODUCT_NOT_FOUND' ? 404 : 409;
+        error.message = payload.message === 'PRODUCT_NOT_FOUND' ? 'Producto no encontrado' : 'Stock insuficiente para completar el pedido';
+      } else if (payload.code === '22023') {
+        error.status = 400;
+        error.message = 'No se pudo validar el inventario';
       } else if (payload.code === 'PGRST202' || payload.code === 'PGRST203') {
         error.status = 503;
-        error.message = 'La migración de inventario no está aplicada en Supabase';
+        error.message = name === 'nudo_place_order'
+          ? 'La migración de inventario no está aplicada en Supabase'
+          : 'La migración del kardex no está aplicada en Supabase';
       }
       throw error;
     }
     return response.json();
+  }
+  async function listInventoryMovements({ productId, limit, offset }) {
+    if (!secretKey) { const error = new Error('Consulta del kardex no configurada'); error.status = 503; throw error; }
+    const endpoint = new URL('/rest/v1/nudo_inventory_movements', base);
+    endpoint.searchParams.set('select', 'id,product_id,product_name,movement_type,quantity,stock_before,stock_after,reference,notes,created_at');
+    endpoint.searchParams.set('order', 'created_at.desc,id.desc');
+    endpoint.searchParams.set('limit', String(limit));
+    endpoint.searchParams.set('offset', String(offset));
+    if (productId) endpoint.searchParams.set('product_id', `eq.${productId}`);
+    const response = await fetchImpl(endpoint, {
+      headers: { apikey: secretKey, Accept: 'application/json' },
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!response.ok) {
+      let payload = {};
+      try { payload = await response.json(); } catch {}
+      const error = new Error(payload.message || `Supabase devolvió HTTP ${response.status}`);
+      if (payload.code === 'PGRST205' || payload.code === '42P01') {
+        error.status = 503;
+        error.message = 'La migración del kardex no está aplicada en Supabase';
+      }
+      throw error;
+    }
+    const rows = await response.json();
+    if (!Array.isArray(rows)) throw new Error('Respuesta de kardex de Supabase inválida');
+    return rows.map(row => ({
+      id: String(row.id),
+      productId: row.product_id,
+      productName: row.product_name,
+      movementType: row.movement_type,
+      quantity: Number(row.quantity),
+      stockBefore: Number(row.stock_before),
+      stockAfter: Number(row.stock_after),
+      reference: row.reference,
+      notes: row.notes,
+      createdAt: row.created_at
+    }));
   }
   return {
     async list() { return (await request({ select: 'data', order: 'position.asc,id.asc' })).map(row => row.data); },
@@ -49,7 +97,15 @@ function createSupabaseProductRepository({ url, publishableKey, secretKey, fetch
     },
     async update(id, product) { return (await request({ select: 'data', id: `eq.${id}` }, { method: 'PATCH', write: true, body: { data: product } }))[0]?.data; },
     async remove(id) { return (await request({ select: 'data', id: `eq.${id}` }, { method: 'DELETE', write: true })).length > 0; },
-    placeOrder
+    placeOrder,
+    listInventoryMovements,
+    receiveStock(receipt) {
+      return callInventoryRpc('nudo_receive_stock', {
+        p_reference: receipt.reference,
+        p_items: receipt.items,
+        p_notes: receipt.notes
+      });
+    }
   };
 }
 module.exports = { createSupabaseProductRepository };

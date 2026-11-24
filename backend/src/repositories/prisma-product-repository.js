@@ -41,6 +41,36 @@ function createPrismaProductRepository(prisma) {
       } catch (error) {
         throw mapInventoryError(error);
       }
+    },
+    async listInventoryMovements({ productId, limit, offset }) {
+      try {
+        return await prisma.$queryRaw`
+          SELECT id::text AS id, product_id AS "productId", product_name AS "productName",
+                 movement_type AS "movementType", quantity::integer AS quantity,
+                 stock_before::integer AS "stockBefore", stock_after::integer AS "stockAfter",
+                 reference, notes, created_at AS "createdAt"
+          FROM public.nudo_inventory_movements
+          WHERE (${productId}::text IS NULL OR product_id = ${productId})
+          ORDER BY created_at DESC, id DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+      } catch (error) {
+        throw mapInventoryError(error);
+      }
+    },
+    async receiveStock(receipt) {
+      try {
+        const rows = await prisma.$queryRaw`
+          SELECT public.nudo_receive_stock(
+            ${receipt.reference}::text,
+            ${JSON.stringify(receipt.items)}::jsonb,
+            ${receipt.notes}::text
+          ) AS result
+        `;
+        return rows[0]?.result;
+      } catch (error) {
+        throw mapInventoryError(error);
+      }
     }
   };
 }

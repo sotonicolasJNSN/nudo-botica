@@ -17,6 +17,35 @@ function createProductRepository(pool) {
       } catch (error) {
         throw mapInventoryError(error);
       }
+    },
+    async listInventoryMovements({ productId, limit, offset }) {
+      try {
+        const result = await pool.query(
+          `SELECT id::text AS id, product_id AS "productId", product_name AS "productName",
+                  movement_type AS "movementType", quantity::integer AS quantity,
+                  stock_before::integer AS "stockBefore", stock_after::integer AS "stockAfter",
+                  reference, notes, created_at AS "createdAt"
+           FROM nudo_inventory_movements
+           WHERE ($1::text IS NULL OR product_id = $1)
+           ORDER BY created_at DESC, id DESC
+           LIMIT $2 OFFSET $3`,
+          [productId, limit, offset]
+        );
+        return result.rows;
+      } catch (error) {
+        throw mapInventoryError(error);
+      }
+    },
+    async receiveStock(receipt) {
+      try {
+        const result = await pool.query(
+          'SELECT nudo_receive_stock($1, $2::jsonb, $3) AS result',
+          [receipt.reference, JSON.stringify(receipt.items), receipt.notes]
+        );
+        return result.rows[0].result;
+      } catch (error) {
+        throw mapInventoryError(error);
+      }
     }
   };
 }

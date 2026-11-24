@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Administración | NUDO</title>
-  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="admin.css?v=20261124-mensajes">
-  <script defer src="app-config.js?v=20261116-api"></script><script defer src="admin.js?v=20261124-inventory-mensajes"></script>
+  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="admin.css?v=20261124-kardex">
+  <script defer src="app-config.js?v=20261116-api"></script><script defer src="admin.js?v=20261124-kardex"></script>
 </head>
 <body>
 <main class="container admin">
@@ -52,6 +52,41 @@
       <div class="admin-actions"><button type="submit">Guardar producto</button><button class="secondary" type="button" id="delete">Eliminar producto</button></div>
       <p id="product-message" class="admin-feedback" role="status" aria-live="polite"></p>
     </form>
+    <section class="kardex" aria-labelledby="kardex-title">
+      <h2 id="kardex-title">Kardex de inventario</h2>
+      <p>Entradas, ventas confirmadas y ajustes con saldo antes y después. Se muestran hasta los 100 movimientos más recientes.</p>
+      <p id="kardex-status" class="admin-feedback" role="status" aria-live="polite"></p>
+      <div class="fields">
+        <div class="field">
+          <label for="kardex-product">Filtrar por producto</label>
+          <select id="kardex-product"><option value="">Todos los productos</option></select>
+        </div>
+        <div class="field kardex-action">
+          <button type="button" class="secondary" id="refresh-kardex">Actualizar kardex</button>
+        </div>
+      </div>
+      <dl class="kardex-summary" aria-label="Resumen de los movimientos mostrados">
+        <div><dt>Compras / ingresos</dt><dd id="kardex-purchases">0</dd></div>
+        <div><dt>Ventas</dt><dd id="kardex-sales">0</dd></div>
+        <div><dt>Ajustes</dt><dd id="kardex-adjustments">0</dd></div>
+      </dl>
+      <form id="inventory-receipt-form" class="admin-login inventory-receipt">
+        <h3>Registrar compra o ingreso</h3>
+        <label for="receipt-product">Producto</label>
+        <select id="receipt-product" name="productId" required></select>
+        <label for="receipt-quantity">Unidades recibidas</label>
+        <input id="receipt-quantity" name="quantity" type="number" min="1" max="1000000000" step="1" required>
+        <label for="receipt-notes">Referencia u observación</label>
+        <input id="receipt-notes" name="notes" maxlength="500" placeholder="Opcional">
+        <button type="submit">Registrar ingreso</button>
+      </form>
+      <div class="kardex-table-wrap">
+        <table class="kardex-table">
+          <thead><tr><th>Fecha</th><th>Producto</th><th>Movimiento</th><th>Cantidad</th><th>Saldo anterior</th><th>Saldo nuevo</th><th>Referencia / nota</th></tr></thead>
+          <tbody id="kardex-rows"></tbody>
+        </table>
+      </div>
+    </section>
   </section>
 </main>
 </body>
