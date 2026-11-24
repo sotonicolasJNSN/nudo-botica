@@ -1,4 +1,5 @@
 'use strict';
+const { mapInventoryError } = require('./inventory-error');
 
 // Conserva el mismo contrato que los repositorios PostgreSQL y Supabase.
 function createPrismaProductRepository(prisma) {
@@ -30,6 +31,16 @@ function createPrismaProductRepository(prisma) {
     async remove(id) {
       const result = await prisma.product.deleteMany({ where: { id } });
       return result.count > 0;
+    },
+    async placeOrder(order) {
+      try {
+        const rows = await prisma.$queryRaw`
+          SELECT public.nudo_place_order(${order.reference}::text, ${JSON.stringify(order.items)}::jsonb) AS result
+        `;
+        return rows[0]?.result;
+      } catch (error) {
+        throw mapInventoryError(error);
+      }
     }
   };
 }

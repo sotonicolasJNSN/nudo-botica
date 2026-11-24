@@ -13,6 +13,7 @@ function createApp(repository, { frontendOrigin, adminPassword = process.env.ADM
   const controller = createProductController(createProductService(repository));
   const sessions = new Map();
   const attempts = new Map();
+  const orderAttempts = new Map();
   app.disable('x-powered-by');
   app.use((req, res, next) => {
     res.set('X-Request-Id', randomUUID());
@@ -66,6 +67,14 @@ function createApp(repository, { frontendOrigin, adminPassword = process.env.ADM
     app.post('/api/admin/products', authorize, asyncRoute(admin.createProduct));
     app.put('/api/admin/products/:id', authorize, asyncRoute(admin.updateProduct));
   }
+  app.post('/api/orders', (req, res, next) => {
+    const now = Date.now();
+    const attempt = orderAttempts.get(req.ip) || { count: 0, until: now + 60000 };
+    if (now > attempt.until) { attempt.count = 0; attempt.until = now + 60000; }
+    if (++attempt.count > 20) return res.status(429).json({ error: 'Demasiados pedidos; intenta de nuevo en un minuto' });
+    orderAttempts.set(req.ip, attempt);
+    next();
+  }, asyncRoute(controller.placeOrder));
   for (const base of ['/api/products', '/api/v1/products']) {
     const router = express.Router();
     router.get('/', asyncRoute(controller.list));

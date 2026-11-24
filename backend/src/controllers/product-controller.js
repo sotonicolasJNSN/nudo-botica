@@ -27,6 +27,9 @@ function createProductController(service) {
     },
     async remove(req, res) {
       return await service.remove(req.params.id) ? res.status(204).end() : res.status(404).json({ error:'Producto no encontrado' });
+    },
+    async placeOrder(req, res) {
+      return res.status(200).json(await service.placeOrder(req.body));
     }
   };
 }

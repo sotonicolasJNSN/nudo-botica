@@ -29,8 +29,20 @@ test('totales, envío y validación Luhn', () => {
   assert.equal(model.passesLuhn('4242424242424241'), false);
 });
 
+test('el stock disponible limita la cantidad comprable', () => {
+  assert.equal(model.availableStock({ stock: 12 }), 12);
+  assert.equal(model.maxQuantity({ stock: 12 }), 12);
+  assert.equal(model.maxQuantity({ stock: 0 }), 0);
+  assert.equal(model.maxQuantity({}), 0);
+  assert.equal(model.maxQuantity({ stock: 150 }), 99);
+  const html = globalThis.NudoView.card({ id:'agotado', name:'Agotado', size:'50 ml', category:'Cabello', art:'sage', label:'Test', price:100, stock:0 });
+  assert.match(html, /Sin existencias/);
+  assert.match(html, /disabled/);
+});
+
 test('el repositorio valida los datos y solo guarda identificador y cantidad', () => {
   const product = model.products[0];
+  product.stock = 12;
   let value = JSON.stringify([{ id: product.id, quantity: 2 }, { id: product.id, quantity: 4 }, { id: 'desconocido', quantity: 1 }, { id: product.id, quantity: 100 }]);
   globalThis.localStorage = { getItem: () => value, setItem: (key, data) => { value = data; } };
   const loaded = repository.load();

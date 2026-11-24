@@ -54,3 +54,28 @@ test('CORS permite únicamente el origen configurado', async t => {
   const other = await fetch(url, { headers: { Origin: 'https://other.example' } });
   assert.equal(other.headers.get('access-control-allow-origin'), null);
 });
+
+test('pedido reduce inventario según la cantidad y rechaza cantidades sin stock', async t => {
+  let stock = 12;
+  const server = createApp({
+    list: async () => [],
+    placeOrder: async order => {
+      const item = order.items[0];
+      if (item.quantity > stock) { const error = Error('Stock insuficiente'); error.status = 409; throw error; }
+      stock -= item.quantity;
+      return { reference: order.reference, stock: [{ id: item.id, stock }] };
+    }
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const base = `http://127.0.0.1:${server.address().port}/api/orders`;
+  const order = { reference: 'NUDO-A1B2-C3D4-E5F6-A7B8', items: [{ id: 'shampoo', quantity: 12 }] };
+  let response = await fetch(base, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(order) });
+  assert.equal(response.status, 200);
+  assert.deepEqual((await response.json()).stock, [{ id: 'shampoo', stock: 0 }]);
+  assert.equal(stock, 0);
+  response = await fetch(base, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...order, reference: 'NUDO-ABCD-EF12-3456-789A', items: [{ id: 'shampoo', quantity: 1 }] }) });
+  assert.equal(response.status, 409);
+  response = await fetch(base, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...order, reference: 'bad', items: [{ id: 'shampoo', quantity: 12 }] }) });
+  assert.equal(response.status, 400);
+});

@@ -17,7 +17,7 @@
   }
   function showSession() { login.hidden = !!token; panel.hidden = !token; }
   function showProduct() {
-    const product = products.find(p => p.id === selected) || { id:'', name:'', category:'', size:'', price:0, art:'sage', label:'', description:'', benefits:[], collections:[] };
+    const product = products.find(p => p.id === selected) || { id:'', name:'', category:'', size:'', price:0, stock:0, art:'sage', label:'', description:'', benefits:[], collections:[] };
     for (const field of ['name','size','description']) editor.elements[field].value = product[field];
     const category = editor.elements.category;
     category.replaceChildren();
@@ -26,6 +26,7 @@
     if (product.category && !['Paquete de 12','Paquete de 24'].includes(product.category)) category.add(new Option(product.category + ' (actual)', product.category));
     category.value = product.category;
     editor.elements.price.value = selected ? (product.price / 100).toFixed(2) : '';
+    editor.elements.stock.value = product.stock ?? 0;
     editor.elements.benefits.value = product.benefits.join('\n');
     editor.elements.collections.value = product.collections.join(', ');
     supplierSelect.value = links.find(link => link.productId === selected)?.supplierId || '';
@@ -42,6 +43,9 @@
     const price = editor.elements.price.value;
     if (!/^\d+(?:\.\d{1,2})?$/.test(price) || Number(price) > 100000) throw Error('Escribe un precio válido con hasta dos decimales');
     product.price = Math.round(Number(price) * 100);
+    const stock = editor.elements.stock.value;
+    if (!/^(0|[1-9]\d*)$/.test(stock) || Number(stock) > 1000000000) throw Error('El stock debe ser un entero no negativo');
+    product.stock = Number(stock);
     product.benefits = editor.elements.benefits.value.split(/\r?\n/).map(value => value.trim()).filter(Boolean);
     product.collections = editor.elements.collections.value.split(',').map(value => value.trim()).filter(Boolean);
     return product;

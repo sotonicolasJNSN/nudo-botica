@@ -37,7 +37,7 @@ El frontend publicado en GitHub Pages consulta al backend; `frontend/app-config.
 
 Con `CATALOG_SOURCE=prisma`, el repositorio utiliza Prisma Client para consultar PostgreSQL. También hay proveedores alternativos: `postgres`, con la biblioteca `pg`, y `supabase`, mediante la Data API. **Supabase es la plataforma donde se aloja PostgreSQL; Prisma es la herramienta de acceso**, no otra base de datos. La configuración versionada de Render selecciona Prisma.
 
-La tabla `products` contiene `id`, `position` y `data` (JSONB). El modelo `Product` se asigna a esta tabla existente mediante `@@map("products")`. El carrito y el checkout son de demostración: no existe registro de pedidos, pasarela de pago ni cobro real.
+La tabla `products` contiene `id`, `position` y `data` (JSONB). El modelo `Product` se asigna a esta tabla existente mediante `@@map("products")`. El checkout no procesa pagos ni guarda datos personales; al confirmar, la API registra una referencia idempotente y descuenta el inventario.
 
 ## Estructura del repositorio
 
@@ -51,7 +51,7 @@ La tabla `products` contiene `id`, `position` y `data` (JSONB). El modelo `Produ
 | [`backend/src/repositories/`](backend/src/repositories/) | Selector de proveedor e implementaciones Prisma, PostgreSQL y Supabase. |
 | [`backend/prisma/`](backend/prisma/) | Esquema Prisma del catálogo y migración inicial. |
 | [`backend/prisma-lab/`](backend/prisma-lab/) | Esquema y migraciones del laboratorio aislado de Prisma. |
-| [`database/`](database/) | Scripts SQL históricos de esquema, catálogo inicial y políticas RLS. |
+| [`database/`](database/) | Scripts SQL de esquema, catálogo inicial, políticas RLS e inventario. |
 | [`tests/`](tests/) | Pruebas automatizadas de API, administración, proveedores y laboratorio. |
 | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Validaciones, pruebas y despliegue manual opcional. |
 | [`auditorias/`](auditorias/) | Auditorías históricas; su fecha determina el estado que describen. |
@@ -64,6 +64,7 @@ La tabla `products` contiene `id`, `position` y `data` (JSONB). El modelo `Produ
 | --- | --- | --- | --- |
 | GET | [`/api/products`](https://nudo-botica.onrender.com/api/products) | Lista los productos. | Público |
 | GET | `/api/products/:id` | Consulta un producto por identificador. | Público |
+| POST | `/api/orders` | Valida y descuenta inventario de forma atómica e idempotente. | Público |
 | POST | `/api/session` | Inicia sesión con `{"username":"…","password":"…"}` y devuelve un token temporal. | Usuario y contraseña |
 | DELETE | `/api/session` | Cierra la sesión. | Token |
 | POST | `/api/products` | Crea un producto. | Token |
@@ -90,7 +91,9 @@ Para crear un producto en el panel, seleccione su proveedor y categoría, comple
 
 El listado acepta `category`, `sort=price`, `limit` y `offset`. Por ejemplo: [consultar cinco productos ordenados por precio](https://nudo-botica.onrender.com/api/products?sort=price&limit=5&offset=0). El límite debe estar entre 1 y 100 y el desplazamiento ser un entero no negativo.
 
-Para crear o actualizar, el producto incluye `id`, `name`, `category`, `description`, `label`, `size`, `art`, `price`, `benefits` y `collections`. El precio se expresa como **centavos enteros**; los dos últimos campos son arreglos de texto. En una actualización el `id` del cuerpo debe coincidir con el de la ruta. El servidor valida el contenido antes de usar el repositorio.
+Para crear o actualizar, el producto incluye `id`, `name`, `category`, `description`, `label`, `size`, `art`, `price`, `stock`, `benefits` y `collections`. El precio se expresa como **centavos enteros**; `stock` es una cantidad entera no negativa y los campos `benefits` y `collections` son arreglos de texto. En una actualización el `id` del cuerpo debe coincidir con el de la ruta. El servidor valida el contenido antes de usar el repositorio.
+
+El carrito limita cada cantidad a las existencias disponibles. Al confirmar, `POST /api/orders` envía solo una referencia y los identificadores/cantidades; el servidor vuelve a validar el inventario y realiza el descuento en una transacción. Reintentar la misma referencia y los mismos artículos no duplica el descuento. No se guardan datos personales ni se procesa el pago.
 
 Respuestas habituales: `200` consulta o actualización; `201` creación; `204` eliminación o cierre de sesión; `400` datos inválidos; `401` sesión ausente o vencida; `404` registro o ruta inexistente; `409` producto duplicado; `429` demasiados intentos de inicio de sesión; `503` fallo de acceso al catálogo. Estos códigos dependen del caso y del proveedor. El servidor agrega `X-Request-Id` para facilitar el diagnóstico.
 
@@ -127,7 +130,7 @@ El servidor escucha por defecto en `http://127.0.0.1:3000`. Para ejecutar la sui
 
 Las migraciones posteriores describen las tablas `admin_users`, `suppliers` y `product_suppliers`. La asignación de los proveedores ficticios al catálogo existente es una carga de datos separada de la creación de la estructura. Antes de aplicar cambios en una base existente, revise qué tablas ya existen; no ejecute la migración inicial de `products` sobre una tabla existente.
 
-El laboratorio [`backend/prisma-lab/`](backend/prisma-lab/) es independiente y utiliza `LAB_DATABASE_URL` y datos de prueba. Los scripts de [`database/`](database/) son recursos para crear o poblar un entorno nuevo y configurar RLS; no hay que ejecutarlos en la base existente como parte de la puesta en marcha. CI no ejecuta migraciones en Supabase de producción.
+El laboratorio [`backend/prisma-lab/`](backend/prisma-lab/) es independiente y utiliza `LAB_DATABASE_URL` y datos de prueba. Los scripts de [`database/`](database/) son recursos SQL independientes; no los ejecute en una base existente sin revisar el estado, respaldo y autorización. `database/004_inventory.sql` crea la función transaccional e idempotente que requiere `POST /api/orders`; debe aplicarse una vez en la base conectada antes de habilitar pedidos. Los productos antiguos sin `stock` se consideran en cero: cargue existencias reales desde el panel antes de vender. Esta migración no se ha aplicado automáticamente a Supabase de producción. CI no ejecuta migraciones en Supabase de producción.
 
 ## Pruebas y CI/CD
 

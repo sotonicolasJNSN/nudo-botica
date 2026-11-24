@@ -5,11 +5,11 @@ document.addEventListener('error', event => {
   }
 }, true);
 (async () => {
-const catalogState = await globalThis.NudoCatalogRepository.load();
+let catalogState = await globalThis.NudoCatalogRepository.load();
 const catalogNotice = document.getElementById('catalog-status');
 catalogNotice.textContent = catalogState === 'demo' ? 'Catálogo de demostración: la API no está disponible.' : catalogState === 'empty' ? 'El catálogo de la base de datos está vacío.' : 'Catálogo conectado a la API.';
 // Controlador: coordina estado, eventos y navegaci?n.
-const { products, categories, priceRanges, sortOptions, collections, collectionProducts, relatedProducts, normalizeSearch, filteredProducts, total, deliveryFee, passesLuhn } = globalThis.NudoModel;
+const { products, categories, priceRanges, sortOptions, collections, collectionProducts, relatedProducts, normalizeSearch, filteredProducts, total, availableStock, maxQuantity, deliveryFee, passesLuhn } = globalThis.NudoModel;
 const { money, escapeHTML, icon, categoryIcon, art, heading, card, miniProduct, totals, summary, stepper } = globalThis.NudoView;
 
 const listingOptions = { categories, priceRanges, sortOptions };
@@ -85,6 +85,7 @@ let shippingReady = false;
 const emptyPayment = () => ({ method: 'local', delivery: 'home', destination: { city: '', address: '', complement: '', postal: '' } });
 let payment = emptyPayment();
 let order = null;
+let pendingOrderReference = null;
 let storageWarning = cartLoad.unavailable;
 let cartConfirmationAction = null;
 
@@ -103,6 +104,7 @@ function requestCartConfirmation(title, message, actionLabel, action) {
 function updateCartAfterRemoval(message) {
   shippingReady = false;
   order = null;
+  pendingOrderReference = null;
   if (!cart.length) { shipping = {}; payment = emptyPayment(); }
   saveCart();
   render({ keepPosition: true });
@@ -124,6 +126,20 @@ cartConfirmDialog.addEventListener('close', () => { cartConfirmationAction = nul
 function saveCart() {
   storageWarning = !globalThis.NudoCartRepository.save(cart);
 }
+function syncCartStock() {
+  let adjusted = false;
+  cart = cart.flatMap(item => {
+    const product = products.find(candidate => candidate.id === item.product.id);
+    const maximum = product ? maxQuantity(product) : 0;
+    if (!maximum) { adjusted = true; return []; }
+    const quantity = Math.min(item.quantity, maximum);
+    if (quantity !== item.quantity || product !== item.product) adjusted = true;
+    return [{ product, quantity }];
+  });
+  if (adjusted) saveCart();
+  return adjusted;
+}
+if (catalogState === 'api' && syncCartStock()) catalogNotice.textContent += ' El carrito se ajustó al stock disponible.';
 function announce(message) { status.textContent = message + (storageWarning ? ' El navegador no permite guardar el carrito; se conservará solo durante esta sesión.' : ''); }
 function updateCartCount() {
   cartCount.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -381,9 +397,10 @@ function render(options = {}) {
           : results.length ? catalogSection(listingState.category || 'Productos', 'filtered-products', results, false) : `<div class="search-empty"><h2>No hay productos con estos filtros</h2><p class="muted">Prueba con otra categoría o rango de precio.</p></div>`;
     app.innerHTML = '<div class="container"><div class="catalog-intro"><div>' + heading('La colección / NUDO', collection ? collection.title : selected || 'Tu próxima rutina.') + '<p class="muted">' + (collection ? collection.description : selected ? 'Descubre toda la colección de ' + selected.toLowerCase() + ' y encuentra tus esenciales.' : 'Cabello, estilo y cuidado personal. Elige lo que acompaña tu rutina.') + '</p></div></div>' + listingControls(listingState) + catalogContent + '</div>';
   } else if (product) {
-    app.innerHTML = `<div class="container"><a class="back" href="#productos">← Volver a la colección</a><div class="detail">${art(product, { priority: true })}<div class="detail-copy">${heading(escapeHTML(product.category) + ' / NUDO', escapeHTML(product.name))}<p>${escapeHTML(product.description)}</p><p>Presentación · <strong>${escapeHTML(product.size)}</strong></p><ul class="benefits">${product.benefits.map(benefit => `<li>${icon('check')}${escapeHTML(benefit)}</li>`).join('')}</ul><div class="detail-price">${money(product.price)}</div><button class="button" data-add="${escapeHTML(product.id)}">${icon('cart')}<span>Agregar al carrito</span></button><p class="fine">Se agrega una unidad. Podrás ajustar la cantidad en el carrito.</p></div></div><section class="related-products" aria-labelledby="related-title"><div class="section-head"><div><p class="eyebrow">Completa tu rutina</p><h2 id="related-title">Productos que podrían interesarte</h2></div><a class="text-link" href="#productos">Ver todos ↗</a></div><div class="grid">${relatedProducts(product).map(card).join('')}</div></section></div>`;
+    const stock = availableStock(product);
+    app.innerHTML = `<div class="container"><a class="back" href="#productos">← Volver a la colección</a><div class="detail">${art(product, { priority: true })}<div class="detail-copy">${heading(escapeHTML(product.category) + ' / NUDO', escapeHTML(product.name))}<p>${escapeHTML(product.description)}</p><p>Presentación · <strong>${escapeHTML(product.size)}</strong></p><ul class="benefits">${product.benefits.map(benefit => `<li>${icon('check')}${escapeHTML(benefit)}</li>`).join('')}</ul><div class="detail-price">${money(product.price)}</div><p class="stock-status">${stock ? `Disponibles: ${stock}` : 'Sin existencias'}</p><button class="button" data-add="${escapeHTML(product.id)}" ${stock ? '' : 'disabled'}>${icon('cart')}<span>${stock ? 'Agregar al carrito' : 'Agotado'}</span></button><p class="fine">Se agrega una unidad. Podrás ajustar la cantidad en el carrito.</p></div></div><section class="related-products" aria-labelledby="related-title"><div class="section-head"><div><p class="eyebrow">Completa tu rutina</p><h2 id="related-title">Productos que podrían interesarte</h2></div><a class="text-link" href="#productos">Ver todos ↗</a></div><div class="grid">${relatedProducts(product).map(card).join('')}</div></section></div>`;
   } else if (route === 'carrito') {
-    app.innerHTML = `<div class="container">${heading('Tu selección', 'Carrito')}${cart.length ? `<div class="layout"><div class="cart-items"><div class="cart-actions"><a class="back" href="#productos">← Seguir explorando</a><button class="secondary empty-cart" type="button" data-empty-cart>Vaciar carrito</button></div>${cart.map(item => `<article class="cart-row">${art(item.product)}<div><h2><a href="#detalle/${escapeHTML(item.product.id)}">${escapeHTML(item.product.name)}</a></h2><p>${escapeHTML(item.product.size)} · ${money(item.product.price)} / unidad</p><strong class="cart-price">${money(item.product.price * item.quantity)}</strong><div class="quantity"><button class="secondary" data-change="-1" data-id="${escapeHTML(item.product.id)}" aria-label="Restar una unidad de ${escapeHTML(item.product.name)}" ${item.quantity === 1 ? 'disabled' : ''}>−</button><span aria-label="Cantidad: ${item.quantity}">${item.quantity}</span><button class="secondary" data-change="1" data-id="${escapeHTML(item.product.id)}" aria-label="Sumar una unidad de ${escapeHTML(item.product.name)}" ${item.quantity >= 99 ? 'disabled' : ''}>+</button><button class="remove" data-remove="${escapeHTML(item.product.id)}" aria-label="Eliminar ${escapeHTML(item.product.name)}">Eliminar</button></div></div></article>`).join('')}</div><aside class="panel" aria-label="Resumen del carrito"><h2>${icon('cart')}Tu ritual, listo.</h2>${totals(cart)}<a class="button" href="#envio">Continuar a datos de compra/contacto →</a></aside></div>` : `<div class="empty"><div class="empty-icon">${icon('cart')}</div><h2>Tu ritual está por empezar.</h2><p class="muted">Tu carrito está vacío. Explora nuestros esenciales y encuentra un momento para ti.</p><a class="button" href="#productos">Explorar productos ↗</a></div>`}</div>`;
+    app.innerHTML = `<div class="container">${heading('Tu selección', 'Carrito')}${cart.length ? `<div class="layout"><div class="cart-items"><div class="cart-actions"><a class="back" href="#productos">← Seguir explorando</a><button class="secondary empty-cart" type="button" data-empty-cart>Vaciar carrito</button></div>${cart.map(item => `<article class="cart-row">${art(item.product)}<div><h2><a href="#detalle/${escapeHTML(item.product.id)}">${escapeHTML(item.product.name)}</a></h2><p>${escapeHTML(item.product.size)} · ${money(item.product.price)} / unidad · ${availableStock(item.product)} disponibles</p><strong class="cart-price">${money(item.product.price * item.quantity)}</strong><div class="quantity"><button class="secondary" data-change="-1" data-id="${escapeHTML(item.product.id)}" aria-label="Restar una unidad de ${escapeHTML(item.product.name)}" ${item.quantity === 1 ? 'disabled' : ''}>−</button><label class="sr-only" for="quantity-${escapeHTML(item.product.id)}">Cantidad de ${escapeHTML(item.product.name)}</label><input id="quantity-${escapeHTML(item.product.id)}" type="number" min="1" max="${maxQuantity(item.product)}" step="1" value="${item.quantity}" data-quantity="${escapeHTML(item.product.id)}"><button class="secondary" data-change="1" data-id="${escapeHTML(item.product.id)}" aria-label="Sumar una unidad de ${escapeHTML(item.product.name)}" ${item.quantity >= maxQuantity(item.product) ? 'disabled' : ''}>+</button><button class="remove" data-remove="${escapeHTML(item.product.id)}" aria-label="Eliminar ${escapeHTML(item.product.name)}">Eliminar</button></div></div></article>`).join('')}</div><aside class="panel" aria-label="Resumen del carrito"><h2>${icon('cart')}Tu ritual, listo.</h2>${totals(cart)}<a class="button" href="#envio">Continuar a datos de compra/contacto →</a></aside></div>` : `<div class="empty"><div class="empty-icon">${icon('cart')}</div><h2>Tu ritual está por empezar.</h2><p class="muted">Tu carrito está vacío. Explora nuestros esenciales y encuentra un momento para ti.</p><a class="button" href="#productos">Explorar productos ↗</a></div>`}</div>`;
   } else if (route === 'envio') {
     const fields = [
       ['firstName', 'Nombre', 'given-name', true],
@@ -400,7 +417,7 @@ function render(options = {}) {
   } else if (route === 'confirmacion') {
     const ticketTitle = order.paymentMethod === 'local' ? 'Ticket de pago' : order.fulfillment === 'online-home' ? 'Ticket de envío' : 'Ticket de retiro';
     const paymentStatus = order.paymentMethod === 'local' ? 'Pago pendiente en el local.' : 'Pago en línea simulado; no se ha realizado ningún cobro.';
-    app.innerHTML = `<div class="container confirmation">${stepper(3)}<div class="success-mark" aria-hidden="true">✓</div>${heading('Tu pedido / 03', ticketTitle)}<p class="confirmation-encouragement">Gracias por elegir NUDO. Sigue explorando y encuentra más esenciales para tu rutina.</p><p class="checkout-disclosure"><strong>${paymentStatus}</strong></p><div class="panel ticket-panel"><h2>Resumen del pedido</h2><p class="verification-code"><span>Código de verificación</span><strong>${order.reference}</strong></p>${summary(order.items, order.fulfillment)}<p>${order.paymentMethod === 'local' ? 'Punto de pago: 12 de Octubre y Veintimilla.' : fulfillmentLabel(order.fulfillment)}</p>${ticketBuyer(order.buyer)}${order.fulfillment === 'online-home' ? ticketDestination(order.destination) + '<p>Envío a casa · Cargo de envío: ' + money(order.deliveryFee) + '</p>' : ''}</div><div class="actions"><a class="button" href="#productos">Seguir explorando ↗</a><a class="text-link" href="#inicio">Volver al inicio</a></div></div>`;
+    app.innerHTML = `<div class="container confirmation">${stepper(3)}<div class="success-mark" aria-hidden="true">✓</div>${heading('Tu pedido / 03', ticketTitle)}<p class="confirmation-encouragement">Gracias por elegir NUDO. Sigue explorando y encuentra más esenciales para tu rutina.</p><p class="checkout-disclosure"><strong>${paymentStatus}</strong></p><p class="checkout-disclosure">El inventario se actualizó para las cantidades de este pedido.</p><div class="panel ticket-panel"><h2>Resumen del pedido</h2><p class="verification-code"><span>Código de verificación</span><strong>${order.reference}</strong></p>${summary(order.items, order.fulfillment)}<p>${order.paymentMethod === 'local' ? 'Punto de pago: 12 de Octubre y Veintimilla.' : fulfillmentLabel(order.fulfillment)}</p>${ticketBuyer(order.buyer)}${order.fulfillment === 'online-home' ? ticketDestination(order.destination) + '<p>Envío a casa · Cargo de envío: ' + money(order.deliveryFee) + '</p>' : ''}</div><div class="actions"><a class="button" href="#productos">Seguir explorando ↗</a><a class="text-link" href="#inicio">Volver al inicio</a></div></div>`;
   }
   initializePhonePicker();
   document.title = app.querySelector('h1').textContent + ' | NUDO';
@@ -416,8 +433,11 @@ app.addEventListener('click', event => {
     const product = products.find(item => item.id === button.dataset.add);
     if (!product) return;
     const existing = cart.find(item => item.product.id === product.id);
-    if (existing && existing.quantity >= 99) { announce('Máximo de 99 unidades por producto.'); return; }
+    if (catalogState !== 'api') { announce('No se puede confirmar el stock mientras el catálogo no esté conectado.'); return; }
+    if (availableStock(product) < 1) { announce('Este producto está agotado.'); return; }
+    if (existing && existing.quantity >= maxQuantity(product)) { announce(`Stock máximo disponible: ${maxQuantity(product)} unidades.`); return; }
     order = null;
+    pendingOrderReference = null;
     shippingReady = false;
     if (existing) existing.quantity += 1; else cart.push({ product, quantity: 1 });
     saveCart();
@@ -436,9 +456,10 @@ app.addEventListener('click', event => {
     const item = cart.find(entry => entry.product.id === id);
     if (!item) return;
     const change = button.dataset.change;
-    item.quantity = Math.min(99, Math.max(1, item.quantity + Number(change)));
+    item.quantity = Math.min(maxQuantity(item.product), Math.max(1, item.quantity + Number(change)));
     shippingReady = false;
     order = null;
+    pendingOrderReference = null;
     saveCart();
     render({ keepPosition: true });
     const next = [...app.querySelectorAll('button')].find(candidate => candidate.dataset.id === id && candidate.dataset.change === change && !candidate.disabled)
@@ -447,6 +468,23 @@ app.addEventListener('click', event => {
     next.focus({ preventScroll: true });
     announce(`Cantidad actualizada: ${item.quantity}. Total del carrito: ${money(total(cart))}.`);
   }
+});
+app.addEventListener('change', event => {
+  const input = event.target.closest('[data-quantity]');
+  if (!input) return;
+  const item = cart.find(entry => entry.product.id === input.dataset.quantity);
+  if (!item) return;
+  const requested = Number(input.value);
+  const quantity = Number.isSafeInteger(requested) ? Math.min(maxQuantity(item.product), Math.max(1, requested)) : item.quantity;
+  item.quantity = quantity;
+  shippingReady = false;
+  order = null;
+  pendingOrderReference = null;
+  saveCart();
+  render({ keepPosition: true });
+  app.querySelector(`[data-quantity="${CSS.escape(item.product.id)}"]`)?.focus({ preventScroll: true });
+  announce(`Cantidad actualizada: ${item.quantity}. Total del carrito: ${money(total(cart))}.`);
+  if (quantity !== requested) announce(`Cantidad ajustada al stock disponible: ${quantity}.`);
 });
 app.addEventListener('click', event => {
   const button = event.target.closest('[data-remove], [data-empty-cart]');
@@ -468,6 +506,7 @@ app.addEventListener('click', event => {
     'Eliminar producto',
     () => {
       cart = cart.filter(entry => entry !== item);
+      pendingOrderReference = null;
       updateCartAfterRemoval(`${item.product.name} eliminado.`);
     }
   );
@@ -609,7 +648,7 @@ app.addEventListener('keydown', event => {
     if (!input.checked) { input.checked = true; input.dispatchEvent(new Event('change', { bubbles: true })); }
   }
 });
-app.addEventListener('submit', event => {
+app.addEventListener('submit', async event => {
   if (event.target.id !== 'payment-form') return;
   event.preventDefault();
   if (!cart.length || !shippingReady || order || location.hash !== '#pago') return;
@@ -637,16 +676,56 @@ app.addEventListener('submit', event => {
     firstInvalid.focus();
     return;
   }
-  let verificationCode;
-  try {
-    verificationCode = createVerificationCode();
-  } catch (error) {
-    console.error(error);
-    document.querySelector('#form-error').textContent = 'No se pudo generar el código del pedido. Intenta nuevamente.';
+  if (catalogState !== 'api') {
+    document.querySelector('#form-error').textContent = 'No se puede confirmar el pedido porque no hay conexión con el catálogo.';
     return;
   }
-  document.querySelector('[data-pay]').disabled = true;
+  let verificationCode = pendingOrderReference;
+  if (!verificationCode) {
+    try {
+      verificationCode = createVerificationCode();
+      pendingOrderReference = verificationCode;
+    } catch (error) {
+      console.error(error);
+      document.querySelector('#form-error').textContent = 'No se pudo generar el código del pedido. Intenta nuevamente.';
+      return;
+    }
+  }
+  const payButton = document.querySelector('[data-pay]');
+  payButton.disabled = true;
+  let inventoryResult;
+  try {
+    const base = globalThis.NUDO_API_BASE;
+    const endpoint = base ? new URL('api/orders', base.endsWith('/') ? base : base + '/').href : '/api/orders';
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reference: verificationCode, items: cart.map(item => ({ id: item.product.id, quantity: item.quantity })) })
+    });
+    let result = {};
+    try { result = await response.json(); } catch {}
+    if (!response.ok) {
+      if (response.status === 409) {
+        catalogState = await globalThis.NudoCatalogRepository.load();
+        syncCartStock();
+        render({ keepPosition: true });
+      }
+      throw new Error(result.error || `No se pudo actualizar el inventario (HTTP ${response.status}).`);
+    }
+    inventoryResult = result;
+  } catch (error) {
+    if (/stock insuficiente|inventario no configurado/i.test(error.message)) pendingOrderReference = null;
+    const currentButton = document.querySelector('[data-pay]');
+    if (currentButton) currentButton.disabled = false;
+    document.querySelector('#form-error').textContent = error.message || 'No se pudo confirmar el pedido. Intenta de nuevo.';
+    return;
+  }
+  pendingOrderReference = null;
   const fulfillment = currentFulfillment();
+  for (const change of inventoryResult.stock || []) {
+    const product = products.find(item => item.id === change.id);
+    if (product && Number.isSafeInteger(change.stock) && change.stock >= 0) product.stock = change.stock;
+  }
   order = { reference: verificationCode, items: cart.map(item => ({ ...item })), fulfillment, paymentMethod: payment.method, buyer: { firstName: shipping.firstName, firstSurname: shipping.firstSurname, email: shipping.email, phoneCountry: shipping.phoneCountry, mobile: shipping.mobile }, destination: fulfillment === 'online-home' ? { ...payment.destination } : null, deliveryFee: deliveryFee(fulfillment) };
   cart = [];
   shipping = {};

@@ -16,6 +16,30 @@ function createSupabaseProductRepository({ url, publishableKey, secretKey, fetch
     if (!Array.isArray(rows) || rows.some(row => !row || typeof row.data !== 'object' || row.data === null)) throw new Error('Respuesta de catálogo de Supabase inválida');
     return rows;
   }
+  async function placeOrder(order) {
+    if (!secretKey) { const error = new Error('Escritura en Supabase no configurada'); error.status = 503; throw error; }
+    const endpoint = new URL('/rest/v1/rpc/nudo_place_order', base);
+    const response = await fetchImpl(endpoint, {
+      method: 'POST',
+      headers: { apikey: secretKey, Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_order_id: order.reference, p_items: order.items }),
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!response.ok) {
+      let payload = {};
+      try { payload = await response.json(); } catch {}
+      const error = new Error(payload.message || `Supabase devolvió HTTP ${response.status}`);
+      if (payload.code === 'P0001' || payload.code === '22023') {
+        error.status = payload.code === 'P0001' ? 409 : 400;
+        error.message = payload.message === 'INSUFFICIENT_STOCK' ? 'Stock insuficiente para completar el pedido' : 'No se pudo validar el inventario';
+      } else if (payload.code === 'PGRST202' || payload.code === 'PGRST203') {
+        error.status = 503;
+        error.message = 'La migración de inventario no está aplicada en Supabase';
+      }
+      throw error;
+    }
+    return response.json();
+  }
   return {
     async list() { return (await request({ select: 'data', order: 'position.asc,id.asc' })).map(row => row.data); },
     async get(id) { return (await request({ select: 'data', id: `eq.${id}` }))[0]?.data; },
@@ -24,7 +48,8 @@ function createSupabaseProductRepository({ url, publishableKey, secretKey, fetch
       return (await request({ select: 'data' }, { method: 'POST', write: true, body: { id: product.id, position: (rows[0]?.position ?? -1) + 1, data: product } }))[0].data;
     },
     async update(id, product) { return (await request({ select: 'data', id: `eq.${id}` }, { method: 'PATCH', write: true, body: { data: product } }))[0]?.data; },
-    async remove(id) { return (await request({ select: 'data', id: `eq.${id}` }, { method: 'DELETE', write: true })).length > 0; }
+    async remove(id) { return (await request({ select: 'data', id: `eq.${id}` }, { method: 'DELETE', write: true })).length > 0; },
+    placeOrder
   };
 }
 module.exports = { createSupabaseProductRepository };

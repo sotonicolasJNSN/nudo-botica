@@ -21,7 +21,7 @@ class Element {
 function makeHarness() {
   const selectors = ['#admin-status', '#login', '#panel', '#products', '#editor', '#delete', '#new', '#refresh', '#logout', '#supplier', '#supplier-list', '#supplier-form', '#supplier-to-delete', '#delete-supplier', '#supplier-add-message', '#supplier-delete-message', '#product-message'];
   const elements = Object.fromEntries(selectors.map(selector => [selector, new Element()]));
-  const fields = ['id', 'name', 'category', 'size', 'price', 'art', 'label', 'description', 'benefits', 'collections'];
+  const fields = ['id', 'name', 'category', 'size', 'price', 'stock', 'art', 'label', 'description', 'benefits', 'collections'];
   elements['#login'].elements.password = new Element();
   elements['#supplier-form'].elements.name = new Element();
   elements['#editor'].elements = Object.fromEntries(fields.map(field => [field, new Element()]));
@@ -105,12 +105,13 @@ test('admin panel uses deployed API for login and CRUD and reports logout errors
   assert.match(elements['#supplier-delete-message'].textContent, /Proveedor eliminado correctamente/);
 
   const editor = elements['#editor'];
-  const product = { name:'Temporary product', category:'Paquete de 12', size:'50 ml', price:'12.00', description:'Temporary test', benefits:'Test benefit', collections:'diario' };
+  const product = { name:'Temporary product', category:'Paquete de 12', size:'50 ml', price:'12.00', stock:'12', description:'Temporary test', benefits:'Test benefit', collections:'diario' };
   const productId = 'temporary-product-12345678';
   for (const [field, value] of Object.entries(product)) editor.elements[field].value = value;
   elements['#supplier'].value = 'proveedor-prueba';
   await editor.dispatch('submit');
   assert.equal(rows.get(productId).price, 1200);
+  assert.equal(rows.get(productId).stock, 12);
   assert.equal(rows.get(productId).category, 'Paquete de 12');
   assert.match(elements['#product-message'].textContent, /Producto agregado correctamente/);
   for (const field of ['name','category','size','price','description','benefits','collections']) assert.equal(editor.elements[field].value, '');
@@ -148,7 +149,7 @@ test('si falla la actualización de la lista, informa que el producto sí se gua
   elements['#login'].elements.password.value='valid-test-password';
   await elements['#login'].dispatch('submit');
   const editor=elements['#editor'];
-  const data={name:'Crema',category:'Paquete de 12',size:'50 ml',price:'12.00',description:'Prueba',benefits:'',collections:''};
+  const data={name:'Crema',category:'Paquete de 12',size:'50 ml',price:'12.00',stock:'0',description:'Prueba',benefits:'',collections:''};
   for (const [field,value] of Object.entries(data)) editor.elements[field].value=value;
   elements['#supplier'].value='proveedor-prueba';
   setFailRefresh(true);

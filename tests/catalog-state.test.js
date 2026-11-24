@@ -21,7 +21,7 @@ test('los productos de paquete aparecen en las categorías de la tienda', async 
 
 test('tarjeta y arte escapan contenido del catálogo', () => {
   const fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
-  const context = { NudoModel: { total: () => 0, deliveryFee: () => 0 }, Intl };
+  const context = { NudoModel: { total: () => 0, availableStock: product => product.stock || 0, maxQuantity: product => Math.min(99, product.stock || 0), deliveryFee: () => 0 }, Intl };
   vm.createContext(context); vm.runInContext(fs.readFileSync(path.join(__dirname,'../frontend/view.js'),'utf8'),context);
   const html = context.NudoView.card({ id:'x', name:'<img src=x onerror=alert(1)>', size:'50', category:'test', art:'sage', label:'test', price:100 });
   assert.doesNotMatch(html, /<img/); assert.match(html, /&lt;img/);

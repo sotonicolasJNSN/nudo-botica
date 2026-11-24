@@ -27,6 +27,8 @@ test('CRUD con sesión, validaciones, errores y CORS', async t => {
   assert.deepEqual(filtered.map(p => p.price), [900,1500]);
   assert.equal((await (await call('/api/products?category=Cabello&sort=price&limit=1&offset=1')).json())[0].id,'prueba');
   assert.equal((await call('/api/products?limit=-1')).status,400);
+  response = await call('/api/products','POST',{ ...product, id:'stock-invalido', stock:-1 },token);
+  assert.equal(response.status,400);
   response = await fetch(base + '/api/products', {method:'OPTIONS',headers:{Origin:'https://example.com','Access-Control-Request-Method':'PUT'}}); assert.equal(response.status,204); assert.equal(response.headers.get('access-control-allow-origin'),'https://example.com');
   assert.equal((await call('/api/products/prueba','DELETE',undefined,token)).status,204);
   assert.equal((await call('/api/products/prueba','DELETE',undefined,token)).status,404);

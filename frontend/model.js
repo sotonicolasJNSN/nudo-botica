@@ -120,6 +120,8 @@ function filteredProducts(items, state, query = '') {
   return results;
 }
 const total = items => items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+const availableStock = product => Number.isSafeInteger(product?.stock) && product.stock >= 0 ? product.stock : 0;
+const maxQuantity = product => Math.min(99, availableStock(product));
 const deliveryFee = fulfillment => fulfillment === 'online-home' ? 500 : 0;
 function passesLuhn(digits) {
   let sum = 0;
@@ -135,5 +137,5 @@ function passesLuhn(digits) {
   }
   return sum % 10 === 0;
 }
-return { products, categories, priceRanges, sortOptions, collections, collectionProducts, relatedProducts, normalizeSearch, filteredProducts, total, deliveryFee, passesLuhn };
+return { products, categories, priceRanges, sortOptions, collections, collectionProducts, relatedProducts, normalizeSearch, filteredProducts, total, availableStock, maxQuantity, deliveryFee, passesLuhn };
 })();
