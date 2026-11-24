@@ -3,6 +3,7 @@ services:
     name: nudo-botica
     runtime: node
     plan: free
+    autoDeployTrigger: checksPass
     buildCommand: npm ci --prefix backend
     startCommand: npm start --prefix backend
     envVars:

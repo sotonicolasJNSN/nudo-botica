@@ -30,6 +30,7 @@ const backendPackage = JSON.parse(fs.readFileSync(path.join(__dirname, '../backe
 
 test('Render uses backend npm scripts and leaves credentials unset in source control', () => {
   assert.match(renderConfig, /name: nudo-botica/);
+  assert.match(renderConfig, /autoDeployTrigger: checksPass/);
   assert.match(renderConfig, /buildCommand: npm ci --prefix backend/);
   assert.match(renderConfig, /startCommand: npm start --prefix backend/);
   for (const key of ['SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY', 'SUPABASE_SECRET_KEY', 'ADMIN_PASSWORD']) {
