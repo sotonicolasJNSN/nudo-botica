@@ -6,8 +6,9 @@
   const select = document.querySelector('#products'), editor = document.querySelector('#editor');
   const supplierSelect = document.querySelector('#supplier'), supplierList = document.querySelector('#supplier-list'), supplierForm = document.querySelector('#supplier-form');
   const supplierToDelete = document.querySelector('#supplier-to-delete');
+  const supplierAddMessage = document.querySelector('#supplier-add-message'), supplierDeleteMessage = document.querySelector('#supplier-delete-message'), productMessage = document.querySelector('#product-message');
   let token = '', products = [], suppliers = [], links = [], selected = '';
-  const message = value => { status.textContent = value; };
+  const message = (value, target = status) => { status.textContent = value; if (target !== status) target.textContent = value; };
   async function request(path, options = {}) {
     const response = await fetch(url(path), { ...options, headers: { ...(options.body ? { 'Content-Type': 'application/json' } : {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
     if (response.status === 401 && token) { token = ''; showSession(); }
@@ -24,7 +25,7 @@
     for (const value of ['Paquete de 12','Paquete de 24']) category.add(new Option(value, value));
     if (product.category && !['Paquete de 12','Paquete de 24'].includes(product.category)) category.add(new Option(product.category + ' (actual)', product.category));
     category.value = product.category;
-    editor.elements.price.value = (product.price / 100).toFixed(2);
+    editor.elements.price.value = selected ? (product.price / 100).toFixed(2) : '';
     editor.elements.benefits.value = product.benefits.join('\n');
     editor.elements.collections.value = product.collections.join(', ');
     supplierSelect.value = links.find(link => link.productId === selected)?.supplierId || '';
@@ -60,11 +61,26 @@
     if (!products.some(p => p.id === selected)) selected = '';
     select.value = selected; showProduct();
   }
-  supplierForm.addEventListener('submit', async e => { e.preventDefault(); try { await request('/api/suppliers', { method:'POST', body:JSON.stringify({name:supplierForm.elements.name.value.trim()}) }); supplierForm.reset(); await refresh(); message('Proveedor agregado.'); } catch (error) { message(error.message); } });
-  document.querySelector('#delete-supplier').addEventListener('click', async () => { try { const id=supplierToDelete.value; if (!id) throw Error('Selecciona un proveedor'); if (!confirm('¿Eliminar el proveedor seleccionado?')) return; await request(`/api/suppliers/${encodeURIComponent(id)}`, {method:'DELETE'}); await refresh(); message('Proveedor eliminado.'); } catch (error) { message(error.message); } });
+  supplierForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    try { await request('/api/suppliers', { method:'POST', body:JSON.stringify({name:supplierForm.elements.name.value.trim()}) }); }
+    catch (error) { message(error.message, supplierAddMessage); return; }
+    supplierForm.reset();
+    message('Proveedor agregado correctamente.', supplierAddMessage);
+    try { await refresh(); } catch { message('Proveedor agregado, pero no se pudo actualizar la lista. Pulsa Actualizar lista.', supplierAddMessage); }
+  });
+  document.querySelector('#delete-supplier').addEventListener('click', async () => {
+    const id=supplierToDelete.value;
+    if (!id) { message('Selecciona un proveedor', supplierDeleteMessage); return; }
+    if (!confirm('¿Eliminar el proveedor seleccionado?')) return;
+    try { await request(`/api/suppliers/${encodeURIComponent(id)}`, {method:'DELETE'}); }
+    catch (error) { message(error.message, supplierDeleteMessage); return; }
+    message('Proveedor eliminado correctamente.', supplierDeleteMessage);
+    try { await refresh(); } catch { message('Proveedor eliminado, pero no se pudo actualizar la lista. Pulsa Actualizar lista.', supplierDeleteMessage); }
+  });
   login.addEventListener('submit', async e => { e.preventDefault(); try { const result = await request('/api/session', { method:'POST', body:JSON.stringify({password:login.elements.password.value}) }); token = result.token; login.reset(); showSession(); await refresh(); message('Sesión activa.'); } catch (error) { message(error.message); } });
-  select.addEventListener('change', () => { selected = select.value; showProduct(); });
-  document.querySelector('#new').addEventListener('click', () => { selected = ''; select.value = ''; showProduct(); editor.elements.name.focus(); });
+  select.addEventListener('change', () => { selected = select.value; productMessage.textContent = ''; showProduct(); });
+  document.querySelector('#new').addEventListener('click', () => { selected = ''; select.value = ''; productMessage.textContent = ''; showProduct(); editor.elements.name.focus(); });
   document.querySelector('#refresh').addEventListener('click', async () => { try { await refresh(); message('Lista actualizada.'); } catch (error) { message(error.message); } });
   document.querySelector('#logout').addEventListener('click', async () => {
     try {
@@ -77,6 +93,26 @@
       message('No se pudo cerrar la sesion en el servidor: ' + error.message);
     }
   });
-  editor.addEventListener('submit', async e => { e.preventDefault(); try { const product = readProduct(); if (!supplierSelect.value) throw Error('Selecciona un proveedor'); const saved = await request(selected ? `/api/admin/products/${encodeURIComponent(selected)}` : '/api/admin/products', { method:selected ? 'PUT' : 'POST', body:JSON.stringify({product, supplierId:supplierSelect.value}) }); selected = saved.id; await refresh(); message('Producto y proveedor guardados.'); } catch (error) { message(error.message); } });
-  document.querySelector('#delete').addEventListener('click', async () => { if (!selected || !confirm(`¿Eliminar ${selected}?`)) return; try { await request(`/api/products/${encodeURIComponent(selected)}`, {method:'DELETE'}); selected = ''; await refresh(); message('Producto eliminado.'); } catch (error) { message(error.message); } });
+  editor.addEventListener('submit', async e => {
+    e.preventDefault();
+    const isNew = !selected;
+    let saved;
+    try {
+      const product = readProduct();
+      if (!supplierSelect.value) throw Error('Selecciona un proveedor');
+      saved = await request(selected ? `/api/admin/products/${encodeURIComponent(selected)}` : '/api/admin/products', { method:selected ? 'PUT' : 'POST', body:JSON.stringify({product, supplierId:supplierSelect.value}) });
+    } catch (error) { message(error.message, productMessage); return; }
+    selected = isNew ? '' : saved.id;
+    if (isNew) { select.value = ''; showProduct(); }
+    message(isNew ? 'Producto agregado correctamente. Ya puedes crear otro.' : 'Producto actualizado correctamente.', productMessage);
+    try { await refresh(); } catch { message('Producto guardado, pero no se pudo actualizar la lista. Pulsa Actualizar lista.', productMessage); }
+  });
+  document.querySelector('#delete').addEventListener('click', async () => {
+    if (!selected || !confirm(`¿Eliminar ${selected}?`)) return;
+    try { await request(`/api/products/${encodeURIComponent(selected)}`, {method:'DELETE'}); }
+    catch (error) { message(error.message, productMessage); return; }
+    selected = ''; select.value = ''; showProduct();
+    message('Producto eliminado correctamente.', productMessage);
+    try { await refresh(); } catch { message('Producto eliminado, pero no se pudo actualizar la lista. Pulsa Actualizar lista.', productMessage); }
+  });
 })();

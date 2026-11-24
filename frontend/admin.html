@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Administración | NUDO</title>
-  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="admin.css">
-  <script defer src="app-config.js?v=20261116-api"></script><script defer src="admin.js?v=20261124-simplificado"></script>
+  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="admin.css?v=20261124-mensajes">
+  <script defer src="app-config.js?v=20261116-api"></script><script defer src="admin.js?v=20261124-mensajes"></script>
 </head>
 <body>
 <main class="container admin">
@@ -26,10 +26,12 @@
       <label for="supplier-to-delete">Selecciona un proveedor para eliminar</label>
       <select id="supplier-to-delete"></select>
       <button type="button" id="delete-supplier" class="secondary">Eliminar proveedor</button>
+      <p id="supplier-delete-message" class="admin-feedback" role="status" aria-live="polite"></p>
       <form id="supplier-form" class="admin-login">
         <label for="supplier-name">Nombre del proveedor</label>
         <input id="supplier-name" name="name" required maxlength="120">
         <button type="submit">Agregar proveedor</button>
+        <p id="supplier-add-message" class="admin-feedback" role="status" aria-live="polite"></p>
       </form>
     </section>
     <h2>Productos</h2>
@@ -47,6 +49,7 @@
         <div class="field wide"><label for="product-collections">Colecciones, separadas por comas</label><input id="product-collections" name="collections" placeholder="diario, shampoos"></div>
       </div>
       <div class="admin-actions"><button type="submit">Guardar producto</button><button class="secondary" type="button" id="delete">Eliminar producto</button></div>
+      <p id="product-message" class="admin-feedback" role="status" aria-live="polite"></p>
     </form>
   </section>
 </main>

@@ -14,12 +14,12 @@ class Element {
   add(option) { this.options.push(option); }
   appendChild(option) { this.options.push(option); }
   replaceChildren() { this.options = []; }
-  reset() { if (this.elements.password) this.elements.password.value = ''; }
+  reset() { for (const field of Object.values(this.elements)) field.value = ''; }
   async dispatch(type) { return this.listeners[type]({ preventDefault() {} }); }
 }
 
 function makeHarness() {
-  const selectors = ['#admin-status', '#login', '#panel', '#products', '#editor', '#delete', '#new', '#refresh', '#logout', '#supplier', '#supplier-list', '#supplier-form', '#supplier-to-delete', '#delete-supplier'];
+  const selectors = ['#admin-status', '#login', '#panel', '#products', '#editor', '#delete', '#new', '#refresh', '#logout', '#supplier', '#supplier-list', '#supplier-form', '#supplier-to-delete', '#delete-supplier', '#supplier-add-message', '#supplier-delete-message', '#product-message'];
   const elements = Object.fromEntries(selectors.map(selector => [selector, new Element()]));
   const fields = ['id', 'name', 'category', 'size', 'price', 'art', 'label', 'description', 'benefits', 'collections'];
   elements['#login'].elements.password = new Element();
@@ -30,6 +30,7 @@ function makeHarness() {
   const calls = [];
   let serverToken = '';
   let failLogout = false;
+  let failRefresh = false;
   const fetch = async (input, options = {}) => {
     const url = new URL(input);
     const method = options.method || 'GET';
@@ -48,7 +49,7 @@ function makeHarness() {
       serverToken = '';
       return respond(204, null);
     }
-    if (url.pathname === '/api/suppliers' && method === 'GET') return respond(200, supplierRows);
+    if (url.pathname === '/api/suppliers' && method === 'GET') return failRefresh ? respond(503, {error:'Lista no disponible'}) : respond(200, supplierRows);
     if (url.pathname === '/api/suppliers' && method === 'POST') { const row = {id:'otro-proveedor',name:JSON.parse(options.body).name}; supplierRows.push(row); return respond(201,row); }
     if (url.pathname === '/api/suppliers/otro-proveedor' && method === 'DELETE') { supplierRows.splice(1,1); return respond(204,null); }
     if (url.pathname === '/api/product-suppliers' && method === 'GET') return respond(200, [...rows.keys()].map(productId => ({ productId, supplierId:'proveedor-prueba' })));
@@ -86,7 +87,7 @@ function makeHarness() {
   vm.createContext(context);
   vm.runInContext(configSource, context);
   vm.runInContext(adminSource, context);
-  return { elements, rows, calls, setFailLogout(value) { failLogout = value; } };
+  return { elements, rows, calls, setFailLogout(value) { failLogout = value; }, setFailRefresh(value) { failRefresh = value; } };
 }
 
 test('admin panel uses deployed API for login and CRUD and reports logout errors', async () => {
@@ -97,11 +98,11 @@ test('admin panel uses deployed API for login and CRUD and reports logout errors
   assert.match(elements['#admin-status'].textContent, /activa/);
   elements['#supplier-form'].elements.name.value = 'Nuevo proveedor';
   await elements['#supplier-form'].dispatch('submit');
-  assert.match(elements['#admin-status'].textContent, /Proveedor agregado/);
+  assert.match(elements['#supplier-add-message'].textContent, /Proveedor agregado correctamente/);
   assert.ok(elements['#supplier'].options.some(option => option.text === 'Nuevo proveedor'));
   elements['#supplier-to-delete'].value = 'otro-proveedor';
   await elements['#delete-supplier'].dispatch('click');
-  assert.match(elements['#admin-status'].textContent, /Proveedor eliminado/);
+  assert.match(elements['#supplier-delete-message'].textContent, /Proveedor eliminado correctamente/);
 
   const editor = elements['#editor'];
   const product = { name:'Temporary product', category:'Paquete de 12', size:'50 ml', price:'12.00', description:'Temporary test', benefits:'Test benefit', collections:'diario' };
@@ -111,17 +112,20 @@ test('admin panel uses deployed API for login and CRUD and reports logout errors
   await editor.dispatch('submit');
   assert.equal(rows.get(productId).price, 1200);
   assert.equal(rows.get(productId).category, 'Paquete de 12');
-  assert.match(elements['#admin-status'].textContent, /guardados/);
+  assert.match(elements['#product-message'].textContent, /Producto agregado correctamente/);
+  for (const field of ['name','category','size','price','description','benefits','collections']) assert.equal(editor.elements[field].value, '');
+  assert.equal(elements['#supplier'].value,'');
 
   elements['#products'].value = productId;
   await elements['#products'].dispatch('change');
   editor.elements.price.value = '17.50';
   await editor.dispatch('submit');
   assert.equal(rows.get(productId).price, 1750);
+  assert.match(elements['#product-message'].textContent, /Producto actualizado correctamente/);
 
   await elements['#delete'].dispatch('click');
   assert.equal(rows.has(productId), false);
-  assert.match(elements['#admin-status'].textContent, /eliminado/);
+  assert.match(elements['#product-message'].textContent, /Producto eliminado correctamente/);
 
   setFailLogout(true);
   await elements['#logout'].dispatch('click');
@@ -137,6 +141,21 @@ test('admin panel uses deployed API for login and CRUD and reports logout errors
   assert.ok(calls.some(call => call.method === 'POST' && call.path === '/api/admin/products' && call.token === 'session-token'));
   assert.ok(calls.some(call => call.method === 'PUT' && call.token === 'session-token'));
   assert.ok(calls.some(call => call.method === 'DELETE' && call.path.startsWith('/api/products/') && call.token === 'session-token'));
+});
+
+test('si falla la actualización de la lista, informa que el producto sí se guardó', async () => {
+  const {elements,rows,setFailRefresh}=makeHarness();
+  elements['#login'].elements.password.value='valid-test-password';
+  await elements['#login'].dispatch('submit');
+  const editor=elements['#editor'];
+  const data={name:'Crema',category:'Paquete de 12',size:'50 ml',price:'12.00',description:'Prueba',benefits:'',collections:''};
+  for (const [field,value] of Object.entries(data)) editor.elements[field].value=value;
+  elements['#supplier'].value='proveedor-prueba';
+  setFailRefresh(true);
+  await editor.dispatch('submit');
+  assert.ok(rows.has('crema-12345678'));
+  assert.equal(editor.elements.name.value,'');
+  assert.match(elements['#product-message'].textContent,/Producto guardado, pero no se pudo actualizar/);
 });
 
 test('editar un producto anterior conserva su identificador, categoría y campos ocultos', async () => {
