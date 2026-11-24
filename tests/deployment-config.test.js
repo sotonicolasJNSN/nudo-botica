@@ -33,7 +33,8 @@ test('Render uses backend npm scripts and leaves credentials unset in source con
   assert.match(renderConfig, /autoDeployTrigger: checksPass/);
   assert.match(renderConfig, /buildCommand: npm ci --prefix backend && npm run prisma:generate --prefix backend/);
   assert.match(renderConfig, /startCommand: npm start --prefix backend/);
-  for (const key of ['SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY', 'SUPABASE_SECRET_KEY', 'ADMIN_PASSWORD']) {
+  assert.match(renderConfig, /key: CATALOG_SOURCE\r?\n\s+value: prisma/);
+  for (const key of ['DATABASE_URL', 'SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY', 'SUPABASE_SECRET_KEY', 'ADMIN_PASSWORD']) {
     assert.match(renderConfig, new RegExp('key: ' + key + '\\r?\\n\\s+sync: false'));
   }
   assert.equal(backendPackage.scripts.start, 'node src/server.js');

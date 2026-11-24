@@ -14,7 +14,9 @@ services:
       - key: FRONTEND_ORIGIN
         value: https://sotonicolasjnsn.github.io
       - key: CATALOG_SOURCE
-        value: supabase
+        value: prisma
+      - key: DATABASE_URL
+        sync: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_PUBLISHABLE_KEY

@@ -4,7 +4,7 @@
 
 ## Prisma, pruebas y despliegue controlado
 
-El backend conserva la arquitectura controlador → servicio → repositorio. Para usar Prisma en una base de prueba, configure `CATALOG_SOURCE=prisma` y `DATABASE_URL` en el entorno del servidor, genere el cliente con `npm run prisma:generate` desde `backend` e inicie con `npm start`. La API conserva las rutas y respuestas existentes. Sin esa selección explícita siguen disponibles los proveedores `postgres` y `supabase`; el `render.yaml` actual conserva `supabase` y no activa Prisma en producción.
+El backend conserva la arquitectura controlador → servicio → repositorio. Para usar Prisma, configure `CATALOG_SOURCE=prisma` y `DATABASE_URL` en el entorno del servidor, genere el cliente con `npm run prisma:generate` desde `backend` e inicie con `npm start`. La API conserva las rutas y respuestas existentes. También siguen disponibles los proveedores `postgres` y `supabase`; Render selecciona Prisma para el catálogo y conserva las variables Supabase para facilitar una reversión controlada.
 
 Versiones de referencia: Node.js 22 en Render y CI; `package-lock.json` fija Express 5.3.0, pg 8.23.1 y Prisma/Prisma Client 6.12.0. El mínimo real de Prisma 6.12 es Node 18.18. Instale las dependencias con `npm ci` desde `backend`. Para revisar ambos esquemas y generar clientes use `npm run prisma:validate`, `npm run prisma:lab:validate`, `npm run prisma:generate` y `npm run prisma:lab:generate`.
 
@@ -16,7 +16,7 @@ Render está configurado con `Auto-Deploy: After CI Checks Pass`, también expre
 
 El workflow incluye además un despliegue manual opcional desde `main` después de ejecutar las pruebas. Requiere configurar por separado el secreto `RENDER_DEPLOY_HOOK_URL` y revisar la protección del entorno `production`; el hook es secreto. El hook solicita el SHA probado y, según la documentación de Render, desplegar un SHA mediante hook desactiva el autodespliegue: https://render.com/docs/deploys#deploying-a-specific-commit . Este mecanismo opcional no está configurado por defecto; el flujo automático usa la integración nativa de Render con CI.
 
-Para una futura conexión Prisma con Supabase, la URL de base de datos es una credencial distinta de la clave secreta de la Data API: conservar cada una sin exponerla. Revisar la conexión y el pool de Supabase antes de activar Prisma; las migraciones requieren conexión directa o de sesión, no un pool de transacciones. En la configuración actual el CLI usa `DATABASE_URL`, por lo que para migraciones debe proporcionarse la conexión apropiada mediante el entorno de prueba. No ejecutar migraciones en producción desde CI.
+La URL de la base de datos es una credencial distinta de la clave secreta de la Data API: ambas deben mantenerse privadas. Render usa un pool de sesiones IPv4 de Supabase mediante `DATABASE_URL`. Para migraciones use una conexión directa o de sesión; en la configuración actual el CLI usa `DATABASE_URL`, por lo que debe proporcionarse la conexión apropiada mediante el entorno de prueba. No ejecutar migraciones en producción desde CI.
 
 ## Arquitectura y puesta en marcha
 
@@ -42,7 +42,7 @@ En PowerShell, instale con `cd backend` y `npm.cmd ci`. Para Supabase, configure
 
 El servidor escucha en `127.0.0.1` por defecto. Si el entorno de publicación necesita escuchar en otra interfaz, configure `HOST` explícitamente; para exponerlo a Internet debe utilizar una infraestructura apropiada con HTTPS.
 
-GitHub Pages publica la interfaz estatica desde la raiz y redirige a `frontend/`; no ejecuta el backend Node.js. `frontend/app-config.js` conecta el sitio publicado en `sotonicolasjnsn.github.io` con `https://nudo-botica.onrender.com/`, y mantiene el modo same-origin en desarrollo local. Render instala con `npm ci --prefix backend`, genera el cliente con `npm run prisma:generate --prefix backend` y arranca con `npm start --prefix backend`; configure alli `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` y `ADMIN_PASSWORD` como variables privadas, ademas de `HOST=0.0.0.0`, `CATALOG_SOURCE=supabase` y `FRONTEND_ORIGIN=https://sotonicolasjnsn.github.io`. Las claves y la contrasena no deben anadirse al repositorio ni a GitHub Pages.
+GitHub Pages publica la interfaz estatica desde la raiz y redirige a `frontend/`; no ejecuta el backend Node.js. `frontend/app-config.js` conecta el sitio publicado en `sotonicolasjnsn.github.io` con `https://nudo-botica.onrender.com/`, y mantiene el modo same-origin en desarrollo local. Render instala con `npm ci --prefix backend`, genera el cliente con `npm run prisma:generate --prefix backend` y arranca con `npm start --prefix backend`; configura `DATABASE_URL` y `ADMIN_PASSWORD` como variables privadas, ademas de `HOST=0.0.0.0`, `CATALOG_SOURCE=prisma` y `FRONTEND_ORIGIN=https://sotonicolasjnsn.github.io`. Las claves y la contrasena no deben anadirse al repositorio ni a GitHub Pages.
 
 `render.yaml` prepara un servicio gratuito de Render desde la raíz del repositorio; se requiere conectar el repositorio a una cuenta de Render y crear el servicio. El plan gratuito se suspende después de inactividad y puede tardar en arrancar; el tiempo de espera actual de la interfaz puede hacer que use temporalmente el catálogo local. Consulte las condiciones actuales de Render antes de usarlo para producción.
 
