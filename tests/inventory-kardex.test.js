@@ -163,6 +163,6 @@ test('Kardex reports missing server credentials or migration explicitly', async 
   });
   await assert.rejects(missingMigration.listInventoryMovements({ productId: null, limit: 100, offset: 0 }), {
     status: 503,
-    message: 'La migración del kardex no está aplicada en Supabase'
+    message: 'La migración del kardex no está aplicada en la base de datos conectada'
   });
 });

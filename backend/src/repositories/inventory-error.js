@@ -13,7 +13,7 @@ function mapInventoryError(error) {
     error.message = 'No se pudo validar el inventario';
   } else if (code === '42883' || code === '42P01') {
     error.status = 503;
-    error.message = 'La migración del kardex no está aplicada en Supabase';
+    error.message = 'La migración del kardex no está aplicada en la base de datos conectada';
   } else {
     error.message = message;
   }

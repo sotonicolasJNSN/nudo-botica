@@ -141,5 +141,5 @@ test('Supabase descuenta stock mediante RPC con referencia idempotente', async (
     secretKey: 'secret',
     fetchImpl: async () => ({ ok: false, status: 404, json: async () => ({ code: 'PGRST202', message: 'function not found' }) })
   });
-  await assert.rejects(missingMigration.placeOrder({ reference: 'NUDO-A1B2-C3D4-E5F6-A7B8', items: [{ id: 'shampoo', quantity: 12 }] }), { status: 503, message: 'La migración de inventario no está aplicada en Supabase' });
+  await assert.rejects(missingMigration.placeOrder({ reference: 'NUDO-A1B2-C3D4-E5F6-A7B8', items: [{ id: 'shampoo', quantity: 12 }] }), { status: 503, message: 'La migración de inventario no está aplicada en la base de datos conectada' });
 });

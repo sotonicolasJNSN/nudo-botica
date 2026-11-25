@@ -44,8 +44,8 @@ function createSupabaseProductRepository({ url, publishableKey, secretKey, fetch
       } else if (payload.code === 'PGRST202' || payload.code === 'PGRST203') {
         error.status = 503;
         error.message = name === 'nudo_place_order'
-          ? 'La migración de inventario no está aplicada en Supabase'
-          : 'La migración del kardex no está aplicada en Supabase';
+          ? 'La migración de inventario no está aplicada en la base de datos conectada'
+          : 'La migración del kardex no está aplicada en la base de datos conectada';
       }
       throw error;
     }
@@ -69,7 +69,7 @@ function createSupabaseProductRepository({ url, publishableKey, secretKey, fetch
       const error = new Error(payload.message || `Supabase devolvió HTTP ${response.status}`);
       if (payload.code === 'PGRST205' || payload.code === '42P01') {
         error.status = 503;
-        error.message = 'La migración del kardex no está aplicada en Supabase';
+        error.message = 'La migración del kardex no está aplicada en la base de datos conectada';
       }
       throw error;
     }

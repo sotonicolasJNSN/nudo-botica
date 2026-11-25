@@ -42,6 +42,6 @@ test('SQL repositories report insufficient stock and unapplied migration', async
   }
   await assert.rejects(missingMigrationRepository.placeOrder(order), {
     status: 503,
-    message: 'La migración del kardex no está aplicada en Supabase'
+    message: 'La migración del kardex no está aplicada en la base de datos conectada'
   });
 });
